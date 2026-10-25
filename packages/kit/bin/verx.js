@@ -64,6 +64,11 @@ switch (command) {
     if (r.needsServer.length) console.log(`        Necesitan servidor (verx start): ${r.needsServer.join(', ')}`)
     break
   }
+  case 'desktop': {
+    const { runDesktop } = await import('../src/desktop.js')
+    await runDesktop({ root })
+    break
+  }
   case 'budget': {
     const { createKit } = await import('../src/kit.js')
     const { measureBudget, checkBudget, DEFAULT_BUDGET, kb } = await import('../src/budget.js')
@@ -83,5 +88,5 @@ switch (command) {
     process.exit(problems.length ? 1 : 0)
   }
   default:
-    console.log('Uso: verx <dev|build|start|budget> [--port 3000] [--out dist] [--workers auto]')
+    console.log('Uso: verx <dev|build|start|desktop|budget> [--port 3000] [--out dist] [--workers auto]')
 }

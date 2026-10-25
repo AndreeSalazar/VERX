@@ -34,3 +34,7 @@ export const setCurrent = (kit) => (current = kit)
 export function asset(path) {
   return current?.app.asset(path) ?? path
 }
+
+// ¿Esta app se está ejecutando como escritorio (verx desktop)? Sirve para mostrar
+// funciones que usan los recursos del sistema sólo donde existen.
+export const isDesktop = () => Boolean(current?.desktop)

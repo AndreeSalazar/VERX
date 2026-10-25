@@ -6,7 +6,8 @@
     "dev": "verx dev",
     "build": "verx build",
     "start": "verx start",
-    "budget": "verx budget"
+    "budget": "verx budget",
+    "desktop": "verx desktop"
   },
   "dependencies": {
     "@verx/gl": "workspace:*",

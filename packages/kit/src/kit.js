@@ -25,6 +25,7 @@ import { buildClient } from './client.js'
 import { mergeMetadata, renderDocument } from './document.js'
 import { IsrCache } from './isr.js'
 import { NotFoundError, RedirectError, setCurrent } from './navigation.js'
+import { desktopGuard, desktopAllows } from './desktop.js'
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 const HTML = 'text/html; charset=utf-8'
@@ -42,14 +43,16 @@ export async function loadConfig(root) {
 
 const load = (file) => import(pathToFileURL(file).href)
 
-export async function createKit({ root = process.cwd(), dev = false } = {}) {
+// desktop: { token } activa el modo escritorio (ver desktop.js).
+export async function createKit({ root = process.cwd(), dev = false, desktop = null } = {}) {
   root = resolve(root)
   const config = { lang: 'es', speculation: 'prerender', ...(await loadConfig(root)) }
   const appDir = join(root, 'app')
   if (!existsSync(appDir)) throw new Error(`No existe ${appDir}: crea al menos app/page.jsx`)
 
   const app = verx({ headers: config.headers, bodyLimit: config.bodyLimit })
-  const kit = { root, dev, config, app, pages: [], dynamic: [], apis: [], client: null, routes: null }
+  const kit = { root, dev, desktop, config, app, pages: [], dynamic: [], apis: [], client: null, routes: null }
+  if (desktop) app.use(desktopGuard(desktop.token))
   setCurrent(kit)
 
   const publicDir = join(root, 'public')
@@ -148,7 +151,9 @@ export async function createKit({ root = process.cwd(), dev = false } = {}) {
     if (methods.length === 0 && !m.WS) throw new Error(`${a.file}: exporta al menos un método (GET, POST…) o WS`)
     if (m.WS) {
       if (methods.includes('GET')) throw new Error(`${a.file}: WS y GET no pueden convivir (el WebSocket usa el GET del upgrade)`)
-      app.ws(a.path, m.WS)
+      // Los WebSockets no pasan por los middlewares: el candado de escritorio va en el upgrade.
+      const ws = !desktop ? m.WS : { ...m.WS, upgrade: (req) => desktopAllows(req, desktop.token) && (m.WS.upgrade?.(req) ?? {}) }
+      app.ws(a.path, ws)
       kit.apis.push(`WS ${a.path}`)
     }
     for (const method of methods) {

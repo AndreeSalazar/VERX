@@ -1,4 +1,4 @@
-import { asset } from '@verx/kit'
+import { asset, isDesktop } from '@verx/kit'
 
 export const metadata = {
   title: { default: 'VERX', template: '%s · VERX' },
@@ -27,11 +27,19 @@ export default function RootLayout({ children }) {
           <a href="/blog">Blog</a>
           <a href="/isr">ISR</a>
           <a href="/contacto">Contacto</a>
+          {isDesktop() && (
+            <a class="desktop-link" href="/escritorio">
+              Escritorio
+            </a>
+          )}
         </nav>
       </header>
       <main>{children}</main>
       <footer>
-        <span>VERX · Bun + Rust, JSX propio y cero dependencias.</span>
+        <span>
+          VERX · Bun + Rust, JSX propio y cero dependencias.
+          {isDesktop() && <b class="badge">VERX Desktop</b>}
+        </span>
         <a href="/privacidad">Privacidad</a>
       </footer>
     </>

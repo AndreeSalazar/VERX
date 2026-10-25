@@ -83,6 +83,23 @@ apps/web/        el sitio                                              → kit, 
 - **El puente:** `bun run wasm` compila `crates/sim` y publica `packages/sim/sim.wasm` junto con un manifiesto que lleva la huella del código. Si el `.wasm` no corresponde al código Rust, la regla `wasm-al-dia` falla.
 - **Cada paquete** tiene un único propósito, su README, sus tests y una API pública declarada en `exports`.
 
+## VERX Desktop: la misma app, también como escritorio
+
+```bash
+bun run desktop   # abre la app en su propia ventana
+```
+
+Una sola base de código con dos destinos. Las mismas páginas, islas, `.wasm`, APIs y WebSockets sirven a la web y al escritorio. En el escritorio, el servidor es Bun en tu ordenador, así que una página puede usar los recursos del sistema (ver `app/escritorio`). Las páginas saben dónde corren con `isDesktop()`.
+
+| | Electron | Tauri | **VERX Desktop** |
+|---|---|---|---|
+| Proceso principal | Node (V8) | Rust | **Bun (JavaScriptCore)** |
+| Navegador | Chromium incluido | WebView del sistema | ventana del sistema (Edge en modo app en Windows; WebView nativo en la fase 2) |
+| Protección del servidor local | depende de la app | permisos declarados | **solo `127.0.0.1` + token → cookie `HttpOnly`/`SameSite=Strict`; sin ella, 403 en todo, WebSockets incluidos** |
+| Dependencias | cientos | cientos de crates | **cero** |
+
+Las fases siguientes (ventana nativa en Rust y ejecutable único) están en el [ROADMAP](ROADMAP.md#️-verx-desktop-la-misma-app-como-web-y-como-escritorio).
+
 ## Reglas que bloquean
 
 Las 13 reglas de `verx-guard` (`bun run rules`) se aplican en tres sitios:
@@ -135,6 +152,7 @@ Windows 11, Bun 1.3.14, 12 núcleos, 100 conexiones keep-alive, 8 s por escenari
 | `bun run check` · `rules` | el guardián y su lista de reglas |
 | `bun run wasm` | recompila la simulación Rust y la publica |
 | `bun run budget` | JS + WASM por página contra el presupuesto (12 KB por página, 8 KB por isla) |
+| `bun run desktop` | la misma app como programa de escritorio (VERX Desktop) |
 | `bun test` · `bun run test:rust` | 53 tests JS · 16 tests de Rust |
 | `bun run verify` | todo junto: pásalo antes de dar algo por terminado |
 | `bun run bench` | benchmark del núcleo HTTP |

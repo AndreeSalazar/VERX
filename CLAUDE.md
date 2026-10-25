@@ -44,6 +44,7 @@ apps/web/      el sitio                         → kit, ui, sim, gl
 | `bun run verify` | check + tests JS + fmt/clippy/tests de Rust: **pásalo antes de dar algo por terminado** |
 | `bun run wasm` | recompila `crates/sim` y lo publica en `packages/sim` |
 | `bun run budget` | tabla de JS + WASM por página y por isla, contra el presupuesto |
+| `bun run desktop` | la app como escritorio: ventana propia, servidor solo en 127.0.0.1 y candado por token |
 | `bun test` · `bun run test:rust` | tests |
 | `bun run build` · `bun run start` | exportación estática y servidor de producción |
 

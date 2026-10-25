@@ -33,3 +33,12 @@ Cada plan es un paquete (`packages/`) o un crate (`crates/`) nuevo, con su READM
 - [ ] **13. `bun create verx`**: un proyecto nuevo con un comando, con las reglas ya incluidas.
 - [ ] **14. Panel de desarrollo**: en modo dev, una capa que muestra cada isla, su peso y cuándo se hidrató.
 - [ ] **15. Adaptadores** para desplegar en Cloudflare y Vercel.
+
+## 🖥️ VERX Desktop: la misma app como web y como escritorio
+
+**16.** Inspirado en Electron (un proceso principal con acceso al sistema: aquí, Bun) y en Tauri (sin meter un navegador entero, y con permisos protegidos). Una sola base de código: las mismas páginas, islas, `.wasm` y APIs sirven a la web y al escritorio.
+
+- [x] **Fase 1. `verx desktop`** ✅: servidor solo en `127.0.0.1` con un puerto aleatorio, una ventana de app propia y un candado de seguridad (token y cookie `HttpOnly`/`SameSite=Strict`) para que ninguna otra web ni programa local pueda usar las APIs del escritorio. Las páginas saben si están en escritorio con `isDesktop()`.
+- [ ] **Fase 2. `crates/desktop`**: ventana nativa en Rust con el WebView del sistema (WebKit en macOS, WebKitGTK en Linux, WebView2 en Windows). El `unsafe` de FFI quedaría confinado a su propio `ffi.rs`, cambiando la regla en el guardián con su test.
+- [ ] **Fase 3. Un solo ejecutable**: `bun build --compile` con el runtime de Bun incluido; pocos MB frente a los 80–150 MB de Electron.
+- [ ] **Fase 4 (opcional). Sin Chromium también en Windows**: incluir Servo, el motor en Rust. Rompe la regla de cero dependencias, así que haría falta una excepción decidida por escrito.

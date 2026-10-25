@@ -108,3 +108,8 @@ test('galaxia multijugador: lo que mueve uno lo ve el otro', async () => {
   a.ws.close()
   b.ws.close()
 })
+
+test('en la web normal no existe la página de escritorio ni su enlace', async () => {
+  expect((await html('/escritorio')).status).toBe(404)
+  expect(await (await html('/')).text()).not.toContain('desktop-link')
+})

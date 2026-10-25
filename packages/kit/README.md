@@ -7,6 +7,7 @@ verx dev     # desarrollo con recarga en vivo (vigila también el código del fr
 verx build   # exporta lo estático a dist/ con .br/.gz y _headers
 verx start   # producción (--workers auto reparte la carga en Linux)
 verx budget  # JS + WASM (brotli) que transfiere cada página, contra `budget` de verx.config.js
+verx desktop # la misma app como programa de escritorio (ventana propia, solo 127.0.0.1, con candado)
 ```
 
 | Archivo | Qué hace |

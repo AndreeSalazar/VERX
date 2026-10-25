@@ -850,3 +850,21 @@ h3 {
     transition: none !important;
   }
 }
+
+/* ── VERX Desktop ────────────────────────────────────────────────── */
+.top nav a.desktop-link {
+  color: var(--gold);
+}
+.badge {
+  margin-left: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0a0a10;
+  background: var(--spectrum);
+}
+.stats dd.small {
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
