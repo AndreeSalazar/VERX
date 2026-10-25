@@ -1,106 +1,147 @@
-# VERX ⚡
+# VERX ✦
 
-Framework web para **Bun**, inspirado en Next.js, Vercel, Astro, Solid y Remix.
-**Cero dependencias, cero JavaScript en el navegador por defecto**, y todo lo que
-se puede decidir antes de la primera petición se decide al arrancar.
+**Framework web sobre Bun y Rust.** Inspirado en Next.js, Astro, Solid y Remix, pero con **cero dependencias**, **cero JavaScript por defecto** y un héroe 3D simulado en **Rust → WebAssembly**.
+
+Todo lo que se puede decidir antes de la primera petición se decide al arrancar.
 
 ```bash
-bun install      # solo enlaza los paquetes del workspace: no descarga nada
+bun install      # enlaza los paquetes del workspace (sin descargar nada) y activa los hooks de git
 bun run dev      # http://localhost:3000 con recarga en vivo
-bun test         # 43 tests de todos los paquetes
-bun run check    # verifica las fronteras entre paquetes
-bun run build    # exporta el sitio estático a apps/web/dist
-bun run start    # servidor de producción
-bun run bench    # benchmark del núcleo HTTP
+bun run verify   # guardián + tests JS + fmt/clippy/tests de Rust
 ```
 
-Solo hace falta [Bun](https://bun.sh) ≥ 1.3, sin npm.
+Necesitas [Bun](https://bun.sh) ≥ 1.3 y Rust (la versión exacta la fija `crates/rust-toolchain.toml`). **Sin npm.**
 
-## Arquitectura: paquetes aislados, no un monolito
+---
+
+## VERX frente a los grandes
+
+Una comparación cualitativa, sin favoritismos: aparece lo que VERX ya hace mejor y lo que todavía le falta. No incluye cifras de los demás frameworks, porque no los hemos medido en la misma máquina.
+
+### De un vistazo
+
+|                              | **VERX**                          | Next.js              | Astro                 | Remix / React Router  | SvelteKit           | SolidStart          | Qwik                | Fresh (Deno)        |
+|------------------------------|-----------------------------------|----------------------|-----------------------|-----------------------|---------------------|---------------------|---------------------|---------------------|
+| Runtime                      | **Bun**                           | Node (y Edge)        | Node y otros          | Node y otros          | Node y otros        | Node y otros        | Node y otros        | Deno                |
+| Dependencias de terceros     | **0**                             | muchas               | muchas                | muchas                | muchas              | muchas              | muchas              | pocas               |
+| JS en el navegador por defecto | **0 KB**                        | runtime de React     | **0 KB**              | runtime de React      | runtime pequeño     | runtime pequeño     | casi 0 (resumable)  | **0 KB**            |
+| Modelo de UI                 | JSX propio + signals              | React (VDOM, RSC)    | cualquiera (islas)    | React (VDOM)          | compilador Svelte   | signals + JSX       | resumabilidad       | Preact (islas)      |
+| Islas / hidratación parcial  | ✅ `client:load/idle/visible`      | componentes cliente  | ✅                     | ❌ (hidrata todo)      | ❌ (hidrata todo)    | ❌ (hidrata todo)    | ✅ (sin hidratar)    | ✅                   |
+| Rutas por archivos y layouts | ✅                                 | ✅                    | ✅                     | ✅                     | ✅                   | ✅                   | ✅                   | ✅                   |
+| ISR / stale-while-revalidate | ✅                                 | ✅                    | vía adaptadores       | cabeceras HTTP        | vía adaptadores     | vía adaptadores     | vía adaptadores     | ❌                   |
+| Formularios sin JS           | ✅ `action`                        | server actions       | parcial               | ✅                     | ✅                   | ✅                   | ✅                   | ✅                   |
+| Rust en el producto final    | **✅ (WASM en el navegador)**      | en el tooling (SWC/Turbopack) | ❌            | ❌                     | ❌                   | ❌                   | ❌                   | ❌                   |
+| Reglas de arquitectura que bloquean | **✅ guardián + hooks**     | ❌                    | ❌                     | ❌                     | ❌                   | ❌                   | ❌                   | ❌                   |
+| Ecosistema y comunidad       | 🌱 recién nacido                  | 🌳 enorme            | 🌳 grande             | 🌳 grande             | 🌳 grande           | 🌿 mediano          | 🌿 mediano          | 🌿 mediano          |
+
+### Dónde VERX ya gana
+
+- **Cero dependencias, de verdad.** El `package.json` de cada paquete y el `Cargo.toml` de cada crate solo apuntan a piezas propias, y una regla del guardián falla si alguien añade una de fuera.
+- **Lo mínimo en el navegador.** Una página sin interacción no lleva JS. Toda la portada, con el héroe 3D incluido, transfiere **9,9 KB** de JS más WebAssembly. Solo Three.js ya pesa más.
+- **El cálculo pesado en Rust.** La galaxia simula 40 000 partículas en ~1,7 ms por frame, en un `.wasm` de 6 KB, y sus datos pasan a la GPU sin copias.
+- **Velocidad del servidor.** Sobre `Bun.serve` y su router nativo. En nuestra máquina rinde entre un 45 y un 60 % más que `node:http` sin nada encima (ver [Benchmarks](#benchmarks)).
+- **Arquitectura que no se degrada.** Las fronteras se comprueban automáticamente en cada edición, en cada commit y al terminar cada sesión de Claude Code.
+
+### Dónde los grandes nos ganan hoy (y por dónde crecer)
+
+| Hueco | Quién lo tiene | Plan para VERX | Mundo |
+|---|---|---|---|
+| **Streaming SSR** (enviar HTML mientras carga) | Next.js, Remix, SolidStart | `renderToStream` en `@verx/ui` con límites `<Suspense>` | Bun |
+| **Hidratación que reutiliza el DOM** | Svelte, Solid, Qwik | Recorrer el HTML del servidor en lugar de volver a pintar la isla | Bun |
+| **Reactividad automática** (sin `() =>`) | Solid, Svelte | Plugin de Bun que envuelva las expresiones JSX al compilar | Bun |
+| **Optimización de imágenes** | Next.js, Astro | Redimensionar y codificar en Rust con un crate propio, sin dependencias | 🦀 Rust |
+| **Tipos TypeScript** | todos | `.d.ts` para cada paquete y `tsc --noEmit` dentro de `verify` | Bun |
+| **HMR que conserva el estado** | Vite (Astro, SvelteKit…) | `bun --hot` más recarga parcial de islas | Bun |
+| **Adaptadores de despliegue** (edge, serverless) | Next.js, Astro, SvelteKit | Adaptadores para Cloudflare y Vercel sobre `fetch` estándar | Bun |
+| **i18n en las rutas** | Next.js, Nuxt | Segmento `[lang]` con negociación de idioma en el servidor | Bun |
+| **WebSockets y tiempo real** | SvelteKit (vía adaptador), Fresh | `app.ws()` sobre los WebSockets nativos de Bun.serve | Bun |
+| **Listas con clave** (`<For>`) | Solid | Reconciliación con clave en `@verx/ui` | Bun |
+| **Markdown / MDX** | Astro, Next.js | Parser de Markdown en Rust → WASM para docs y blog | 🦀 Rust |
+| **Búsqueda** | Docusaurus, Astro (plugins) | Índice invertido en Rust generado en `verx build` | 🦀 Rust |
+| **Ecosistema** | todos | Plantillas, ejemplos y documentación pública | — |
+
+Cada fila es un paquete o crate nuevo con su README y sus tests, igual que el resto del repo, y el guardián se asegura de que siga así.
+
+---
+
+## Arquitectura: dos mundos, una frontera
 
 ```
-packages/
-  signals/   @verx/signals   reactividad (signal, computed, effect)    → no depende de nada
-  server/    @verx/server    HTTP sobre Bun.serve, estáticos, prerender → no depende de nada
-  ui/        @verx/ui        JSX propio: string en servidor, DOM real   → signals
-  kit/       @verx/kit       rutas por archivos, render, islas, CLI     → server, ui
-apps/
-  web/                        el sitio (la web del propio framework)    → kit, ui
-scripts/check-architecture.js las fronteras se comprueban, no se prometen
+crates/          MUNDO RUST (workspace propio, toolchain 1.99.1 fijada)
+  sim/           verx-sim     galaxia → .wasm · no_std · 6 KB · unsafe sólo en abi.rs
+  guard/         verx-guard   guardián de 12 reglas (std, sin crates)
+packages/        MUNDO BUN (workspaces aislados: cada uno ve sólo lo que declara)
+  signals/       @verx/signals   reactividad de grano fino            → nada
+  server/        @verx/server    HTTP sobre Bun.serve + estáticos      → nada
+  ui/            @verx/ui        JSX propio servidor/navegador         → signals
+  sim/           @verx/sim       ÚNICO PUENTE con Rust (ABI v1)        → nada
+  gl/            @verx/gl        motor WebGL2 propio                   → nada
+  kit/           @verx/kit       rutas, islas, ISR, CLI (estilo Next)  → server, ui
+apps/web/        el sitio                                              → kit, ui, sim, gl
 ```
 
-Tres mecanismos mantienen el aislamiento:
+- **El puente:** `bun run wasm` compila `crates/sim` y publica `packages/sim/sim.wasm` junto con un manifiesto que lleva la huella del código. Si el `.wasm` no corresponde al código Rust, la regla `wasm-al-dia` falla.
+- **Cada paquete** tiene un único propósito, su README, sus tests y una API pública declarada en `exports`.
 
-1. **Bun en modo `isolated`** (`bunfig.toml`): cada paquete solo puede importar lo que declara en su `package.json`. Lo que no está declarado falla al importarlo, en vez de funcionar de casualidad.
-2. **`exports`** en cada `package.json`: solo se puede usar la API pública, nunca `src/` por dentro.
-3. **`bun run check`** analiza los imports reales (con el AST de Bun) y falla si encuentra:
-   - imports relativos que salen del paquete,
-   - dependencias no declaradas o de terceros,
-   - ciclos entre paquetes,
-   - módulos de Node sin el prefijo `node:`,
-   - componentes `'use client'` que lleguen a código de servidor, aunque sea indirectamente.
+## Reglas que bloquean
 
-Cada paquete tiene su README, sus tests y su `tsconfig.json`, y se puede entender sin abrir los demás.
+Las 12 reglas de `verx-guard` (`bun run rules`) se aplican en tres sitios:
 
-## Qué se tomó de cada framework
-
-| De | Qué | Cómo se usa aquí |
-|---|---|---|
-| **Next.js** | App Router | `app/blog/[slug]/page.jsx`, `layout.jsx`, `route.js`, grupos `(x)`, carpetas `_privadas` |
-| | Metadata | `metadata`, `generateMetadata`, plantillas de título, Open Graph |
-| | Datos | componentes `async`, `generateStaticParams`, `notFound()`, `redirect()` |
-| **Vercel** | ISR | `export const revalidate = 60` con stale-while-revalidate y `s-maxage` para CDN |
-| | Despliegue | `verx build` → `dist/` precomprimido y `_headers` |
-| **Astro** | Islas | solo los archivos `'use client'` mandan JS, con `client:load / idle / visible / none` |
-| **Solid** | Reactividad | signals de grano fino; el JSX crea nodos reales, sin DOM virtual |
-| **Remix** | Formularios | `export async function action()`, que funciona sin JavaScript |
-| **Fastify** | Esquemas | `response: esquema`, que filtra campos y serializa |
-| **Chrome** | Navegación | Speculation Rules (prerender al pasar el ratón) y View Transitions, sin router en JS |
-
-## Por qué es rápido
-
-| Técnica | Efecto |
+| Dónde | Qué hace |
 |---|---|
-| Router nativo de `Bun.serve` (Zig) | sin regex ni recorrido de rutas en JS |
-| Páginas estáticas por defecto | se renderizan una vez y se sirven como un archivo |
-| Brotli 11 + gzip 9 al arrancar | entre un 15 y un 25 % menos bytes que gzip, sin coste por petición |
-| URLs con huella + `immutable` | el navegador no vuelve a preguntar nunca |
-| Islas | una página sin interacción pesa 0 KB de JS |
-| Runtime compartido | JSX + signals ≈ 3 KB minificado, en un chunk que comparten todas las islas |
-| `modulepreload` | el runtime y su chunk se piden en paralelo |
-| ISR | nadie espera un render salvo el primer visitante |
-| Componentes `async` | solo espera la rama que lo necesita |
+| **Hooks de git** (`.githooks/`) | `pre-commit`: guardián, tests y, si cambió Rust, fmt/clippy/tests. `commit-msg`: formato `tipo(ámbito): …` |
+| **Hooks de Claude Code** (`.claude/settings.json`) | Deniegan npm/yarn/pnpm, `bun add`, `cargo add`, `--no-verify` y `push --force`; revisan cada edición; no dejan terminar con reglas rotas |
+| **`bun run verify`** | Todo lo anterior a mano, más clippy pedantic `-D warnings` para el host y para WebAssembly |
+
+La lista completa y el porqué de cada regla están en [CLAUDE.md](CLAUDE.md). Si una regla molesta, se cambia en el guardián, con su test. Nunca se esquiva.
+
+## Qué tomamos de cada casa
+
+| De | Qué | En VERX |
+|---|---|---|
+| **Next.js** | App Router | `app/blog/[slug]/page.jsx`, `layout.jsx`, `route.js`, grupos `(x)`, `metadata`, `generateStaticParams`, `notFound()` |
+| **Vercel** | ISR y CDN | `export const revalidate = 60`, `s-maxage` + `stale-while-revalidate`, exportación precomprimida |
+| **Astro** | Islas | Solo los archivos `'use client'` mandan JS, con `client:load / idle / visible / none` |
+| **Solid** | Signals | El JSX crea nodos reales y cada signal actualiza solo su nodo |
+| **Remix** | Formularios | `export async function action()` con mejora progresiva |
+| **Fastify** | Esquemas | `response: esquema`, que filtra campos y serializa |
+| **Chrome** | Navegación | Speculation Rules y View Transitions, sin router en JS |
+| **Rust** | Disciplina | Toolchain fijada, clippy pedantic y un guardián que vigila todo el repo |
 
 ## Benchmarks
 
-Windows 11, Bun 1.3.14, 12 núcleos, 100 conexiones keep-alive, 4 hilos de carga en la
-misma máquina, 8 s por escenario (`bun run bench`). Entre una ejecución y otra hay un ±5 % de variación.
+Windows 11, Bun 1.3.14, 12 núcleos, 100 conexiones keep-alive, 8 s por escenario (`bun run bench`). Entre ejecuciones hay un ±5 % de variación.
 
 | Escenario | req/s | p99 |
 |---|---:|---:|
 | node:http puro · texto | 33 845 | 4,43 ms |
 | Bun.serve puro · texto | 53 332 | 3,04 ms |
 | **VERX · texto** | **49 107** | 3,67 ms |
-| node:http puro · JSON | 30 966 | 6,38 ms |
-| Bun.serve puro · JSON | 55 242 | 2,90 ms |
 | **VERX · `/user/:id` con esquema** | **49 150** | 3,31 ms |
 | **VERX · página prerenderizada (brotli)** | **47 304** | 3,58 ms |
-| **VERX · CSS estático (brotli)** | **45 830** | 3,60 ms |
 
-**Cómo leerlo:** VERX cuesta entre un 3 y un 11 % respecto a `Bun.serve` sin nada encima
-(que es su techo) y rinde entre un 45 y un 60 % más que `node:http` sin nada encima. Hay que
-tenerlo en cuenta: en un sitio real casi todo son páginas prerenderizadas y archivos con huella,
-así que la mayoría de visitas repetidas ni siquiera llegan al servidor.
+| Cliente (producción, brotli) | Bytes |
+|---|---:|
+| Runtime de islas + chunk compartido (JSX + signals) | 2 129 |
+| Héroe 3D (motor WebGL2 + escena + puente) | 3 767 |
+| `sim.wasm` (Rust) | 2 596 |
+| **Todas las islas del sitio + wasm** | **9 904** |
 
-En una versión anterior sobre Node, el serializador JSON "compilado" (estilo fast-json-stringify)
-salió **más lento** que `JSON.stringify` nativo, así que se cambió por una proyección. Y servir los
-cuerpos como strings latin1 dio entre un 8 y un 18 % más en `node:http`. Las optimizaciones se miden;
-no se suponen.
+## Comandos
 
-## Límites conocidos
+| Comando | Qué hace |
+|---|---|
+| `bun run dev` · `build` · `start` | desarrollo, exportación estática y producción |
+| `bun run check` · `rules` | el guardián y su lista de reglas |
+| `bun run wasm` | recompila la simulación Rust y la publica |
+| `bun test` · `bun run test:rust` | 53 tests JS · 16 tests de Rust |
+| `bun run verify` | todo junto: pásalo antes de dar algo por terminado |
+| `bun run bench` | benchmark del núcleo HTTP |
 
-- Las islas se hidratan **re-renderizando** su contenido (no reaprovechan el DOM del servidor). Para islas pequeñas no se nota, pero un formulario a medio escribir antes de hidratar perdería lo escrito.
-- En el navegador, una expresión es reactiva solo si va dentro de una función: `{() => a() + b()}`. Sin compilador no hay forma de detectarlo sola.
-- Las props de una isla viajan como JSON: no se pueden pasar funciones ni `children` del servidor.
-- `--workers` solo reparte carga en Linux (SO_REUSEPORT). En Windows y macOS arranca un único proceso.
-- No hay streaming SSR (`Suspense`), optimización de imágenes ni HTTP/2 propio. Para TLS y HTTP/2-3, pon Caddy o nginx delante.
+## Límites actuales
+
+- Las islas se hidratan volviendo a pintar su contenido. Si alguien escribe en un formulario antes de que hidrate, lo pierde.
+- En el navegador, una expresión es reactiva solo dentro de una función: `{() => a() + b()}`.
+- Las props de una isla viajan como JSON, así que no admiten funciones.
+- `--workers` solo reparte la carga en Linux (SO_REUSEPORT).
+- No hay HTTP/2 propio. Para TLS y HTTP/2-3, pon Caddy o nginx delante.
