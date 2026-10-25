@@ -60,7 +60,7 @@ Una comparación cualitativa, sin favoritismos: aparece lo que VERX ya hace mejo
 | **Búsqueda** | Docusaurus, Astro (plugins) | Índice invertido en Rust generado en `verx build` | 🦀 Rust |
 | **Ecosistema** | todos | Plantillas, ejemplos y documentación pública | — |
 
-Cada fila es un paquete o crate nuevo con su README y sus tests, igual que el resto del repo, y el guardián se asegura de que siga así.
+Cada fila es un paquete o crate nuevo con su README y sus tests, igual que el resto del repo, y el guardián se asegura de que siga así. La lista completa, en orden y con casillas, está en [ROADMAP.md](ROADMAP.md).
 
 ---
 
