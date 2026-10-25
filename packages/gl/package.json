@@ -5,7 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./core": "./src/core.js"
   },
   "scripts": {
     "test": "bun test"

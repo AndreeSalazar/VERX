@@ -5,7 +5,7 @@ const stats = [
   ['0', 'dependencias'],
   ['6 KB', 'de Rust en WASM'],
   ['~49k', 'req/s por núcleo'],
-  ['0 KB', 'de JS por defecto'],
+  ['3,5 KB', 'de agujero negro en la GPU'],
 ]
 
 export default function Hero() {

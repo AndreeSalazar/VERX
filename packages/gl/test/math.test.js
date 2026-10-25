@@ -34,3 +34,11 @@ test('rayToPlaneY es la inversa de project sobre el plano y = 0', () => {
 test('un rayo que no corta el plano devuelve null', () => {
   expect(m4.rayToPlaneY([0, 5, 5], [0, 5, 0], Math.PI / 3, 1, 0, 0.9)).toBeNull()
 })
+
+test('@verx/gl/core expone lo mínimo y es lo mismo que la entrada principal', async () => {
+  const core = await import('../src/core.js')
+  const full = await import('../src/index.js')
+  expect(Object.keys(core).sort()).toEqual(['createGL', 'createLoop', 'prefersReducedMotion'])
+  expect(core.createGL).toBe(full.createGL)
+  expect(core.createLoop).toBe(full.createLoop)
+})

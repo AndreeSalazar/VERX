@@ -47,6 +47,42 @@ body {
   }
 }
 
+/* El motor real (isla BlackHoleGL): cuando dibuja su primer frame, aparece con un
+   fundido y el agujero CSS se oculta (sin perder su caja: es el ancla del motor). */
+.cosmos-gl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.8s ease;
+}
+.cosmos-gl.is-live {
+  opacity: 1;
+}
+/* Velo de lectura sobre el motor: más oscuro donde va el texto. */
+.cosmos:has(.cosmos-gl.is-live)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(2, 2, 3, 0.62), rgba(2, 2, 3, 0.28) 48%, rgba(2, 2, 3, 0) 72%);
+}
+@media (max-width: 760px) {
+  .cosmos:has(.cosmos-gl.is-live)::after {
+    background: linear-gradient(180deg, rgba(2, 2, 3, 0.7), rgba(2, 2, 3, 0.45) 55%, rgba(2, 2, 3, 0.15));
+  }
+}
+.cosmos .bh,
+.cosmos .stars {
+  transition: opacity 1.8s ease, visibility 0s;
+}
+.cosmos:has(.cosmos-gl.is-live) .bh,
+.cosmos:has(.cosmos-gl.is-live) .stars {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1.8s ease, visibility 0s 1.8s;
+}
+
 /* Estrellas: puntos de degradado en mosaico (se pintan una vez) y una segunda capa que titila. */
 .stars {
   position: absolute;
@@ -614,5 +650,18 @@ footer::before {
   ::view-transition-new(root) {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* Lectura larga (docs, blog): el texto va sobre un panel oscuro translúcido, por
+   brillante que esté el disco detrás. Sin backdrop-filter: desenfocar un lienzo
+   que cambia en cada frame le costaría a la GPU en cada frame. */
+@media (min-width: 900px) {
+  .prose {
+    padding: 28px 32px 36px;
+    margin-inline: -32px;
+    border-radius: 18px;
+    background: rgba(3, 3, 7, 0.68);
+    box-shadow: 0 0 0 1px var(--line), 0 30px 80px -30px rgba(0, 0, 0, 0.9);
   }
 }

@@ -28,7 +28,7 @@ test('inicio: islas sólo donde hay interacción, cabeceras de seguridad y brotl
   const r = await html('/', { headers: { 'accept-encoding': 'br' } })
   expect(r.headers.get('x-content-type-options')).toBe('nosniff')
   const page = await r.text()
-  expect(page.match(/<verx-island/g)).toHaveLength(3) // Galaxy + Counter + CopyButton
+  expect(page.match(/<verx-island/g)).toHaveLength(4) // Galaxy + Counter + CopyButton + el agujero negro
   expect(page).toContain('<title>VERX · Rápido por diseño</title>')
 })
 
@@ -45,10 +45,13 @@ test('el héroe 3D: la galaxia carga ya y su .wasm se sirve como application/was
   expect(WebAssembly.validate(await r.arrayBuffer())).toBe(true)
 })
 
-test('una página sin islas no manda ni un byte de JavaScript', async () => {
+// El framework sigue mandando 0 KB por defecto (lo prueba @verx/kit); este sitio
+// decide poner de fondo un agujero negro en la GPU. Nunca bloquea el primer pintado.
+test('una página sin islas propias sólo carga el fondo, en idle, con el agujero CSS de respaldo', async () => {
   const page = await (await html('/privacidad')).text()
-  expect(page).not.toContain('<script type="module"')
-  expect(page).not.toContain('modulepreload')
+  const islands = [...page.matchAll(/<verx-island data-src="([^"]+)"[^>]*data-load="(\w+)"/g)].map((m) => [m[1].replace(/-\w+\.js$/, ""), m[2]])
+  expect(islands).toEqual([['/_verx/BlackHoleGL', 'idle']])
+  expect(page).toContain('<span class="bh-horizon"></span>')
 })
 
 test('slugs de docs desconocidos: 404 sin renderizar (dynamicParams = false)', async () => {

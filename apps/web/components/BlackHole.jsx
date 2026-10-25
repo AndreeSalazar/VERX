@@ -5,6 +5,8 @@
 //
 // Lo usan el fondo de todas las páginas (`cosmos`) y el héroe del inicio, donde
 // se coloca en el centro de la galaxia de Rust (ver lib/galaxy-scene.js).
+import BlackHoleGL from './BlackHoleGL.jsx'
+
 export default function BlackHole({ class: extra = '' }) {
   return (
     <div class={`bh ${extra}`} aria-hidden="true">
@@ -25,12 +27,15 @@ export default function BlackHole({ class: extra = '' }) {
   )
 }
 
-// El fondo de todas las páginas: estrellas que titilan y el agujero negro.
+// El fondo de todas las páginas: estrellas que titilan y el agujero negro CSS,
+// que el motor WebGL (isla BlackHoleGL, cuando el navegador queda libre)
+// sustituye por el trazado de rayos real.
 export function Cosmos() {
   return (
     <div class="cosmos" aria-hidden="true">
       <span class="stars" />
       <span class="stars twinkle" />
+      <BlackHoleGL client:idle />
       <BlackHole />
     </div>
   )
