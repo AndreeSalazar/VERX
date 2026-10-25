@@ -54,7 +54,7 @@ Una comparación cualitativa, sin favoritismos: aparece lo que VERX ya hace mejo
 | **HMR que conserva el estado** | Vite (Astro, SvelteKit…) | `bun --hot` más recarga parcial de islas | Bun |
 | **Adaptadores de despliegue** (edge, serverless) | Next.js, Astro, SvelteKit | Adaptadores para Cloudflare y Vercel sobre `fetch` estándar | Bun |
 | **i18n en las rutas** | Next.js, Nuxt | Segmento `[lang]` con negociación de idioma en el servidor | Bun |
-| **WebSockets y tiempo real** | SvelteKit (vía adaptador), Fresh | `app.ws()` sobre los WebSockets nativos de Bun.serve | Bun |
+| ~~**WebSockets y tiempo real**~~ ✅ | SvelteKit (vía adaptador), Fresh | **Hecho:** `app.ws()` y `export const WS` en `route.js`; la galaxia ya es multijugador | Bun |
 | **Listas con clave** (`<For>`) | Solid | Reconciliación con clave en `@verx/ui` | Bun |
 | **Markdown / MDX** | Astro, Next.js | Parser de Markdown en Rust → WASM para docs y blog | 🦀 Rust |
 | **Búsqueda** | Docusaurus, Astro (plugins) | Índice invertido en Rust generado en `verx build` | 🦀 Rust |

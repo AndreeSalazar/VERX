@@ -13,7 +13,7 @@ verx budget  # JS + WASM (brotli) que transfiere cada página, contra `budget` d
 |---|---|
 | `app/**/page.jsx` | página. Exporta `metadata`, `generateMetadata`, `generateStaticParams`, `revalidate`, `dynamic`, `dynamicParams`, `action` |
 | `app/**/layout.jsx` | envuelve a su carpeta. Exporta `metadata` y `head` |
-| `app/**/route.js` | API: `GET`, `POST`… como función o `{ response, handler }` |
+| `app/**/route.js` | API: `GET`, `POST`… como función o `{ response, handler }`. Con `export const WS = { open, message, close }` es un WebSocket en tiempo real |
 | `app/not-found.jsx`, `app/error.jsx` | páginas de 404 y de error, dentro del layout raíz |
 | `app/middleware.js` | middleware global |
 | `'use client'` | ese archivo es una isla: se hidrata con `client:load`, `client:idle`, `client:visible` (por defecto) o `client:none` |

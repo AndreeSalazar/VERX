@@ -140,11 +140,17 @@ export async function createKit({ root = process.cwd(), dev = false } = {}) {
     }
   }
 
-  // ── API: route.js exporta GET/POST/… como handlers de @verx/server ─────
+  // ── API: route.js exporta GET/POST/… como handlers de @verx/server, y
+  //    WS = { open, message, close, upgrade? } para tiempo real (WebSocket) ──
   for (const a of routes.apis) {
     const m = await load(a.file)
     const methods = METHODS.filter((method) => m[method])
-    if (methods.length === 0) throw new Error(`${a.file}: exporta al menos un método (GET, POST…)`)
+    if (methods.length === 0 && !m.WS) throw new Error(`${a.file}: exporta al menos un método (GET, POST…) o WS`)
+    if (m.WS) {
+      if (methods.includes('GET')) throw new Error(`${a.file}: WS y GET no pueden convivir (el WebSocket usa el GET del upgrade)`)
+      app.ws(a.path, m.WS)
+      kit.apis.push(`WS ${a.path}`)
+    }
     for (const method of methods) {
       const h = m[method]
       if (typeof h === 'function') app.route(method, a.path, h)

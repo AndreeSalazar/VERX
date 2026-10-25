@@ -30,7 +30,7 @@ test('el puntero agita las partículas y el muelle las calma', async () => {
   const g = await createGalaxy({ source: bytes, count: 2000, seed: 9 })
   const first = g.step(0)
   const pointer = [first[0] + 0.05, first[1], first[2]]
-  for (let i = 0; i < 30; i++) g.step(1 / 60, pointer)
+  for (let i = 0; i < 30; i++) g.step(1 / 60, [pointer])
   const glow = () => g.points.filter((_, i) => i % 4 === 3).reduce((max, v) => Math.max(max, v), 0)
   expect(glow()).toBeGreaterThan(0.1)
   for (let i = 0; i < 900; i++) g.step(1 / 60)
@@ -48,4 +48,17 @@ test('una ABI distinta se rechaza con un mensaje claro', async () => {
   } finally {
     WebAssembly.instantiate = original
   }
+})
+
+test('ABI v2: varios punteros a la vez, limitados a maxPointers', async () => {
+  const g = await createGalaxy({ source: bytes, count: 3000, seed: 4 })
+  expect(g.maxPointers).toBe(16)
+  const p = g.step(0)
+  const near = (i) => [p[i * 4] + 0.05, p[i * 4 + 1], p[i * 4 + 2]]
+  // Más punteros de los que caben: no debe romper nada, sólo usa los 16 primeros.
+  const many = Array.from({ length: 40 }, (_, i) => near(i * 50))
+  for (let i = 0; i < 20; i++) g.step(1 / 60, many)
+  const glowing = [...g.points].filter((v, i) => i % 4 === 3 && v > 0.05).length
+  expect(glowing).toBeGreaterThan(16)
+  expect(g.points.every(Number.isFinite)).toBe(true)
 })

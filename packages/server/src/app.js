@@ -19,6 +19,8 @@ export class App {
     this.routes = []
     this.statics = []
     this.prerenders = []
+    this.sockets = []
+    this.wsMaxPayload = options.wsMaxPayload ?? 16 * 1024
     this.assets = new Map()
     this.notFoundHandler = (ctx) => ctx.status(404).text('Not Found')
     this.errorHandler = defaultErrorHandler
@@ -60,6 +62,20 @@ export class App {
   static(dir, opts = {}) {
     this.statics.push({ dir, opts })
     return this
+  }
+
+  // WebSocket sobre el soporte nativo de Bun.serve, con su pub/sub
+  // (ws.subscribe(tema) y app.publish(tema, datos)). No pasa por los middlewares HTTP.
+  // handlers: { upgrade?(req) → datos extra | false, open, message, close, drain }
+  // En cada socket, ws.data = { ...datosExtra, params, server, handlers }.
+  ws(path, handlers) {
+    this.sockets.push({ path, handlers })
+    return this
+  }
+
+  // Envía a todos los suscritos a `topic` (devuelve los bytes enviados, 0 si nadie).
+  publish(topic, data) {
+    return this.server?.publish(topic, data) ?? 0
   }
 
   // Renderiza UNA vez al arrancar y lo sirve como un estático más: desde memoria,
@@ -126,6 +142,16 @@ export class App {
       const { path, wildcard } = toBunPattern(r.path)
       const route = { serialize: r.opts.response ? compileJSON(r.opts.response) : null }
       add(r.method, path, this.handler(compose([...mw, ...r.fns]), route, wildcard))
+    }
+    for (const { path, handlers } of this.sockets) {
+      add('GET', toBunPattern(path).path, (req, server) => {
+        const extra = handlers.upgrade ? handlers.upgrade(req) : {}
+        if (extra === false) return new Response('Forbidden', { status: 403 })
+        const data = { ...extra, params: req.params ?? EMPTY, server, handlers }
+        // Tras un upgrade correcto Bun espera `undefined`, no una Response.
+        if (server.upgrade(req, { data })) return undefined
+        return new Response('Upgrade Required', { status: 426, headers: { upgrade: 'websocket' } })
+      })
     }
 
     this._notFound = compose([...mw, this.notFoundHandler])
@@ -226,6 +252,7 @@ export class App {
       maxRequestBodySize: this.bodyLimit,
       development: false,
       reusePort: workers > 1,
+      ...(this.sockets.length ? { websocket: socketHandlers(this.wsMaxPayload) } : {}),
       ...serveOptions,
     })
     if (log && !isWorker) console.log(`[verx] escuchando en ${this.server.url}${workers > 1 ? ` (${workers} procesos)` : ''}`)
@@ -239,6 +266,19 @@ export class App {
 }
 
 export const verx = (options) => new App(options)
+
+// Bun.serve tiene un único manejador de WebSocket: lo repartimos según la ruta
+// (ws.data.handlers). Un error en un handler se registra sin tumbar el servidor.
+function socketHandlers(maxPayloadLength) {
+  const call = (name) => (ws, ...args) => {
+    try {
+      ws.data.handlers[name]?.(ws, ...args)
+    } catch (err) {
+      console.error(`[verx] error en ws.${name}:`, err)
+    }
+  }
+  return { maxPayloadLength, open: call('open'), message: call('message'), close: call('close'), drain: call('drain') }
+}
 
 // '/docs/*path' → { path: '/docs/*', wildcard: { name: 'path', prefix: 6 } }
 function toBunPattern(raw) {

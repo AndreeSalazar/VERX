@@ -117,9 +117,27 @@ fn dot(a: [f32; 3], b: [f32; 3]) -> f32 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
+/// Empuje y remolino de un puntero sobre una partícula en `pos`.
+fn pointer_force(acc: &mut [f32; 3], pos: [f32; 3], q: [f32; 3]) {
+    let d = sub(pos, q);
+    let d2 = dot(d, d);
+    if d2 >= POINTER_RADIUS * POINTER_RADIUS {
+        return;
+    }
+    let dist = sqrt(d2).max(0.05);
+    let falloff = 1.0 - dist / POINTER_RADIUS;
+    let push = POINTER_PUSH * falloff * falloff / dist;
+    let swirl = POINTER_SWIRL * falloff / dist;
+    acc[0] += d[0] * push - d[2] * swirl;
+    acc[1] += d[1] * push + falloff * 2.0;
+    acc[2] += d[2] * push + d[0] * swirl;
+}
+
 /// Avanza `dt` segundos (se limita a 50 ms para que una pestaña dormida no
-/// dispare la física). Escribe `x, y, z, brillo` en `out` (4 por partícula).
-pub fn step(particles: &mut [Particle], out: &mut [f32], dt: f32, pointer: Option<[f32; 3]>) {
+/// dispare la física). Cada puntero de `pointers` (el tuyo y los de otros
+/// visitantes) empuja las partículas cercanas. Escribe `x, y, z, brillo` en
+/// `out` (4 por partícula).
+pub fn step(particles: &mut [Particle], out: &mut [f32], dt: f32, pointers: &[[f32; 3]]) {
     let dt = if dt.is_finite() {
         dt.clamp(0.0, MAX_DT)
     } else {
@@ -144,18 +162,8 @@ pub fn step(particles: &mut [Particle], out: &mut [f32], dt: f32, pointer: Optio
         for ((a, off), vel) in acc.iter_mut().zip(p.offset).zip(p.velocity) {
             *a = -SPRING * off - DAMPING * vel;
         }
-        if let Some(q) = pointer {
-            let d = sub(pos, q);
-            let d2 = dot(d, d);
-            if d2 < POINTER_RADIUS * POINTER_RADIUS {
-                let dist = sqrt(d2).max(0.05);
-                let falloff = 1.0 - dist / POINTER_RADIUS;
-                let push = POINTER_PUSH * falloff * falloff / dist;
-                let swirl = POINTER_SWIRL * falloff / dist;
-                acc[0] += d[0] * push - d[2] * swirl;
-                acc[1] += d[1] * push + falloff * 2.0;
-                acc[2] += d[2] * push + d[0] * swirl;
-            }
+        for &q in pointers {
+            pointer_force(&mut acc, pos, q);
         }
         // Euler semi-implícito: estable con el dt limitado.
         for ((vel, off), a) in p.velocity.iter_mut().zip(p.offset.iter_mut()).zip(acc) {
@@ -199,7 +207,7 @@ mod tests {
     fn sin_puntero_sigue_su_orbita() {
         let (mut particles, _, mut out) = galaxy(1000, 3);
         for _ in 0..200 {
-            step(&mut particles, &mut out, 1.0 / 60.0, None);
+            step(&mut particles, &mut out, 1.0 / 60.0, &[]);
         }
         for (p, o) in particles.iter().zip(out.as_chunks::<4>().0) {
             let r = (o[0] * o[0] + o[2] * o[2]).sqrt();
@@ -211,17 +219,17 @@ mod tests {
     #[test]
     fn el_puntero_empuja_y_el_muelle_devuelve() {
         let (mut particles, _, mut out) = galaxy(2000, 9);
-        step(&mut particles, &mut out, 0.0, None);
+        step(&mut particles, &mut out, 0.0, &[]);
         let target = [out[0], out[1], out[2]];
-        let pointer = Some([target[0] + 0.1, target[1], target[2]]);
+        let pointer = [[target[0] + 0.1, target[1], target[2]]];
         for _ in 0..30 {
-            step(&mut particles, &mut out, 1.0 / 60.0, pointer);
+            step(&mut particles, &mut out, 1.0 / 60.0, &pointer);
         }
         let pushed = particles[0].offset;
         assert!(dot(pushed, pushed) > 0.01, "la partícula debería apartarse");
         assert!(out[3] > 0.0, "y brillar al moverse");
         for _ in 0..900 {
-            step(&mut particles, &mut out, 1.0 / 60.0, None);
+            step(&mut particles, &mut out, 1.0 / 60.0, &[]);
         }
         assert!(
             particles.iter().all(|p| dot(p.offset, p.offset) < 1e-4),
@@ -230,10 +238,32 @@ mod tests {
     }
 
     #[test]
+    fn varios_punteros_empujan_a_la_vez() {
+        let (mut particles, _, mut out) = galaxy(4000, 11);
+        step(&mut particles, &mut out, 0.0, &[]);
+        // Un puntero junto a la partícula 0 y otro junto a la más alejada de ella.
+        let pos = |i: usize| [out[i * 4], out[i * 4 + 1], out[i * 4 + 2]];
+        let a = pos(0);
+        let far = (1..4000)
+            .max_by(|&i, &j| {
+                dot(sub(pos(i), a), sub(pos(i), a)).total_cmp(&dot(sub(pos(j), a), sub(pos(j), a)))
+            })
+            .unwrap_or(1);
+        let b = pos(far);
+        assert!(dot(sub(a, b), sub(a, b)) > 4.0 * POINTER_RADIUS * POINTER_RADIUS);
+        let pointers = [[a[0] + 0.05, a[1], a[2]], [b[0] + 0.05, b[1], b[2]]];
+        for _ in 0..20 {
+            step(&mut particles, &mut out, 1.0 / 60.0, &pointers);
+        }
+        assert!(dot(particles[0].offset, particles[0].offset) > 0.001);
+        assert!(dot(particles[far].offset, particles[far].offset) > 0.001);
+    }
+
+    #[test]
     fn dt_absurdo_no_rompe_nada() {
         let (mut particles, _, mut out) = galaxy(300, 5);
         for dt in [1000.0, f32::NAN, f32::INFINITY, -1.0] {
-            step(&mut particles, &mut out, dt, Some([0.0, 0.0, 0.0]));
+            step(&mut particles, &mut out, dt, &[[0.0, 0.0, 0.0]]);
         }
         assert!(out.iter().all(|v| v.is_finite()));
     }

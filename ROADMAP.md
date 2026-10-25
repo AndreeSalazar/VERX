@@ -7,7 +7,7 @@ Cada plan es un paquete (`packages/`) o un crate (`crates/`) nuevo, con su READM
 ## 🚀 Victorias rápidas
 
 - [x] **1. Presupuesto de rendimiento en el guardián.** ✅ `bun run budget` + regla `presupuesto`. Una regla que hace fallar el commit si una página manda más de X KB de JS o si una isla crece de más. Protege la velocidad para siempre.
-- [ ] **2. Galaxia multijugador.** `app.ws()` sobre los WebSockets nativos de `Bun.serve`: los cursores de todos los visitantes mueven la misma galaxia en tiempo real.
+- [x] **2. Galaxia multijugador.** ✅ `app.ws()`, `WS` en `route.js`, ABI v2 con 16 punteros y sala con protocolo binario. `app.ws()` sobre los WebSockets nativos de `Bun.serve`: los cursores de todos los visitantes mueven la misma galaxia en tiempo real.
 - [ ] **3. Tipos TypeScript** (`.d.ts`) en todos los paquetes y `tsc --noEmit` dentro de `bun run verify`.
 - [ ] **4. `<For>` con claves** en `@verx/ui`: las listas solo tocan las filas que cambian.
 

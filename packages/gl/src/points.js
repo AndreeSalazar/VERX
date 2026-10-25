@@ -65,7 +65,14 @@ export function createPointCloud(ctx, { count, colors }) {
       gl.bindBuffer(gl.ARRAY_BUFFER, pointBuffer)
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, points, 0, count * 4)
     },
-    draw(viewProj, { size = 22, intensity = 1 } = {}) {
+    // Cambia los colores (p. ej. marcadores cuyo dueño cambia de un frame a otro).
+    setColors(colors) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, colors, 0, count * 3)
+    },
+    // `visible`: dibuja sólo los primeros N puntos (por defecto, todos).
+    draw(viewProj, { size = 22, intensity = 1, visible = count } = {}) {
+      if (visible <= 0) return
       gl.useProgram(program)
       gl.bindVertexArray(vao)
       gl.enable(gl.BLEND)
@@ -75,7 +82,7 @@ export function createPointCloud(ctx, { count, colors }) {
       gl.uniform1f(uniforms.uIntensity, intensity)
       for (const halo of [1, 0]) {
         gl.uniform1f(uniforms.uHalo, halo)
-        gl.drawArrays(gl.POINTS, 0, count)
+        gl.drawArrays(gl.POINTS, 0, Math.min(visible, count))
       }
       gl.bindVertexArray(null)
     },

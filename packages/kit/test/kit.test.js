@@ -26,7 +26,7 @@ test('scan: grupos sin segmento, carpetas privadas fuera, params y catch-all', (
   const { pages, apis } = scanRoutes(join(root, 'app'))
   const paths = pages.map((p) => p.path).sort()
   expect(paths).toEqual(['/', '/cached', '/form', '/inside', '/island', '/items/:id', '/live'])
-  expect(apis.map((a) => a.path)).toEqual(['/api/ping'])
+  expect(apis.map((a) => a.path).sort()).toEqual(['/api/eco', '/api/ping'])
   expect(pages.find((p) => p.path === '/inside').layouts).toHaveLength(1)
   expect(fillPath('/docs/*path', { path: 'a/b c' })).toBe('/docs/a/b%20c')
 })
@@ -117,4 +117,16 @@ test('presupuesto: mide el JS de cada página y detecta lo que se pasa', async (
   expect(island.bytes).toBe(report.runtime + island.islands[0].bytes)
   expect(checkBudget(report, { page: 100_000, island: 100_000 })).toEqual([])
   expect(checkBudget(report, { page: 10, island: 10 }).map((p) => p.where)).toEqual(['/island', 'Clicker'])
+})
+
+test('route.js con export WS: WebSocket en tiempo real', async () => {
+  const ws = new WebSocket(base.replace('http', 'ws') + '/api/eco')
+  const received = []
+  ws.addEventListener('message', (e) => received.push(e.data))
+  await new Promise((r) => ws.addEventListener('open', r, { once: true }))
+  ws.send('hola')
+  for (let i = 0; i < 50 && received.length < 2; i++) await Bun.sleep(10)
+  expect(received).toEqual(['conectado', 'eco:hola'])
+  expect(kit.apis).toContain('WS /api/eco')
+  ws.close()
 })

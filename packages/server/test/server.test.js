@@ -27,6 +27,14 @@ const auth = (ctx) => {
 app.get('/privado', auth, (ctx) => ctx.status(201).set('x-extra', '1').json({ ok: true }))
 app.get('/cookie', (ctx) => ctx.cookie('a', '1').cookie('b', '2').text('ok'))
 app.get('/vacio', () => undefined)
+app.ws('/eco/:sala', {
+  upgrade: (req) => (new URL(req.url).searchParams.get('k') === 'no' ? false : { nombre: 'ana' }),
+  open(ws) {
+    ws.subscribe(ws.data.params.sala)
+    ws.send(`hola ${ws.data.nombre} en ${ws.data.params.sala}`)
+  },
+  message: (ws, m) => ws.send(`eco:${m}`),
+})
 
 let base
 beforeAll(async () => {
@@ -139,4 +147,35 @@ test('compileJSON: proyección anidada idéntica a JSON.stringify', () => {
   })
   const input = [{ id: 1, pass: 'x', author: { name: 'Ana', pass: 'y' } }, { id: 2, author: null }]
   expect(serialize(input)).toBe(JSON.stringify([{ id: 1, author: { name: 'Ana' } }, { id: 2, author: null }]))
+})
+
+// Cliente WebSocket con cola: ningún mensaje se pierde aunque llegue antes de esperarlo.
+function socket(path) {
+  const ws = new WebSocket(base.replace('http', 'ws') + path)
+  const queue = []
+  const waiters = []
+  ws.addEventListener('message', (e) => (waiters.length ? waiters.shift()(e.data) : queue.push(e.data)))
+  return {
+    ws,
+    ready: new Promise((r) => ws.addEventListener('open', r, { once: true })),
+    next: () => (queue.length ? Promise.resolve(queue.shift()) : new Promise((r) => waiters.push(r))),
+  }
+}
+
+test('WebSocket: datos del upgrade, params, eco y publish a una sala', async () => {
+  const c = socket('/eco/sala1')
+  await c.ready
+  expect(await c.next()).toBe('hola ana en sala1')
+  c.ws.send('x')
+  expect(await c.next()).toBe('eco:x')
+  expect(app.publish('sala1', 'a todos')).toBeGreaterThan(0)
+  expect(await c.next()).toBe('a todos')
+  c.ws.close()
+})
+
+test('WebSocket: upgrade rechazado (403) y GET normal (426)', async () => {
+  expect((await get('/eco/s?k=no')).status).toBe(403)
+  const plain = await get('/eco/s')
+  expect(plain.status).toBe(426)
+  expect(plain.headers.get('upgrade')).toBe('websocket')
 })

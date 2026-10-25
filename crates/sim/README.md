@@ -4,6 +4,7 @@ Galaxia espiral interactiva para el héroe 3D de VERX, en Rust y compilada a Web
 
 - `no_std`, sin allocator y sin dependencias: **6 KB** de `.wasm`, cero imports.
 - 40 000 partículas en unos 1,7 ms por frame.
+- **Multijugador (ABI v2):** hasta 16 punteros a la vez (el tuyo y los de otros visitantes), que JS escribe en un buffer estático (`verx_pointers`).
 - Física: rotación diferencial (el centro gira más rápido) más un muelle amortiguado. El puntero empuja y arremolina las partículas, y estas vuelven solas a su órbita.
 
 | Archivo | Responsabilidad | `unsafe` |

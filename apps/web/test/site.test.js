@@ -3,6 +3,7 @@ import { test, expect, beforeAll, afterAll } from 'bun:test'
 import { fileURLToPath } from 'node:url'
 import { createKit } from '@verx/kit'
 import { docs } from '../lib/docs.js'
+import { encodePointer, decodeServer } from '../lib/galaxy-protocol.js'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 let kit
@@ -76,4 +77,34 @@ test('ISR y URL canónica sin barra final', async () => {
   const slash = await html('/docs/')
   expect(slash.status).toBe(308)
   expect(slash.headers.get('location')).toBe('/docs')
+})
+
+const until = async (check, ms = 3000) => {
+  const start = Date.now()
+  while (!check()) {
+    if (Date.now() - start > ms) throw new Error('tiempo agotado esperando el WebSocket')
+    await Bun.sleep(10)
+  }
+}
+
+const visitor = (url) =>
+  new Promise((resolve) => {
+    const ws = new WebSocket(url)
+    ws.binaryType = 'arraybuffer'
+    const msgs = []
+    ws.onmessage = (e) => msgs.push(decodeServer(e.data))
+    ws.onopen = () => resolve({ ws, msgs })
+  })
+
+test('galaxia multijugador: lo que mueve uno lo ve el otro', async () => {
+  const url = base.replace('http', 'ws') + '/api/galaxia'
+  const [a, b] = await Promise.all([visitor(url), visitor(url)])
+  await until(() => a.msgs[0]?.type === 'welcome' && b.msgs[0]?.type === 'welcome')
+  const idA = a.msgs[0].id
+  a.ws.send(encodePointer([1.5, 0, -2]))
+  const sees = () => b.msgs.some((m) => m?.type === 'snapshot' && m.cursors.some((c) => c.id === idA && Math.abs(c.x - 1.5) < 1e-6))
+  await until(sees)
+  expect(b.msgs.findLast((m) => m?.type === 'snapshot').online).toBeGreaterThanOrEqual(2)
+  a.ws.close()
+  b.ws.close()
 })

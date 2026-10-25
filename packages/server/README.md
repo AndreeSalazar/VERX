@@ -22,6 +22,20 @@ await app.listen(3000)
 
 **`ctx`:** `params`, `query`, `cookies`, `header()`, `body()`, `status()`, `set()`, `cookie()`, `text()`, `html()`, `json()`, `redirect()`, `stream()`, `req`, `server`.
 
+**WebSockets:** usa los nativos de `Bun.serve`, con pub/sub. No pasan por los middlewares HTTP.
+
+```js
+app.ws('/sala/:id', {
+  upgrade: (req) => ({ usuario: 'ana' }),   // datos extra en ws.data, o false → 403
+  open: (ws) => ws.subscribe(ws.data.params.id),
+  message: (ws, msg) => ws.send(`eco: ${msg}`),
+  close: (ws) => {},
+})
+app.publish('sala-1', 'a todos')            // a todos los suscritos
+```
+
+Un GET sin upgrade recibe 426. Un error dentro de un handler se registra sin tumbar el servidor. `veloz({ wsMaxPayload })` limita el tamaño de los mensajes (16 KB por defecto).
+
 **Subpath `@verx/server/assets`:** `encode`, `buildAsset`, `loadStatic`, `MIME` y `IMMUTABLE`, para construir respuestas precocinadas fuera del router (por ejemplo, ISR).
 
 Para medirlo: `bun run bench`.

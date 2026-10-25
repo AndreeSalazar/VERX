@@ -6,7 +6,7 @@
 
 import wasmUrl from '../sim.wasm' with { type: 'file' }
 
-export const ABI_VERSION = 1
+export const ABI_VERSION = 2
 export { wasmUrl }
 
 async function instantiate(source) {
@@ -32,15 +32,20 @@ export async function createGalaxy({ count = 30_000, seed = 1, source = wasmUrl 
   // La memoria es estática (no crece): las vistas se crean una vez y valen siempre.
   const points = new Float32Array(e.memory.buffer, e.verx_points(), n * 4)
   const colors = new Float32Array(e.memory.buffer, e.verx_colors(), n * 3)
+  const maxPointers = e.verx_max_pointers()
+  const pointerBuffer = new Float32Array(e.memory.buffer, e.verx_pointers(), maxPointers * 3)
 
   return {
     count: n,
     colors,
     points,
-    // Avanza dt segundos. pointer: [x, y, z] en el mundo, o null. Devuelve `points`.
-    step(dt, pointer = null) {
-      if (pointer) e.verx_step(dt, pointer[0], pointer[1], pointer[2], 1)
-      else e.verx_step(dt, 0, 0, 0, 0)
+    maxPointers,
+    // Avanza dt segundos. pointers: lista de [x, y, z] en el mundo (el tuyo y los
+    // de otros visitantes); se usan como mucho `maxPointers`. Devuelve `points`.
+    step(dt, pointers = []) {
+      const k = Math.min(pointers.length, maxPointers)
+      for (let i = 0; i < k; i++) pointerBuffer.set(pointers[i], i * 3)
+      e.verx_step(dt, k)
       return points
     },
   }

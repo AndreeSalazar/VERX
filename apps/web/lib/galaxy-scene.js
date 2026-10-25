@@ -2,13 +2,23 @@
 // la dibuja WebGL2 (@verx/gl). Cada frame:
 //   puntero → rayo → plano de la galaxia → Rust empuja partículas →
 //   vista Float32Array sobre la memoria del .wasm → GPU (sin copias en JS).
+// Multijugador: los punteros de los demás visitantes (vía /api/galaxia) también
+// empujan la galaxia y se ven como orbes de colores.
 // Nada se ejecuta al importar: el SSR puede cargar este módulo sin DOM.
 
 import { createGL, createLoop, createPointCloud, createBackdrop, m4 } from '@verx/gl'
 import { createGalaxy } from '@verx/sim'
+import { connectGalaxy } from './galaxy-net.js'
+import { MAX_CURSORS } from './galaxy-protocol.js'
 
 const FOV = Math.PI / 4.2
 const TARGET = [0, 0, 0]
+// Un color por visitante (id % 8): oro, coral, violeta, cian, menta, rosa, lima, azul.
+const ORBS = [
+  [1, 0.84, 0.42], [1, 0.48, 0.36], [0.62, 0.42, 1], [0.26, 0.72, 1],
+  [0.35, 1, 0.75], [1, 0.45, 0.8], [0.75, 1, 0.35], [0.4, 0.55, 1],
+]
+const socketUrl = () => `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/galaxia`
 
 // Menos partículas en pantallas pequeñas o equipos modestos.
 function budget() {
@@ -16,12 +26,16 @@ function budget() {
   return Math.round(base * ((navigator.hardwareConcurrency || 4) <= 4 ? 0.6 : 1))
 }
 
-export async function startGalaxy(canvas, { seed = 7 } = {}) {
+export async function startGalaxy(canvas, { seed = 7, multiplayer = true, onOnline } = {}) {
   const ctx = createGL(canvas, { maxDpr: 1.75 })
   if (!ctx) return () => {} // sin WebGL2 se queda el degradado CSS del héroe
   const galaxy = await createGalaxy({ count: budget(), seed })
   const cloud = createPointCloud(ctx, { count: galaxy.count, colors: galaxy.colors })
   const backdrop = createBackdrop(ctx)
+  const orbPoints = new Float32Array(MAX_CURSORS * 4)
+  const orbColors = new Float32Array(MAX_CURSORS * 3)
+  const orbs = createPointCloud(ctx, { count: MAX_CURSORS, colors: orbColors })
+  const net = multiplayer ? connectGalaxy(socketUrl(), { onOnline }) : null
   const view = m4.mat4()
   const proj = m4.mat4()
   const vp = m4.mat4()
@@ -64,18 +78,39 @@ export async function startGalaxy(canvas, { seed = 7 } = {}) {
 
     const recent = pointer.inside && performance.now() - pointer.at < 1500
     const hit = recent ? m4.rayToPlaneY(eye, TARGET, FOV, aspect, pointer.x - shift, pointer.y - shiftY) : null
-    cloud.update(galaxy.step(dt, hit))
+
+    // Tu puntero y los de los demás empujan la misma galaxia.
+    const pointers = hit ? [hit] : []
+    let visible = 0
+    if (net) {
+      net.send(hit)
+      net.smooth(dt)
+      for (const [id, c] of net.cursors) {
+        if (visible >= MAX_CURSORS) break
+        pointers.push([c.x, 0, c.z])
+        orbPoints.set([c.x, 0.08, c.z, 1], visible * 4)
+        orbColors.set(ORBS[id % ORBS.length], visible * 3)
+        visible++
+      }
+    }
+    cloud.update(galaxy.step(dt, pointers))
 
     const [cx, cy] = m4.project(vp, TARGET)
     backdrop.draw([cx * 0.5 + 0.5, cy * 0.5 + 0.5], aspect)
     // En vertical hay menos partículas: puntos algo mayores y más brillo.
     cloud.draw(vp, { size: (portrait ? 30 : 24) * dpr, intensity: portrait ? 1.4 : 0.95 })
+    if (visible > 0) {
+      orbs.update(orbPoints)
+      orbs.setColors(orbColors)
+      orbs.draw(vp, { size: 150 * dpr, intensity: 1.6, visible })
+    }
   }
 
   const loop = createLoop(canvas, frame, { onSlow: () => ctx.setMaxDpr(1) })
   loop.start()
 
   return () => {
+    net?.close()
     loop.destroy()
     removeEventListener('pointermove', onMove)
     document.documentElement.removeEventListener('pointerleave', onLeave)
