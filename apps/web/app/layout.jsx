@@ -1,4 +1,5 @@
 import { asset, isDesktop } from '@verx/kit'
+import { Cosmos } from '../components/BlackHole.jsx'
 
 export const metadata = {
   title: { default: 'VERX', template: '%s · VERX' },
@@ -11,12 +12,14 @@ export const head = () => (
   <>
     <link rel="icon" href={asset('/favicon.svg')} type="image/svg+xml" />
     <link rel="stylesheet" href={asset('/styles.css')} />
+    <link rel="stylesheet" href={asset('/cosmos.css')} />
   </>
 )
 
 export default function RootLayout({ children }) {
   return (
     <>
+      <Cosmos />
       <header class="top">
         <a class="brand" href="/">
           <img src={asset('/favicon.svg')} alt="" width="24" height="24" />

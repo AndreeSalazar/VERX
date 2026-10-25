@@ -1,4 +1,5 @@
 import Galaxy from '../Galaxy.jsx'
+import BlackHole from '../BlackHole.jsx'
 
 const stats = [
   ['0', 'dependencias'],
@@ -11,6 +12,7 @@ export default function Hero() {
   return (
     <section class="hero">
       <Galaxy seed={7} client:load />
+      <BlackHole class="hero-hole" />
       <div class="hero-inner">
         <p class="eyebrow">Bun · Rust · WebAssembly · WebGL2</p>
         <h1 class="hero-title">
@@ -20,7 +22,7 @@ export default function Hero() {
         </h1>
         <p class="lead">
           Un framework web que hace al arrancar lo que otros hacen en cada petición. Inspirado en Next.js, Astro y Solid, sin una sola dependencia, y con
-          una galaxia de 38 000 estrellas simulada en Rust.
+          una galaxia de 38 000 estrellas que gira alrededor de un agujero negro, simulada en Rust.
         </p>
         <div class="actions">
           <a class="button" href="/docs/empezar">

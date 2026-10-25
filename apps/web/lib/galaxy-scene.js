@@ -12,6 +12,9 @@ import { connectGalaxy } from './galaxy-net.js'
 import { MAX_CURSORS } from './galaxy-protocol.js'
 
 const FOV = Math.PI / 4.2
+// Radio del horizonte de sucesos del agujero negro central, en unidades del mundo
+// (el núcleo de la galaxia llega a 0,9 y los brazos empiezan en 0,35).
+const HORIZON = 0.4
 const TARGET = [0, 0, 0]
 // Un color por visitante (id % 8): oro, coral, violeta, cian, menta, rosa, lima, azul.
 const ORBS = [
@@ -42,6 +45,7 @@ export async function startGalaxy(canvas, { seed = 7, multiplayer = true, onOnli
   const pointer = { x: 0, y: 0, inside: false, at: 0 }
   const look = { x: 0, y: 0 }
   let time = 0
+  let hole = ''
 
   const onMove = (e) => {
     const r = canvas.getBoundingClientRect()
@@ -96,6 +100,18 @@ export async function startGalaxy(canvas, { seed = 7, multiplayer = true, onOnli
     cloud.update(galaxy.step(dt, pointers))
 
     const [cx, cy] = m4.project(vp, TARGET)
+    // El agujero negro (CSS, components/BlackHole.jsx) va en el centro proyectado
+    // de la galaxia. Sólo cambia al redimensionar: no hay escrituras de estilo por frame.
+    const size = (2 * HORIZON * canvas.clientHeight) / (2 * dist * Math.tan(FOV / 2))
+    const next = `${(cx * 50 + 50).toFixed(2)}% ${(50 - cy * 50).toFixed(2)}% ${size.toFixed(1)}px`
+    if (next !== hole) {
+      hole = next
+      const [gx, gy, gsize] = next.split(' ')
+      const style = canvas.parentElement.style
+      style.setProperty('--gx', gx)
+      style.setProperty('--gy', gy)
+      style.setProperty('--gsize', gsize)
+    }
     backdrop.draw([cx * 0.5 + 0.5, cy * 0.5 + 0.5], aspect)
     // En vertical hay menos partículas: puntos algo mayores y más brillo.
     cloud.draw(vp, { size: (portrait ? 30 : 24) * dpr, intensity: portrait ? 1.4 : 0.95 })
