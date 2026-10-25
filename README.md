@@ -69,7 +69,7 @@ Cada fila es un paquete o crate nuevo con su README y sus tests, igual que el re
 ```
 crates/          MUNDO RUST (workspace propio, toolchain 1.99.1 fijada)
   sim/           verx-sim     galaxia → .wasm · no_std · 6 KB · unsafe sólo en abi.rs
-  guard/         verx-guard   guardián de 12 reglas (std, sin crates)
+  guard/         verx-guard   guardián de 13 reglas (std, sin crates)
 packages/        MUNDO BUN (workspaces aislados: cada uno ve sólo lo que declara)
   signals/       @verx/signals   reactividad de grano fino            → nada
   server/        @verx/server    HTTP sobre Bun.serve + estáticos      → nada
@@ -85,7 +85,7 @@ apps/web/        el sitio                                              → kit, 
 
 ## Reglas que bloquean
 
-Las 12 reglas de `verx-guard` (`bun run rules`) se aplican en tres sitios:
+Las 13 reglas de `verx-guard` (`bun run rules`) se aplican en tres sitios:
 
 | Dónde | Qué hace |
 |---|---|
@@ -134,6 +134,7 @@ Windows 11, Bun 1.3.14, 12 núcleos, 100 conexiones keep-alive, 8 s por escenari
 | `bun run dev` · `build` · `start` | desarrollo, exportación estática y producción |
 | `bun run check` · `rules` | el guardián y su lista de reglas |
 | `bun run wasm` | recompila la simulación Rust y la publica |
+| `bun run budget` | JS + WASM por página contra el presupuesto (12 KB por página, 8 KB por isla) |
 | `bun test` · `bun run test:rust` | 53 tests JS · 16 tests de Rust |
 | `bun run verify` | todo junto: pásalo antes de dar algo por terminado |
 | `bun run bench` | benchmark del núcleo HTTP |

@@ -11,6 +11,7 @@
     "dev": "cd apps/web && bun run dev",
     "build": "cd apps/web && bun run build",
     "start": "cd apps/web && bun run start",
+    "budget": "cd apps/web && bun run budget",
     "test": "bun test",
     "check": "cd crates && cargo run -q --release -p verx-guard -- check",
     "check:quick": "cd crates && cargo run -q --release -p verx-guard -- check --quick",

@@ -150,7 +150,7 @@ apps/web/        este sitio                      → kit, ui, sim, gl`,
   {
     slug: 'reglas',
     title: 'Reglas y guardián',
-    summary: 'Las 12 reglas del repo y los tres sitios donde se hacen cumplir.',
+    summary: 'Las 13 reglas del repo y los tres sitios donde se hacen cumplir.',
     body: [
       { p: 'verx-guard es un binario en Rust, sin dependencias, que revisa todo el repositorio. Cada regla tiene un id estable y una indicación de cómo arreglarla.' },
       {
@@ -161,8 +161,12 @@ apps/web/        este sitio                      → kit, ui, sim, gl`,
           'unsafe-acotado: unsafe sólo en crates/sim/src/abi.rs.',
           'sin-restos · tamano · lf: nada de test.only ni dbg!, archivos de 400 líneas como máximo, saltos de línea LF.',
           'imports-js: las fronteras de los imports, analizadas con el AST de Bun.',
+          'presupuesto: ninguna página transfiere más JS + WASM del límite fijado en verx.config.js (12 KB en este sitio).',
         ],
       },
+      { h: 'Presupuesto de rendimiento' },
+      { p: 'verx budget renderiza cada página, mira qué islas usa y suma lo que descargaría el navegador: el runtime, cada isla, sus chunks compartidos y el .wasm, todo comprimido con brotli. Si una página o una isla pasa del límite, el commit no entra.' },
+      { code: `budget: {\n  page: 12 * 1024,   // por página\n  island: 8 * 1024,  // por isla (sin contar el runtime)\n}`, title: 'verx.config.js' },
       { h: 'Dónde bloquea' },
       {
         list: [
@@ -171,7 +175,7 @@ apps/web/        este sitio                      → kit, ui, sim, gl`,
           'bun run verify: lo mismo a mano, más clippy pedantic y rustfmt.',
         ],
       },
-      { code: 'bun run check   # el guardián\nbun run rules   # la lista con explicaciones', title: 'Comandos' },
+      { code: 'bun run check    # el guardián\nbun run rules    # la lista con explicaciones\nbun run budget   # tabla de JS + WASM por página', title: 'Comandos' },
     ],
   },
 ]

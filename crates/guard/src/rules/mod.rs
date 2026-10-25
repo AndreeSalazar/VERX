@@ -115,6 +115,13 @@ pub(crate) const RULES: &[Rule] = &[
         check: project::imports_js,
         quick: false,
     },
+    Rule {
+        id: "presupuesto",
+        title: "Cada página transfiere poco JS + WASM (límite en verx.config.js → budget)",
+        fix: "adelgaza la isla, cárgala con client:visible/idle o sube el límite si está justificado",
+        check: project::presupuesto,
+        quick: false,
+    },
 ];
 
 pub(crate) struct Outcome<'a> {

@@ -12,4 +12,10 @@ export default defineConfig({
     'x-frame-options': 'DENY',
   },
   bodyLimit: 64 * 1024,
+  // Presupuesto de rendimiento (bytes transferidos con brotli, JS + WASM).
+  // Lo exige el guardián (regla `presupuesto`): un commit que lo supere no entra.
+  budget: {
+    page: 12 * 1024,
+    island: 8 * 1024,
+  },
 })

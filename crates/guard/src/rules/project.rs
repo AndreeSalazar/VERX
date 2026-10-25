@@ -64,36 +64,94 @@ pub(super) fn wasm_al_dia(repo: &Repo) -> Vec<Problem> {
     }
 }
 
-/// Delegada en scripts/check-architecture.js, que usa el AST real de Bun.
-pub(super) fn imports_js(repo: &Repo) -> Vec<Problem> {
-    let output = Command::new("bun")
-        .arg("scripts/check-architecture.js")
-        .current_dir(&repo.root)
-        .output();
-    match output {
-        Err(e) => vec![Problem::new(
-            "scripts/check-architecture.js",
-            format!("no se pudo ejecutar bun: {e}"),
-        )],
+/// Ejecuta `bun <args>` en `dir` y convierte sus líneas `· dónde: qué` en
+/// problemas. Así las reglas que necesitan el mundo JS lo delegan en Bun.
+fn delegate(repo: &Repo, dir: &str, args: &[&str], origin: &str) -> Vec<Problem> {
+    match Command::new("bun")
+        .args(args)
+        .current_dir(repo.root.join(dir))
+        .output()
+    {
+        Err(e) => vec![Problem::new(origin, format!("no se pudo ejecutar bun: {e}"))],
         Ok(o) if o.status.success() => Vec::new(),
         Ok(o) => {
             let text = String::from_utf8_lossy(&o.stdout);
-            let problems: Vec<Problem> = text
-                .lines()
-                .filter_map(|l| l.trim_start().strip_prefix("· "))
-                .map(|l| match l.split_once(": ") {
-                    Some((file, msg)) => Problem::new(file.replace('\\', "/"), msg),
-                    None => Problem::new("", l),
-                })
-                .collect();
+            let problems = dot_lines(&text);
             if problems.is_empty() {
-                vec![Problem::new(
-                    "scripts/check-architecture.js",
-                    text.trim().to_string(),
-                )]
+                let stderr = String::from_utf8_lossy(&o.stderr);
+                vec![Problem::new(origin, format!("{}{}", text.trim(), stderr.trim()))]
             } else {
                 problems
             }
         }
+    }
+}
+
+fn dot_lines(text: &str) -> Vec<Problem> {
+    text.lines()
+        .filter_map(|l| l.trim_start().strip_prefix("· "))
+        .map(|l| match l.split_once(": ") {
+            Some((place, msg)) => Problem::new(place.replace('\\', "/"), msg),
+            None => Problem::new("", l),
+        })
+        .collect()
+}
+
+/// Delegada en scripts/check-architecture.js, que usa el AST real de Bun.
+pub(super) fn imports_js(repo: &Repo) -> Vec<Problem> {
+    delegate(
+        repo,
+        "",
+        &["scripts/check-architecture.js"],
+        "scripts/check-architecture.js",
+    )
+}
+
+/// Presupuesto de rendimiento: cada app con script `budget` lo ejecuta
+/// (`verx budget` mide el JS + WASM que transfiere cada página con brotli).
+pub(super) fn presupuesto(repo: &Repo) -> Vec<Problem> {
+    let mut out = Vec::new();
+    for app in repo.members("apps", "package.json") {
+        let pkg = json::parse(&repo.read(&format!("{app}/package.json")).unwrap_or_default());
+        let has_budget = pkg
+            .ok()
+            .and_then(|p| p.get("scripts").and_then(|s| s.get("budget")).cloned())
+            .is_some();
+        if !has_budget {
+            out.push(Problem::new(
+                &app,
+                "no declara el script \"budget\" (verx budget)",
+            ));
+            continue;
+        }
+        out.extend(
+            delegate(repo, &app, &["run", "budget"], &app)
+                .into_iter()
+                .map(|p| {
+                    if p.file.is_empty() || p.file == app {
+                        p
+                    } else {
+                        Problem::new(format!("{app} {}", p.file), p.message)
+                    }
+                }),
+        );
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::dot_lines;
+
+    #[test]
+    fn convierte_lineas_de_bun_en_problemas() {
+        let out = "[verx] tabla\n  ✔ /  9.0 KB\n  · /: la página manda 13.0 KB\n  · Galaxy: la isla pesa 9.1 KB\n✖ 2 fuera";
+        let problems = dot_lines(out);
+        assert_eq!(problems.len(), 2);
+        assert_eq!(
+            (problems[0].file.as_str(), problems[0].message.as_str()),
+            ("/", "la página manda 13.0 KB")
+        );
+        assert_eq!(problems[1].file, "Galaxy");
     }
 }

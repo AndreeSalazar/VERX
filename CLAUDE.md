@@ -32,6 +32,7 @@ apps/web/      el sitio                         → kit, ui, sim, gl
 9. Cada paquete y crate tiene **README.md y tests**.
 10. Los commits siguen el formato convencional `tipo(ámbito): descripción`. **Nunca `--no-verify`** ni `push --force`.
 11. Rust compila con clippy pedantic en modo `-D warnings`. Una excepción a una lint necesita `#[allow(..., reason = "...")]`.
+12. **Presupuesto de rendimiento:** ninguna página transfiere más JS + WASM (brotli) del límite de `apps/web/verx.config.js` (`budget`). Si una isla crece, adelgázala o cárgala con `client:visible`/`client:idle`. Subir el límite solo con un motivo escrito en el commit.
 
 ## Comandos
 
@@ -42,6 +43,7 @@ apps/web/      el sitio                         → kit, ui, sim, gl
 | `bun run check` | el guardián: todas las reglas |
 | `bun run verify` | check + tests JS + fmt/clippy/tests de Rust: **pásalo antes de dar algo por terminado** |
 | `bun run wasm` | recompila `crates/sim` y lo publica en `packages/sim` |
+| `bun run budget` | tabla de JS + WASM por página y por isla, contra el presupuesto |
 | `bun test` · `bun run test:rust` | tests |
 | `bun run build` · `bun run start` | exportación estática y servidor de producción |
 

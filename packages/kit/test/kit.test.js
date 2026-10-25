@@ -2,7 +2,7 @@ import { test, expect, beforeAll, afterAll } from 'bun:test'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createKit, exportStatic } from '../src/index.js'
+import { createKit, exportStatic, measureBudget, checkBudget } from '../src/index.js'
 import { scanRoutes, fillPath } from '../src/scan.js'
 import { mergeMetadata } from '../src/document.js'
 
@@ -106,4 +106,15 @@ test('exportación estática con precompresión y _headers', async () => {
   expect(readFileSync(join(dist, '_headers'), 'utf8')).toContain('/_verx/*')
   expect(r.needsServer).toEqual(expect.arrayContaining(['GET /items/:id', 'GET /live', 'POST /form', 'GET /api/ping']))
   expect(r.isr).toEqual(['/cached'])
+})
+
+test('presupuesto: mide el JS de cada página y detecta lo que se pasa', async () => {
+  const report = await measureBudget(kit)
+  const home = report.pages.find((p) => p.path === '/')
+  const island = report.pages.find((p) => p.path === '/island')
+  expect(home.bytes).toBe(0) // sin islas, cero JS
+  expect(island.islands.map((i) => i.name)).toEqual(['Clicker'])
+  expect(island.bytes).toBe(report.runtime + island.islands[0].bytes)
+  expect(checkBudget(report, { page: 100_000, island: 100_000 })).toEqual([])
+  expect(checkBudget(report, { page: 10, island: 10 }).map((p) => p.where)).toEqual(['/island', 'Clicker'])
 })

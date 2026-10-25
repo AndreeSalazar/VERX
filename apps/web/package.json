@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "verx dev",
     "build": "verx build",
-    "start": "verx start"
+    "start": "verx start",
+    "budget": "verx budget"
   },
   "dependencies": {
     "@verx/gl": "workspace:*",

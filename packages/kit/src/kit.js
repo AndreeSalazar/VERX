@@ -64,16 +64,14 @@ export async function createKit({ root = process.cwd(), dev = false } = {}) {
   const rootLayout = routes.rootLayout ? [await load(routes.rootLayout)] : []
 
   // ── Render ──────────────────────────────────────────────────────────────
-  // AsyncLocalStorage aísla cada render (pueden solaparse): así sabemos si
-  // ESTA página usó islas y sólo entonces le añadimos el runtime.
+  // AsyncLocalStorage aísla cada render (pueden solaparse): así sabemos QUÉ
+  // islas usó esta página; sólo si usó alguna se le añade el runtime, y el
+  // presupuesto de rendimiento suma exactamente lo que descargará.
   const als = new AsyncLocalStorage()
-  onIsland(() => {
-    const store = als.getStore()
-    if (store) store.islands = true
-  })
+  onIsland((meta) => als.getStore()?.islands.add(meta.src))
 
-  const render = (route, props) =>
-    als.run({ islands: false }, async () => {
+  const renderPage = (route, props) =>
+    als.run({ islands: new Set() }, async () => {
       let node = route.page.default(props)
       for (let i = route.layouts.length - 1; i >= 0; i--) node = route.layouts[i].default({ ...props, children: node })
       const body = await renderToString(node)
@@ -83,18 +81,21 @@ export async function createKit({ root = process.cwd(), dev = false } = {}) {
         metas.push(typeof m.generateMetadata === 'function' ? await m.generateMetadata(props) : m.metadata)
         if (typeof m.head === 'function') head += await renderToString(m.head(props))
       }
-      return renderDocument({
+      const islands = [...als.getStore().islands]
+      const html = renderDocument({
         body,
         head,
         meta: mergeMetadata(metas),
         lang: config.lang,
         siteUrl: config.siteUrl,
-        islands: als.getStore().islands,
+        islands: islands.length > 0,
         runtime: client.runtime,
         speculation: config.speculation,
         dev,
       })
+      return { html, islands }
     })
+  const render = async (route, props) => (await renderPage(route, props)).html
 
   const respond = async (ctx, route, params, { status = 200, actionData } = {}) => {
     const html = await render(route, { params, searchParams: ctx.query, actionData })
@@ -116,7 +117,7 @@ export async function createKit({ root = process.cwd(), dev = false } = {}) {
     }
 
     for (const { path, params } of known) {
-      kit.pages.push({ path, mode, render: () => renderAt(params) })
+      kit.pages.push({ path, mode, render: () => renderAt(params), measure: () => renderPage(route, { params, searchParams: EMPTY }) })
       if (mode === 'isr') app.get(path, (ctx) => isr.serve(ctx.req, path, m.revalidate, () => renderAt(params)))
       else app.prerender(path, () => renderAt(params))
     }

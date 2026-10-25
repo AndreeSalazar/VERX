@@ -6,6 +6,7 @@ El meta-framework, al estilo Next.js. Depende de `@verx/server` y `@verx/ui`.
 verx dev     # desarrollo con recarga en vivo (vigila también el código del framework)
 verx build   # exporta lo estático a dist/ con .br/.gz y _headers
 verx start   # producción (--workers auto reparte la carga en Linux)
+verx budget  # JS + WASM (brotli) que transfiere cada página, contra `budget` de verx.config.js
 ```
 
 | Archivo | Qué hace |
