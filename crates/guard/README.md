@@ -6,7 +6,7 @@ El guardián de las reglas del repositorio. Está escrito en Rust, solo con `std
 bun run check         # todas las reglas (incluye el análisis de imports JS con el AST de Bun)
 bun run check:quick   # las reglas rápidas (lo usan los hooks de Claude Code)
 bun run rules         # lista de reglas con su explicación
-bun run wasm          # compila crates/sim → packages/sim/sim.wasm + manifiesto
+bun run wasm          # compila cada crate puente → su .wasm + manifiesto
 ```
 
 Cada regla tiene un id estable (`solo-bun`, `cero-deps-js`, `unsafe-acotado`, …) para poder citarla en commits y en `CLAUDE.md`. Si una falla, sale con código 1 y dice cómo arreglarla.

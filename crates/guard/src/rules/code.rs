@@ -2,6 +2,7 @@
 
 use super::Problem;
 use crate::repo::{Repo, code_only, has_word};
+use crate::wasm::bridges;
 
 const JS: [&str; 5] = [".js", ".jsx", ".ts", ".tsx", ".mjs"];
 const RUST: [&str; 1] = [".rs"];
@@ -9,8 +10,11 @@ const TEXT: [&str; 13] = [
     ".js", ".jsx", ".ts", ".tsx", ".mjs", ".json", ".md", ".css", ".html", ".rs", ".toml", ".svg", ".txt",
 ];
 const MAX_LINES: usize = 400;
-const ABI_FILE: &str = "crates/sim/src/abi.rs";
-const BRIDGE: &str = "packages/sim/";
+
+/// `unsafe` sólo en `crates/<puente>/src/abi.rs`.
+fn is_abi_file(path: &str) -> bool {
+    path.starts_with("crates/") && path.ends_with("/src/abi.rs") && path.matches('/').count() == 3
+}
 
 fn lines(repo: &Repo, file: &str) -> Vec<String> {
     repo.read(file)
@@ -37,6 +41,7 @@ fn is_import(line: &str) -> bool {
 
 pub(super) fn frontera(repo: &Repo) -> Vec<Problem> {
     let mut out = Vec::new();
+    let bridge_dirs: Vec<String> = bridges(repo).into_iter().map(|b| format!("{}/", b.dir)).collect();
     for file in repo.with_ext(&JS, "") {
         for (n, line) in lines(repo, file).iter().enumerate() {
             if !is_import(line) {
@@ -48,10 +53,10 @@ pub(super) fn frontera(repo: &Repo) -> Vec<Problem> {
                     "un archivo JS importa del mundo Rust (crates/)",
                 ));
             }
-            if line.contains(".wasm") && !file.starts_with(BRIDGE) {
+            if line.contains(".wasm") && !bridge_dirs.iter().any(|d| file.starts_with(d)) {
                 out.push(Problem::new(
                     format!("{file}:{}", n + 1),
-                    "sólo @verx/sim puede cargar archivos .wasm",
+                    "sólo los paquetes puente (declarados en crates/*/Cargo.toml) pueden cargar .wasm",
                 ));
             }
         }
@@ -77,7 +82,7 @@ pub(super) fn frontera(repo: &Repo) -> Vec<Problem> {
 
 pub(super) fn unsafe_acotado(repo: &Repo) -> Vec<Problem> {
     let mut out = Vec::new();
-    for file in repo.with_ext(&RUST, "crates/").filter(|f| f.as_str() != ABI_FILE) {
+    for file in repo.with_ext(&RUST, "crates/").filter(|f| !is_abi_file(f)) {
         for (n, line) in lines(repo, file).iter().enumerate() {
             if has_word(&code_only(line), "unsafe") {
                 out.push(Problem::new(

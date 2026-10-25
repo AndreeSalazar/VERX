@@ -1,0 +1,14 @@
+{
+  "name": "@verx/search",
+  "version": "0.3.0",
+  "description": "Puente JS ↔ Rust: carga search.wasm (compilado desde crates/search) y expone el buscador",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": ["src", "search.wasm", "search.manifest.json"],
+  "scripts": {
+    "test": "bun test"
+  }
+}

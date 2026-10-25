@@ -1,0 +1,20 @@
+[package]
+name = "verx-search"
+description = "Buscador de texto completo para VERX: índice invertido en Rust, compilado a WebAssembly"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+# cdylib → el .wasm para el navegador · rlib → tests nativos con `cargo test`
+crate-type = ["cdylib", "rlib"]
+
+[lints]
+workspace = true
+
+# Puente Rust → JS: `bun run wasm` lo compila y lo publica en este paquete.
+[package.metadata.verx]
+bridge = "packages/search"
+wasm = "search.wasm"

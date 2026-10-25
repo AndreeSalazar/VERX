@@ -1,4 +1,4 @@
-//! FNV-1a de 64 bits: huella estable del código fuente de `crates/sim`.
+//! FNV-1a de 64 bits: huella estable del código fuente de un crate puente.
 
 use std::path::Path;
 
@@ -23,24 +23,25 @@ impl Fnv {
     }
 }
 
-/// Archivos que determinan el `.wasm`: si cambia cualquiera, hay que recompilar.
-pub(crate) fn sim_sources(repo: &Repo) -> Vec<&String> {
+/// Archivos que determinan el `.wasm` de un crate (`krate` = "crates/sim"):
+/// si cambia cualquiera, hay que recompilar.
+pub(crate) fn crate_sources<'a>(repo: &'a Repo, krate: &str) -> Vec<&'a String> {
+    let manifest = format!("{krate}/Cargo.toml");
+    let src = format!("{krate}/src/");
     repo.files
         .iter()
         .filter(|f| {
-            matches!(
-                f.as_str(),
-                "crates/Cargo.toml" | "crates/rust-toolchain.toml" | "crates/sim/Cargo.toml"
-            ) || (f.starts_with("crates/sim/src/")
-                && Path::new(f.as_str()).extension().is_some_and(|e| e == "rs"))
+            matches!(f.as_str(), "crates/Cargo.toml" | "crates/rust-toolchain.toml")
+                || **f == manifest
+                || (f.starts_with(&src) && Path::new(f.as_str()).extension().is_some_and(|e| e == "rs"))
         })
         .collect()
 }
 
-/// Huella del código de la simulación (independiente de CRLF/LF).
-pub(crate) fn sim_hash(repo: &Repo) -> String {
+/// Huella del código de un crate (independiente de CRLF/LF).
+pub(crate) fn crate_hash(repo: &Repo, krate: &str) -> String {
     let mut h = Fnv::new();
-    for f in sim_sources(repo) {
+    for f in crate_sources(repo, krate) {
         h.write(f.as_bytes());
         h.write(&[0]);
         h.write(repo.read(f).unwrap_or_default().replace('\r', "").as_bytes());

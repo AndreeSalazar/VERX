@@ -2,7 +2,8 @@
 import { test, expect, beforeAll, afterAll } from 'bun:test'
 import { fileURLToPath } from 'node:url'
 import { createKit } from '@verx/kit'
-import { docs } from '../lib/docs.js'
+import { createSearch } from '@verx/search'
+import { anchor, docs } from '../lib/docs.js'
 import { encodePointer, decodeServer } from '../lib/galaxy-protocol.js'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -112,4 +113,19 @@ test('galaxia multijugador: lo que mueve uno lo ve el otro', async () => {
 test('en la web normal no existe la página de escritorio ni su enlace', async () => {
   expect((await html('/escritorio')).status).toBe(404)
   expect(await (await html('/')).text()).not.toContain('desktop-link')
+})
+
+test('buscador: índice estático de Rust, por secciones y con anclas que existen', async () => {
+  const r = await fetch(base + '/api/buscar', { headers: { 'accept-encoding': 'br' } })
+  expect(r.headers.get('content-type')).toBe('application/x-verx-search')
+  expect(r.headers.get('content-encoding')).toBe('br')
+  const search = await createSearch()
+  const sections = docs.reduce((n, d) => n + 1 + d.body.filter((b) => b.h).length, 0)
+  expect(search.load(await r.arrayBuffer())).toBe(sections)
+  expect(search.query('galaxia webgl')[0].href).toBe('/docs/rust-3d')
+  const [hit] = search.query('estructura app')
+  expect(hit).toMatchObject({ href: `/docs/empezar#${anchor('Estructura de una app')}`, parent: 'Empezar' })
+  expect(await (await html('/docs/empezar')).text()).toContain(`id="${anchor('Estructura de una app')}"`)
+  // Mientras escribes: prefijos y sin acentos.
+  expect(search.query('exportaci').map((h) => h.href)).toContain('/docs/despliegue')
 })

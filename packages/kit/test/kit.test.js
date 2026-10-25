@@ -26,7 +26,7 @@ test('scan: grupos sin segmento, carpetas privadas fuera, params y catch-all', (
   const { pages, apis } = scanRoutes(join(root, 'app'))
   const paths = pages.map((p) => p.path).sort()
   expect(paths).toEqual(['/', '/cached', '/form', '/inside', '/island', '/items/:id', '/live'])
-  expect(apis.map((a) => a.path).sort()).toEqual(['/api/eco', '/api/ping'])
+  expect(apis.map((a) => a.path).sort()).toEqual(['/api/eco', '/api/indice', '/api/ping'])
   expect(pages.find((p) => p.path === '/inside').layouts).toHaveLength(1)
   expect(fillPath('/docs/*path', { path: 'a/b c' })).toBe('/docs/a/b%20c')
 })
@@ -97,6 +97,15 @@ test('API, grupos de rutas y 404 dentro del layout', async () => {
   expect(await nf.text()).toContain('<div id="root">')
 })
 
+test('GET force-static: una sola ejecución, servido desde memoria', async () => {
+  const a = await get('/api/indice')
+  expect(a.headers.get('content-type')).toBe('application/x-verx-test')
+  expect([...new Uint8Array(await a.arrayBuffer())]).toEqual([86, 88, 83, 49, 1])
+  const b = await get('/api/indice')
+  expect([...new Uint8Array(await b.arrayBuffer())]).toEqual([86, 88, 83, 49, 1])
+  expect(kit.apis).not.toContain('GET /api/indice')
+})
+
 test('exportación estática con precompresión y _headers', async () => {
   const r = await exportStatic(kit, 'dist')
   const dist = join(root, 'dist')
@@ -105,6 +114,9 @@ test('exportación estática con precompresión y _headers', async () => {
   expect(existsSync(join(dist, '404.html'))).toBe(true)
   expect(readFileSync(join(dist, '_headers'), 'utf8')).toContain('/_verx/*')
   expect(r.needsServer).toEqual(expect.arrayContaining(['GET /items/:id', 'GET /live', 'POST /form', 'GET /api/ping']))
+  expect([...readFileSync(join(dist, 'api', 'indice'))]).toEqual([86, 88, 83, 49, 1])
+  expect(readFileSync(join(dist, '_headers'), 'utf8')).toContain('/api/indice\n  Content-Type: application/x-verx-test')
+  expect(r.needsServer).not.toContain('GET /api/indice')
   expect(r.isr).toEqual(['/cached'])
 })
 

@@ -1,6 +1,6 @@
 # @verx/sim
 
-**El único puente entre JS y Rust.** Carga `sim.wasm`, compilado desde [`crates/sim`](../../crates/sim/README.md), y expone la galaxia del héroe 3D.
+**Puente JS ↔ Rust de la galaxia.** Carga `sim.wasm`, compilado desde [`crates/sim`](../../crates/sim/README.md), y expone la galaxia del héroe 3D.
 
 ```js
 import { createGalaxy } from '@verx/sim'

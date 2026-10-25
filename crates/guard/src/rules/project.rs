@@ -3,9 +3,10 @@
 use std::process::Command;
 
 use super::Problem;
-use crate::hash::sim_hash;
+use crate::hash::crate_hash;
 use crate::json::{self, Json};
 use crate::repo::Repo;
+use crate::wasm::bridges;
 
 pub(super) fn completo(repo: &Repo) -> Vec<Problem> {
     let mut out = Vec::new();
@@ -39,29 +40,32 @@ pub(super) fn completo(repo: &Repo) -> Vec<Problem> {
     out
 }
 
+/// Cada puente declarado tiene su `.wasm` compilado desde el código actual.
 pub(super) fn wasm_al_dia(repo: &Repo) -> Vec<Problem> {
-    const MANIFEST: &str = "packages/sim/sim.manifest.json";
-    if !repo.exists("packages/sim/sim.wasm") {
-        return vec![Problem::new("packages/sim/sim.wasm", "no existe")];
+    let mut out = Vec::new();
+    for b in bridges(repo) {
+        if !repo.exists(&b.wasm_path()) {
+            out.push(Problem::new(b.wasm_path(), "no existe"));
+            continue;
+        }
+        let manifest = b.manifest_path();
+        let Some(text) = repo.read(&manifest) else {
+            out.push(Problem::new(manifest, "no existe"));
+            continue;
+        };
+        let recorded = json::parse(&text)
+            .ok()
+            .and_then(|m| m.get("sourceHash").and_then(Json::as_str).map(String::from));
+        let current = crate_hash(repo, &b.krate);
+        if recorded.as_deref() != Some(current.as_str()) {
+            let was = recorded.unwrap_or_else(|| "?".into());
+            out.push(Problem::new(
+                manifest,
+                format!("el .wasm se compiló desde otro código (huella {was} ≠ {current})"),
+            ));
+        }
     }
-    let Some(text) = repo.read(MANIFEST) else {
-        return vec![Problem::new(MANIFEST, "no existe")];
-    };
-    let recorded = json::parse(&text)
-        .ok()
-        .and_then(|m| m.get("sourceHash").and_then(Json::as_str).map(String::from));
-    let current = sim_hash(repo);
-    if recorded.as_deref() == Some(current.as_str()) {
-        Vec::new()
-    } else {
-        vec![Problem::new(
-            MANIFEST,
-            format!(
-                "el .wasm se compiló desde otro código (huella {} ≠ {current})",
-                recorded.unwrap_or_else(|| "?".into())
-            ),
-        )]
-    }
+    out
 }
 
 /// Ejecuta `bun <args>` en `dir` y convierte sus líneas `· dónde: qué` en

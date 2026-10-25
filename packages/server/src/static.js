@@ -40,7 +40,8 @@ export const MIME = {
   '.webm': 'video/webm',
 }
 
-const COMPRESSIBLE = /^(text\/|application\/(json|javascript|xml|wasm|manifest)|image\/svg)/
+// application/x-verx-*: formatos propios (p. ej. el índice de @verx/search).
+const COMPRESSIBLE = /^(text\/|application\/(json|javascript|xml|wasm|manifest|x-verx-)|image\/svg)/
 const MIN_COMPRESS = 1024
 export const IMMUTABLE = 'public, max-age=31536000, immutable'
 

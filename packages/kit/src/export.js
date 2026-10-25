@@ -35,6 +35,8 @@ export async function exportStatic(kit, outDir = 'dist') {
     write(page.path === '/' ? '/index.html' : page.path + '/index.html', Buffer.from(await page.render()), HTML)
   }
   write('/404.html', Buffer.from(await kit.renderNotFound()), HTML)
+  // GET estáticos (force-static): su respuesta se guarda tal cual en la URL.
+  for (const s of kit.statics) write(s.path, Buffer.from(s.bytes), s.type)
   for (const f of kit.client.files) write(f.path, f.bytes, f.type || MIME['.js'])
 
   if (kit.publicDir) {
@@ -61,6 +63,7 @@ export async function exportStatic(kit, outDir = 'dist') {
   }
 
   let headers = immutable.map((p) => `${p}\n  Cache-Control: public, max-age=31536000, immutable`).join('\n')
+  for (const s of kit.statics) headers += `\n${s.path}\n  Content-Type: ${s.type}`
   if (kit.app.defaultHeaders.length) headers += '\n/*\n' + kit.app.defaultHeaders.map(([k, v]) => `  ${k}: ${v}`).join('\n')
   writeFileSync(join(out, '_headers'), headers + '\n')
 

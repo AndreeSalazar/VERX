@@ -14,7 +14,7 @@ Cada plan es un paquete (`packages/`) o un crate (`crates/`) nuevo, con su READM
 ## 🦀 Más Rust
 
 - [ ] **5. `verx-md`**: de Markdown a HTML en Rust, para que blog y docs sean archivos `.md`.
-- [ ] **6. `verx-search`**: índice de búsqueda generado en `verx build` y consultado con WASM en el navegador, en microsegundos.
+- [x] **6. `verx-search`**: ✅ crate `no_std` con índice invertido `VXS1` y BM25, puente `@verx/search` y rutas GET estáticas en el kit (`dynamic = 'force-static'`). Índice de búsqueda generado en `verx build` y consultado con WASM en el navegador, en microsegundos. Busca por prefijos, ignora los acentos y llega hasta cada sección.
 - [ ] **7. `verx-img`**: redimensionado y placeholders borrosos. Primero PNG; los codificadores WebP y AVIF desde cero son un proyecto grande.
 
 ## 🧠 Acercarse a los grandes

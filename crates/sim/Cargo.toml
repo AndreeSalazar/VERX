@@ -13,3 +13,8 @@ crate-type = ["cdylib", "rlib"]
 
 [lints]
 workspace = true
+
+# Puente Rust → JS: `bun run wasm` lo compila y lo publica en este paquete.
+[package.metadata.verx]
+bridge = "packages/sim"
+wasm = "sim.wasm"

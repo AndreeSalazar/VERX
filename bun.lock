@@ -10,6 +10,7 @@
       "dependencies": {
         "@verx/gl": "workspace:*",
         "@verx/kit": "workspace:*",
+        "@verx/search": "workspace:*",
         "@verx/sim": "workspace:*",
         "@verx/ui": "workspace:*",
       },
@@ -28,6 +29,10 @@
         "@verx/server": "workspace:*",
         "@verx/ui": "workspace:*",
       },
+    },
+    "packages/search": {
+      "name": "@verx/search",
+      "version": "0.3.0",
     },
     "packages/server": {
       "name": "@verx/server",
@@ -53,6 +58,8 @@
     "@verx/gl": ["@verx/gl@workspace:packages/gl"],
 
     "@verx/kit": ["@verx/kit@workspace:packages/kit"],
+
+    "@verx/search": ["@verx/search@workspace:packages/search"],
 
     "@verx/server": ["@verx/server@workspace:packages/server"],
 

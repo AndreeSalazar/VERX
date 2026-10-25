@@ -5,7 +5,7 @@
 //! ```text
 //! verx-guard check [--quick]   revisa todas las reglas (sale con 1 si alguna falla)
 //! verx-guard rules             lista las reglas con su explicación
-//! verx-guard wasm              compila crates/sim y lo publica en packages/sim
+//! verx-guard wasm              compila cada crate puente y lo publica en su paquete
 //! ```
 
 mod hash;
@@ -45,8 +45,10 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         "wasm" => match wasm::build(&repo) {
-            Ok(summary) => {
-                println!("✔ {summary}");
+            Ok(summaries) => {
+                for s in summaries {
+                    println!("✔ {s}");
+                }
                 ExitCode::SUCCESS
             }
             Err(e) => {

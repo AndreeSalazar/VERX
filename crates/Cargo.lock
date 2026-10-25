@@ -7,5 +7,9 @@ name = "verx-guard"
 version = "0.3.0"
 
 [[package]]
+name = "verx-search"
+version = "0.3.0"
+
+[[package]]
 name = "verx-sim"
 version = "0.3.0"

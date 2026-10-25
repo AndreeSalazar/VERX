@@ -1,6 +1,6 @@
 import { notFound } from '@verx/kit'
 import Code from '../../../components/Code.jsx'
-import { docs, findDoc } from '../../../lib/docs.js'
+import { anchor, docs, findDoc } from '../../../lib/docs.js'
 
 // Todas las páginas de la documentación se prerenderizan al arrancar…
 export const generateStaticParams = () => docs.map((d) => ({ slug: d.slug }))
@@ -13,7 +13,7 @@ export function generateMetadata({ params }) {
 }
 
 function Block({ block }) {
-  if (block.h) return <h2>{block.h}</h2>
+  if (block.h) return <h2 id={anchor(block.h)}>{block.h}</h2>
   if (block.code) return <Code title={block.title}>{block.code}</Code>
   if (block.list) return <ul class="bullets">{block.list.map((item) => <li>{item}</li>)}</ul>
   return <p>{block.p}</p>

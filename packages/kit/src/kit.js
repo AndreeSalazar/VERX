@@ -51,7 +51,7 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
   if (!existsSync(appDir)) throw new Error(`No existe ${appDir}: crea al menos app/page.jsx`)
 
   const app = verx({ headers: config.headers, bodyLimit: config.bodyLimit })
-  const kit = { root, dev, desktop, config, app, pages: [], dynamic: [], apis: [], client: null, routes: null }
+  const kit = { root, dev, desktop, config, app, pages: [], statics: [], dynamic: [], apis: [], client: null, routes: null }
   if (desktop) app.use(desktopGuard(desktop.token))
   setCurrent(kit)
 
@@ -156,6 +156,17 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
       app.ws(a.path, ws)
       kit.apis.push(`WS ${a.path}`)
     }
+    // GET estático (export const dynamic = 'force-static'): se ejecuta UNA vez,
+    // se sirve precomprimido desde memoria y `verx build` lo exporta como archivo.
+    if (m.dynamic === 'force-static') {
+      if (typeof m.GET !== 'function' || methods.length > 1 || a.path.includes(':')) {
+        throw new Error(`${a.file}: una ruta force-static exporta sólo GET (una función sin parámetros de URL)`)
+      }
+      const out = await staticRoute(m.GET)
+      app.prerender(a.path, () => out.bytes, { type: out.type })
+      kit.statics.push({ path: a.path, ...out })
+      continue
+    }
     for (const method of methods) {
       const h = m[method]
       if (typeof h === 'function') app.route(method, a.path, h)
@@ -226,4 +237,16 @@ function htmlResponse(req, html, status, cache, extra) {
     }
   }
   return new Response(body, { status, headers })
+}
+
+// Ejecuta un GET estático (sin petición, como en la exportación) y lo convierte
+// en bytes + tipo. Acepta Response, bytes, string u objeto (JSON).
+async function staticRoute(GET) {
+  const out = await GET()
+  if (out instanceof Response) {
+    return { bytes: new Uint8Array(await out.arrayBuffer()), type: out.headers.get('content-type') ?? 'application/octet-stream' }
+  }
+  if (out instanceof Uint8Array) return { bytes: out, type: 'application/octet-stream' }
+  if (typeof out === 'string') return { bytes: Buffer.from(out), type: 'text/plain; charset=utf-8' }
+  return { bytes: Buffer.from(JSON.stringify(out)), type: 'application/json; charset=utf-8' }
 }

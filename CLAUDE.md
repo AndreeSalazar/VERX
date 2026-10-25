@@ -8,15 +8,17 @@ Comentarios, mensajes y documentación en **español**.
 ```
 crates/        MUNDO RUST (workspace propio, toolchain fijada en rust-toolchain.toml)
   sim/         verx-sim    galaxia 3D → .wasm   (unsafe SOLO en src/abi.rs)
+  search/      verx-search buscador BM25 → .wasm (unsafe SOLO en src/abi.rs)
   guard/       verx-guard  guardián de reglas (std, sin crates)
 packages/      MUNDO JS (workspaces de Bun en modo aislado)
   signals/     reactividad                      → nada
   server/      HTTP sobre Bun.serve             → nada
   ui/          JSX propio servidor/navegador    → signals
-  sim/         ÚNICO PUENTE con Rust (sim.wasm) → nada
+  sim/         puente con verx-sim (sim.wasm)   → nada
+  search/      puente con verx-search           → nada
   gl/          motor WebGL2                     → nada
   kit/         meta-framework estilo Next.js    → server, ui
-apps/web/      el sitio                         → kit, ui, sim, gl
+apps/web/      el sitio                         → kit, ui, sim, search, gl
 ```
 
 ## Reglas (las hace cumplir `verx-guard`; `bun run rules` las lista)
@@ -24,8 +26,8 @@ apps/web/      el sitio                         → kit, ui, sim, gl
 1. **Solo Bun.** Nunca npm, npx, yarn ni pnpm. Usa `bun install`, `bun run`, `bunx`.
 2. **Cero dependencias de terceros**, ni en JS ni en Rust. Si hace falta algo, se escribe como paquete en `packages/` o como crate en `crates/`.
 3. **Fronteras:** un paquete solo importa lo que declara y solo la API de sus `exports`; nada de `../../otro/src`.
-4. **Rust y JS no se tocan.** El único puente es `@verx/sim`. Si cambias `crates/sim`, ejecuta `bun run wasm`. La ABI está versionada: si cambia una firma, sube `ABI_VERSION` en los dos lados.
-5. **`unsafe` solo en `crates/sim/src/abi.rs`**, y siempre con un comentario `// SAFETY:`.
+4. **Rust y JS no se tocan.** Los únicos puentes son los paquetes que un crate declara en su `Cargo.toml` (`[package.metadata.verx]`): hoy, `@verx/sim` y `@verx/search`. Si cambias un crate puente, ejecuta `bun run wasm`. La ABI está versionada: si cambia una firma o un formato, sube `ABI_VERSION` en los dos lados.
+5. **`unsafe` solo en `crates/*/src/abi.rs`**, y siempre con un comentario `// SAFETY:`.
 6. **Los componentes `'use client'` no tocan código de servidor** (`@verx/kit`, `@verx/server`, `node:*`, `bun`), ni siquiera de forma indirecta.
 7. **Ningún archivo de código pasa de 400 líneas**: divide por responsabilidades.
 8. **Sin restos de depuración:** ni `test.only`, `debugger`, `dbg!`, `todo!` ni `unimplemented!`.
@@ -42,7 +44,7 @@ apps/web/      el sitio                         → kit, ui, sim, gl
 | `bun run dev` | sitio en http://localhost:3000 con recarga en vivo |
 | `bun run check` | el guardián: todas las reglas |
 | `bun run verify` | check + tests JS + fmt/clippy/tests de Rust: **pásalo antes de dar algo por terminado** |
-| `bun run wasm` | recompila `crates/sim` y lo publica en `packages/sim` |
+| `bun run wasm` | recompila cada crate puente y publica su `.wasm` en su paquete |
 | `bun run budget` | tabla de JS + WASM por página y por isla, contra el presupuesto |
 | `bun run desktop` | la app como escritorio: ventana propia, servidor solo en 127.0.0.1 y candado por token |
 | `bun test` · `bun run test:rust` | tests |

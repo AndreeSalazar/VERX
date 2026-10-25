@@ -61,14 +61,14 @@ pub(crate) const RULES: &[Rule] = &[
     },
     Rule {
         id: "frontera-rust-js",
-        title: "JS y Rust no se tocan: el único puente es @verx/sim (sim.wasm)",
-        fix: "importa @verx/sim en vez de rutas de crates/ o archivos .wasm",
+        title: "JS y Rust no se tocan: sólo los paquetes puente cargan .wasm",
+        fix: "importa el paquete puente (@verx/sim, @verx/search…) en vez de crates/ o un .wasm",
         check: code::frontera,
         quick: true,
     },
     Rule {
         id: "unsafe-acotado",
-        title: "`unsafe` sólo en crates/sim/src/abi.rs",
+        title: "`unsafe` sólo en crates/*/src/abi.rs",
         fix: "mueve la operación insegura a abi.rs y expón una API segura",
         check: code::unsafe_acotado,
         quick: true,
@@ -103,7 +103,7 @@ pub(crate) const RULES: &[Rule] = &[
     },
     Rule {
         id: "wasm-al-dia",
-        title: "packages/sim/sim.wasm corresponde al código de crates/sim",
+        title: "cada .wasm puente corresponde al código actual de su crate",
         fix: "ejecuta `bun run wasm`",
         check: project::wasm_al_dia,
         quick: true,

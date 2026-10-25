@@ -692,6 +692,19 @@ h3 {
   background: var(--card);
   color: inherit;
 }
+.search-engine {
+  min-height: 1.2em;
+  margin: -4px 0 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.list li a small {
+  color: var(--muted);
+  font-weight: 500;
+}
+.prose h2[id] {
+  scroll-margin-top: 84px;
+}
 
 /* ── Documentación y artículos ───────────────────────────────────── */
 .docs {

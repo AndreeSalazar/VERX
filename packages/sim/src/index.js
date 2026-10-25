@@ -1,4 +1,5 @@
-// El ÚNICO puente entre el mundo JS y el mundo Rust (crates/sim).
+// Puente entre el mundo JS y el crate de la galaxia (crates/sim). Sólo los
+// paquetes puente (declarados en crates/*/Cargo.toml) pueden cargar un .wasm.
 // El contrato es la ABI documentada en crates/sim/src/abi.rs; si cambia, sube
 // ABI_VERSION en los dos lados y `createGalaxy` lo detecta al cargar.
 //

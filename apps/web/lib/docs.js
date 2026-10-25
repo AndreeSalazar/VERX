@@ -94,6 +94,13 @@ export const docs = [
       { h: 'Tiempo real' },
       { code: `export const WS = {\n  open: (ws) => ws.subscribe('chat'),\n  message: (ws, msg) => ws.publish('chat', msg),\n  close: (ws) => {},\n}`, title: 'app/api/chat/route.js → ws://…/api/chat' },
       { p: 'Un route.js que exporta WS es un WebSocket sobre el soporte nativo de Bun.serve, con pub/sub incluido. Así funciona la galaxia multijugador del inicio.' },
+      { h: 'Rutas estáticas' },
+      { code: `export const dynamic = 'force-static'
+
+export async function GET() {
+  return new Response(await crearIndice(), { headers: { 'content-type': 'application/x-verx-search' } })
+}`, title: 'app/api/buscar/route.js' },
+      { p: 'Con dynamic = force-static, el GET se ejecuta una sola vez al arrancar, se sirve precomprimido desde memoria y verx build lo exporta como un archivo más. Así viaja el índice del buscador: también funciona en un hosting estático.' },
     ],
   },
   {
@@ -115,22 +122,27 @@ export const docs = [
     title: 'Arquitectura aislada',
     summary: 'Dos mundos (Rust y Bun) y paquetes pequeños con fronteras que se comprueban solas.',
     body: [
-      { p: 'Para no acabar con un monolito, cada pieza es un paquete con una única responsabilidad y una API pública declarada en exports. Rust y JavaScript viven en carpetas separadas y sólo se comunican a través de un archivo .wasm.' },
+      { p: 'Para no acabar con un monolito, cada pieza es un paquete con una única responsabilidad y una API pública declarada en exports. Rust y JavaScript viven en carpetas separadas y sólo se comunican a través de archivos .wasm, cada uno con su paquete puente.' },
       {
         code: `crates/          MUNDO RUST (workspace propio, toolchain fijada)
   sim/           verx-sim    galaxia → .wasm (no_std, 6 KB)
+  search/        verx-search buscador BM25 → .wasm (no_std, 12 KB)
   guard/         verx-guard  guardián de las reglas
 packages/        MUNDO BUN (workspaces en modo aislado)
   signals/       reactividad                     → nada
   server/        HTTP sobre Bun.serve            → nada
   ui/            JSX servidor + navegador        → signals
-  sim/           ÚNICO PUENTE con Rust           → nada
+  sim/           puente con verx-sim             → nada
+  search/        puente con verx-search          → nada
   gl/            motor WebGL2                    → nada
   kit/           meta-framework y CLI            → server, ui
-apps/web/        este sitio                      → kit, ui, sim, gl`,
+apps/web/        este sitio                      → kit, ui, sim, search, gl`,
         title: 'Mapa del repositorio',
       },
       { p: 'Bun instala el workspace en modo aislado: un paquete sólo puede importar lo que declara en su package.json. El guardián comprueba el resto: nada de imports profundos a src/, nada de dependencias no declaradas, nada de ciclos, y ningún componente cliente puede llegar a código de servidor.' },
+      { h: 'Buscador en Rust' },
+      { p: 'El buscador de esta documentación es verx-search: un índice invertido con BM25, el estándar de los buscadores de texto, escrito en Rust sin std ni dependencias. El mismo .wasm construye el índice en el servidor y lo consulta en tu navegador, así que el formato vive en un solo sitio.' },
+      { list: ['Entiende el español: sin acentos ni mayúsculas, sin palabras vacías y con plurales sencillos.', 'Busca mientras escribes: cada palabra es un prefijo y deben aparecer todas.', 'Llega hasta cada sección: los resultados enlazan al apartado exacto.', 'El motor y el índice sólo se descargan al tocar el buscador.'] },
     ],
   },
   {
@@ -191,3 +203,12 @@ apps/web/        este sitio                      → kit, ui, sim, gl`,
 ]
 
 export const findDoc = (slug) => docs.find((d) => d.slug === slug)
+
+// Ancla de un título de sección: «Estructura de una app» → «estructura-de-una-app».
+export const anchor = (text) =>
+  text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')

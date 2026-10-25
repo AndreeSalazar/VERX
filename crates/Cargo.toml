@@ -1,8 +1,9 @@
 # Mundo Rust de VERX: un workspace autónomo. Nada aquí conoce packages/ ni apps/;
-# la única salida hacia JS es el .wasm de `sim`, que copia `verx-guard wasm`.
+# las únicas salidas hacia JS son los .wasm de los crates puente ([package.metadata.verx]),
+# que compila y copia `verx-guard wasm`.
 [workspace]
 resolver = "3"
-members = ["sim", "guard"]
+members = ["sim", "search", "guard"]
 
 [workspace.package]
 version = "0.3.0"
@@ -13,7 +14,7 @@ publish = false
 
 # Reglas del compilador: lo que a las 3 AM no se discute.
 [workspace.lints.rust]
-unsafe_code = "deny"           # sólo se permite en crates/sim/src/abi.rs (lo vigila el guardián)
+unsafe_code = "deny"           # sólo se permite en crates/*/src/abi.rs (lo vigila el guardián)
 missing_docs = "deny"
 unused_must_use = "deny"
 unreachable_pub = "deny"
