@@ -55,7 +55,7 @@ Una comparación cualitativa, sin favoritismos: aparece lo que VERX ya hace mejo
 | **Adaptadores de despliegue** (edge, serverless) | Next.js, Astro, SvelteKit | Adaptadores para Cloudflare y Vercel sobre `fetch` estándar | Bun |
 | **i18n en las rutas** | Next.js, Nuxt | Segmento `[lang]` con negociación de idioma en el servidor | Bun |
 | ~~**WebSockets y tiempo real**~~ ✅ | SvelteKit (vía adaptador), Fresh | **Hecho:** `app.ws()` y `export const WS` en `route.js`; la galaxia ya es multijugador | Bun |
-| **Listas con clave** (`<For>`) | Solid | Reconciliación con clave en `@verx/ui` | Bun |
+| ~~**Listas con clave** (`<For>`)~~ ✅ | Solid | **Hecho:** `@verx/ui/for` reconcilia por clave y mueve lo mínimo (subsecuencia creciente más larga) | Bun |
 | **Markdown / MDX** | Astro, Next.js | Parser de Markdown en Rust → WASM para docs y blog | 🦀 Rust |
 | ~~**Búsqueda**~~ ✅ | Docusaurus, Astro (plugins) | **Hecho:** `verx-search`, índice invertido con BM25 en Rust; el mismo `.wasm` indexa en el servidor y busca en el navegador | 🦀 Rust |
 | **Ecosistema** | todos | Plantillas, ejemplos y documentación pública | — |

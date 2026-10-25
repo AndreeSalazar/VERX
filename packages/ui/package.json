@@ -17,6 +17,10 @@
       "browser": "./src/browser/jsx-runtime.js",
       "default": "./src/server/jsx-runtime.js"
     },
+    "./for": {
+      "browser": "./src/browser/for.js",
+      "default": "./src/server/for.js"
+    },
     "./server": "./src/server/render.js"
   },
   "dependencies": {

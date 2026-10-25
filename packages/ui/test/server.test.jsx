@@ -1,5 +1,6 @@
 import { test, expect, afterEach } from 'bun:test'
 import { signal, raw } from '@verx/ui'
+import { For } from '@verx/ui/for'
 import { renderToString, registerIsland, clearIslands, onIsland } from '@verx/ui/server'
 
 afterEach(() => {
@@ -70,4 +71,18 @@ test('islas: pasar funciones como props es un error claro', async () => {
   const Btn = () => <button />
   registerIsland(Btn, { src: '/b.js', exportName: 'default' })
   expect(() => <Btn onPress={() => {}} />).toThrow(/no se pueden pasar funciones/)
+})
+
+test('<For> en el servidor: un map con índice, signal o array, y fallback', async () => {
+  const items = signal([{ id: 1, name: 'Ana' }, { id: 2, name: 'Luis' }])
+  const list = (each) => (
+    <ul>
+      <For each={each} key={(p) => p.id} fallback={<li>nadie</li>}>
+        {(p, i) => <li>{i() + 1}. {p.name}</li>}
+      </For>
+    </ul>
+  )
+  expect(await renderToString(list(items))).toBe('<ul><li>1. Ana</li><li>2. Luis</li></ul>')
+  expect(await renderToString(list(['x'].map((name, id) => ({ id, name }))))).toBe('<ul><li>1. x</li></ul>')
+  expect(await renderToString(list([]))).toBe('<ul><li>nadie</li></ul>')
 })

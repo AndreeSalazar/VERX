@@ -81,6 +81,15 @@ export const docs = [
       { p: 'La reactividad es de grano fino, como en Solid: el componente se ejecuta una vez y cada signal actualiza sólo el nodo que lo lee. Para que una expresión sea reactiva, envuélvela en una función: {() => count() * 2}.' },
       { code: `<Counter start={5} client:visible />  // por defecto: al entrar en pantalla\n<Counter start={5} client:idle />     // cuando el navegador esté libre\n<Counter start={5} client:load />     // en cuanto cargue\n<Counter start={5} client:none />     // sólo HTML, cero JS`, title: 'Cuándo se carga (como Astro)' },
       { p: 'Las props viajan como JSON, así que no se pueden pasar funciones. Para código que sólo debe correr en el navegador (timers, window…) usa onMount.' },
+      { h: 'Listas con <For>' },
+      { code: `import { For } from '@verx/ui/for'
+
+<ul>
+  <For each={todos} key={(t) => t.id} fallback={<li>Nada pendiente</li>}>
+    {(t, i) => <li>{() => i() + 1}. {t.text}</li>}
+  </For>
+</ul>`, title: 'Lista con claves (como Solid)' },
+      { p: 'Cuando la lista cambia, For sólo crea las filas nuevas, quita las que desaparecen y mueve las mínimas: calcula la subsecuencia creciente más larga, así que pasar la última fila al principio es un único movimiento. Cada fila tiene su propio ámbito, e i es un signal que sigue a la fila. Va en su propio import (@verx/ui/for) para que sólo lo paguen las islas que lo usan.' },
     ],
   },
   {

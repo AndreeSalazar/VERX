@@ -84,24 +84,27 @@ export function insert(parent, v) {
   }
 }
 
-// Zona reactiva delimitada por un nodo de texto vacío que hace de ancla.
+// Zona reactiva delimitada por dos nodos de texto vacíos. Se borra lo que haya
+// entre ellos (no una foto de los nodos), así que las zonas anidadas y los
+// <For> que crecen después también se limpian.
 function reactive(parent, fn) {
+  const start = document.createTextNode('')
   const end = document.createTextNode('')
+  parent.appendChild(start)
   parent.appendChild(end)
-  let nodes = []
   effect(() => {
     const v = fn()
     const p = end.parentNode
     if (p === null) return
     // Camino rápido: texto → texto, sólo se cambia .data (lo típico en un contador).
-    if ((typeof v === 'string' || typeof v === 'number') && nodes.length === 1 && nodes[0].nodeType === 3) {
-      nodes[0].data = String(v)
+    const only = start.nextSibling
+    if ((typeof v === 'string' || typeof v === 'number') && only !== end && only.nextSibling === end && only.nodeType === 3) {
+      only.data = String(v)
       return
     }
-    for (let i = 0; i < nodes.length; i++) nodes[i].remove()
+    while (start.nextSibling !== end) p.removeChild(start.nextSibling)
     const frag = document.createDocumentFragment()
     insert(frag, v)
-    nodes = Array.from(frag.childNodes)
     p.insertBefore(frag, end)
   })
 }
