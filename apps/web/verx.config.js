@@ -1,4 +1,4 @@
-import { defineConfig } from '@veloz/kit'
+import { defineConfig } from '@verx/kit'
 
 export default defineConfig({
   lang: 'es',

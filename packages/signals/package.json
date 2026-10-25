@@ -1,5 +1,5 @@
 {
-  "name": "@veloz/signals",
+  "name": "@verx/signals",
   "version": "0.2.0",
   "description": "Reactividad de grano fino: signal, computed, effect, batch",
   "type": "module",

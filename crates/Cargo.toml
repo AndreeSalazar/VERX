@@ -1,0 +1,42 @@
+# Mundo Rust de VERX: un workspace autónomo. Nada aquí conoce packages/ ni apps/;
+# la única salida hacia JS es el .wasm de `sim`, que copia `verx-guard wasm`.
+[workspace]
+resolver = "3"
+members = ["sim", "guard"]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2024"
+rust-version = "1.99"
+license = "MIT"
+publish = false
+
+# Reglas del compilador: lo que a las 3 AM no se discute.
+[workspace.lints.rust]
+unsafe_code = "deny"           # sólo se permite en crates/sim/src/abi.rs (lo vigila el guardián)
+missing_docs = "deny"
+unused_must_use = "deny"
+unreachable_pub = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+# Excepciones razonadas: en simulación numérica estos casts son intencionados.
+cast_precision_loss = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+many_single_char_names = "allow"
+similar_names = "allow"
+module_name_repetitions = "allow"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

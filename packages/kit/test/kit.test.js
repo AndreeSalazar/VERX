@@ -64,8 +64,8 @@ test('force-dynamic lee searchParams en cada petición', async () => {
 test('ISR: MISS y luego HIT sin volver a renderizar', async () => {
   const a = await get('/cached')
   const b = await get('/cached')
-  expect(a.headers.get('x-veloz-cache')).toBe('MISS')
-  expect(b.headers.get('x-veloz-cache')).toBe('HIT')
+  expect(a.headers.get('x-verx-cache')).toBe('MISS')
+  expect(b.headers.get('x-verx-cache')).toBe('HIT')
   expect(b.headers.get('cache-control')).toContain('s-maxage=60')
   expect(await b.text()).toContain('render 1')
 })
@@ -80,10 +80,10 @@ test('acciones de formulario: re-render con actionData y redirect()', async () =
 
 test('islas: SSR + runtime + módulo inmutable', async () => {
   const html = await (await get('/island')).text()
-  const src = html.match(/<veloz-island data-src="([^"]+)" data-export="default" data-load="load"/)?.[1]
-  expect(src).toMatch(/^\/_veloz\/Clicker-\w+\.js$/)
+  const src = html.match(/<verx-island data-src="([^"]+)" data-export="default" data-load="load"/)?.[1]
+  expect(src).toMatch(/^\/_verx\/Clicker-\w+\.js$/)
   expect(html).toContain('<button>2</button>')
-  expect(html).toMatch(/<script type="module" src="\/_veloz\/runtime-\w+\.js"><\/script>/)
+  expect(html).toMatch(/<script type="module" src="\/_verx\/runtime-\w+\.js"><\/script>/)
   const js = await get(src)
   expect(js.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
   expect(js.headers.get('content-type')).toContain('javascript')
@@ -103,7 +103,7 @@ test('exportación estática con precompresión y _headers', async () => {
   expect(existsSync(join(dist, 'index.html'))).toBe(true)
   expect(existsSync(join(dist, 'items', '1', 'index.html'))).toBe(true)
   expect(existsSync(join(dist, '404.html'))).toBe(true)
-  expect(readFileSync(join(dist, '_headers'), 'utf8')).toContain('/_veloz/*')
+  expect(readFileSync(join(dist, '_headers'), 'utf8')).toContain('/_verx/*')
   expect(r.needsServer).toEqual(expect.arrayContaining(['GET /items/:id', 'GET /live', 'POST /form', 'GET /api/ping']))
   expect(r.isr).toEqual(['/cached'])
 })

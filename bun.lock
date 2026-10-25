@@ -3,50 +3,64 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "veloz-monorepo",
+      "name": "verx-monorepo",
     },
     "apps/web": {
       "name": "web",
       "dependencies": {
-        "@veloz/kit": "workspace:*",
-        "@veloz/ui": "workspace:*",
+        "@verx/gl": "workspace:*",
+        "@verx/kit": "workspace:*",
+        "@verx/sim": "workspace:*",
+        "@verx/ui": "workspace:*",
       },
     },
+    "packages/gl": {
+      "name": "@verx/gl",
+      "version": "0.3.0",
+    },
     "packages/kit": {
-      "name": "@veloz/kit",
+      "name": "@verx/kit",
       "version": "0.2.0",
       "bin": {
-        "veloz": "./bin/veloz.js",
+        "verx": "./bin/verx.js",
       },
       "dependencies": {
-        "@veloz/server": "workspace:*",
-        "@veloz/ui": "workspace:*",
+        "@verx/server": "workspace:*",
+        "@verx/ui": "workspace:*",
       },
     },
     "packages/server": {
-      "name": "@veloz/server",
+      "name": "@verx/server",
       "version": "0.2.0",
     },
     "packages/signals": {
-      "name": "@veloz/signals",
+      "name": "@verx/signals",
       "version": "0.2.0",
     },
+    "packages/sim": {
+      "name": "@verx/sim",
+      "version": "0.3.0",
+    },
     "packages/ui": {
-      "name": "@veloz/ui",
+      "name": "@verx/ui",
       "version": "0.2.0",
       "dependencies": {
-        "@veloz/signals": "workspace:*",
+        "@verx/signals": "workspace:*",
       },
     },
   },
   "packages": {
-    "@veloz/kit": ["@veloz/kit@workspace:packages/kit"],
+    "@verx/gl": ["@verx/gl@workspace:packages/gl"],
 
-    "@veloz/server": ["@veloz/server@workspace:packages/server"],
+    "@verx/kit": ["@verx/kit@workspace:packages/kit"],
 
-    "@veloz/signals": ["@veloz/signals@workspace:packages/signals"],
+    "@verx/server": ["@verx/server@workspace:packages/server"],
 
-    "@veloz/ui": ["@veloz/ui@workspace:packages/ui"],
+    "@verx/signals": ["@verx/signals@workspace:packages/signals"],
+
+    "@verx/sim": ["@verx/sim@workspace:packages/sim"],
+
+    "@verx/ui": ["@verx/ui@workspace:packages/ui"],
 
     "web": ["web@workspace:apps/web"],
   }

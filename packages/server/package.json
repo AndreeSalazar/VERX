@@ -1,5 +1,5 @@
 {
-  "name": "@veloz/server",
+  "name": "@verx/server",
   "version": "0.2.0",
   "description": "Núcleo HTTP sobre Bun.serve: router nativo, estáticos precomprimidos y prerender",
   "type": "module",

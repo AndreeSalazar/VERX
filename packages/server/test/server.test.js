@@ -1,12 +1,12 @@
 import { test, expect, beforeAll, afterAll } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { brotliDecompressSync, gunzipSync } from 'node:zlib'
-import { veloz, HttpError, HTML_MARK, compileJSON } from '../src/index.js'
+import { verx, HttpError, HTML_MARK, compileJSON } from '../src/index.js'
 
 const fixtures = new URL('./fixtures/public/', import.meta.url)
-const page = (s) => ({ [HTML_MARK]: true, toString: () => s }) // lo que produce el JSX de @veloz/ui
+const page = (s) => ({ [HTML_MARK]: true, toString: () => s }) // lo que produce el JSX de @verx/ui
 
-const app = veloz({ headers: { 'x-content-type-options': 'nosniff' }, bodyLimit: 64 * 1024 })
+const app = verx({ headers: { 'x-content-type-options': 'nosniff' }, bodyLimit: 64 * 1024 })
 app.static(fixtures)
 app.prerender('/', () => page(`<!doctype html><link rel="stylesheet" href="${app.asset('/style.css')}"><h1>Hola</h1>${'<p>relleno</p>'.repeat(100)}`))
 app.get('/hola', (ctx) => `¡Hola, ${ctx.query.nombre ?? 'mundo'}!`)

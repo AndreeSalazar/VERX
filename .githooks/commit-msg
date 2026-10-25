@@ -1,0 +1,10 @@
+#!/bin/sh
+# Mensajes de commit convencionales: tipo(ámbito opcional): descripción
+# Tipos: feat fix docs style refactor perf test build ci chore revert
+first=$(head -n 1 "$1")
+if ! printf '%s' "$first" | grep -Eq '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9/_-]+\))?!?: .{3,}'; then
+  echo "verx: el mensaje de commit no sigue el formato convencional:"
+  echo "  $first"
+  echo "Ejemplos: feat(sim): galaxia con muelles · fix(kit): 404 en rutas con barra"
+  exit 1
+fi

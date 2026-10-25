@@ -5,7 +5,7 @@
 //
 // Cabeceras pensadas para una CDN delante: s-maxage + stale-while-revalidate.
 
-import { encode, buildAsset } from '@veloz/server/assets'
+import { encode, buildAsset } from '@verx/server/assets'
 
 const HTML = 'text/html; charset=utf-8'
 
@@ -33,12 +33,12 @@ export class IsrCache {
       if (!entry.refreshing) {
         entry.refreshing = true
         this.generate(key, seconds, render).catch((err) => {
-          console.error('[veloz] ISR: falló la regeneración, se mantiene la versión anterior', err)
+          console.error('[verx] ISR: falló la regeneración, se mantiene la versión anterior', err)
           entry.refreshing = false
         })
       }
     }
-    return entry.asset.serve(req, [['x-veloz-cache', state]])
+    return entry.asset.serve(req, [['x-verx-cache', state]])
   }
 
   async generate(key, seconds, render) {

@@ -1,0 +1,6 @@
+# Todos compilan con la misma versión: sin "en mi máquina funciona".
+[toolchain]
+channel = "1.99.1"
+components = ["clippy", "rustfmt"]
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

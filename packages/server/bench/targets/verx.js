@@ -1,6 +1,6 @@
-import { veloz, HTML_MARK } from '../../src/index.js'
+import { verx, HTML_MARK } from '../../src/index.js'
 
-const app = veloz()
+const app = verx()
 const page = (s) => ({ [HTML_MARK]: true, toString: () => s })
 
 app.get('/', () => 'Hello World')

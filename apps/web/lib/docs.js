@@ -8,7 +8,7 @@ export const docs = [
     title: 'Empezar',
     summary: 'Instalar, arrancar el servidor de desarrollo y entender la estructura.',
     body: [
-      { p: 'Veloz sólo necesita Bun. No hay dependencias externas: todo el framework son cuatro paquetes del propio monorepo.' },
+      { p: 'VERX sólo necesita Bun. No hay dependencias externas: todo el framework son cuatro paquetes del propio monorepo.' },
       { code: 'bun install\nbun run dev', title: 'Desde la raíz del proyecto' },
       { p: 'bun install no descarga nada: sólo enlaza los paquetes del workspace. bun run dev arranca el sitio en http://localhost:3000 y lo recarga solo cuando guardas cualquier archivo, incluido el código del propio framework.' },
       { h: 'Estructura de una app' },
@@ -18,7 +18,7 @@ export const docs = [
   components/     componentes; los 'use client' son islas
   lib/            datos y lógica de servidor
   public/         estáticos (se sirven precomprimidos)
-  veloz.config.js opcional`,
+  verx.config.js opcional`,
         title: 'Árbol',
       },
     ],
@@ -28,7 +28,7 @@ export const docs = [
     title: 'Rutas por archivos',
     summary: 'Las carpetas de app/ son las URLs, con las mismas convenciones que Next.js.',
     body: [
-      { p: 'Cada carpeta dentro de app/ es un segmento de la URL y cada page.jsx la hace pública. Al arrancar, Veloz recorre app/ una sola vez y registra todo en el router nativo de Bun.serve, que está escrito en Zig.' },
+      { p: 'Cada carpeta dentro de app/ es un segmento de la URL y cada page.jsx la hace pública. Al arrancar, VERX recorre app/ una sola vez y registra todo en el router nativo de Bun.serve, que está escrito en Zig.' },
       {
         list: [
           'app/page.jsx → /',
@@ -52,7 +52,7 @@ export const docs = [
         code: `export const metadata = {\n  title: { default: 'Mi sitio', template: '%s · Mi sitio' },\n  description: 'Lo que sale en Google',\n}\n\nexport const head = () => <link rel="stylesheet" href={asset('/styles.css')} />\n\nexport default function Layout({ children }) {\n  return <main>{children}</main>\n}`,
         title: 'app/layout.jsx',
       },
-      { p: 'La metadata se combina desde el layout raíz hasta la página. Para títulos que dependen de los datos, exporta async function generateMetadata({ params }). Veloz genera el título, la descripción, Open Graph, canonical, theme-color y el icono.' },
+      { p: 'La metadata se combina desde el layout raíz hasta la página. Para títulos que dependen de los datos, exporta async function generateMetadata({ params }). VERX genera el título, la descripción, Open Graph, canonical, theme-color y el icono.' },
     ],
   },
   {
@@ -65,7 +65,7 @@ export const docs = [
       { code: `export const dynamic = 'force-dynamic' // SSR en cada petición (lee searchParams)`, title: 'Dinámica' },
       { code: `export async function generateStaticParams() {\n  return posts.map((p) => ({ slug: p.slug }))\n}`, title: 'Rutas con parámetros prerenderizadas' },
       { p: 'Los componentes pueden ser async, como los Server Components de Next: haz await de tus datos dentro de la página. Sólo esa rama espera; el resto del árbol se convierte en texto directamente, sin DOM virtual.' },
-      { p: 'Para mostrar un 404 o redirigir desde cualquier página, usa notFound() o redirect(url) de @veloz/kit.' },
+      { p: 'Para mostrar un 404 o redirigir desde cualquier página, usa notFound() o redirect(url) de @verx/kit.' },
     ],
   },
   {
@@ -75,7 +75,7 @@ export const docs = [
     body: [
       { p: "Una página sin islas pesa 0 KB de JavaScript. Si un archivo empieza por 'use client', sus componentes se renderizan en el servidor y además se hidratan en el navegador. Bun.build los empaqueta minificados y con code splitting." },
       {
-        code: `'use client'\nimport { signal, computed } from '@veloz/ui'\n\nexport default function Counter({ start }) {\n  const count = signal(start)\n  const double = computed(() => count() * 2)\n  return <button onClick={() => count.set(count() + 1)}>{count} · {double}</button>\n}`,
+        code: `'use client'\nimport { signal, computed } from '@verx/ui'\n\nexport default function Counter({ start }) {\n  const count = signal(start)\n  const double = computed(() => count() * 2)\n  return <button onClick={() => count.set(count() + 1)}>{count} · {double}</button>\n}`,
         title: 'components/Counter.jsx',
       },
       { p: 'La reactividad es de grano fino, como en Solid: el componente se ejecuta una vez y cada signal actualiza sólo el nodo que lo lee. Para que una expresión sea reactiva, envuélvela en una función: {() => count() * 2}.' },
@@ -99,26 +99,79 @@ export const docs = [
     summary: 'Exportación estática a dist/ o servidor de producción con Bun.',
     body: [
       { code: 'bun run build   # exporta a apps/web/dist\nbun run start   # servidor de producción', title: 'Comandos' },
-      { p: 'veloz build escribe cada página como carpeta/index.html junto a sus versiones .br y .gz precomprimidas, más un _headers que cachea un año todo lo que lleva huella. Sirve tal cual en Cloudflare Pages, Netlify, Vercel o detrás de nginx/Caddy.' },
-      { p: 'Lo que necesita servidor (SSR, API, acciones, ISR real) se lista al terminar. Para eso está veloz start, que en Linux puede repartir la carga entre varios procesos con --workers auto (SO_REUSEPORT).' },
+      { p: 'verx build escribe cada página como carpeta/index.html junto a sus versiones .br y .gz precomprimidas, más un _headers que cachea un año todo lo que lleva huella. Sirve tal cual en Cloudflare Pages, Netlify, Vercel o detrás de nginx/Caddy.' },
+      { p: 'Lo que necesita servidor (SSR, API, acciones, ISR real) se lista al terminar. Para eso está verx start, que en Linux puede repartir la carga entre varios procesos con --workers auto (SO_REUSEPORT).' },
     ],
   },
   {
     slug: 'arquitectura',
     title: 'Arquitectura aislada',
-    summary: 'Un monorepo de paquetes pequeños con fronteras que se comprueban solas.',
+    summary: 'Dos mundos (Rust y Bun) y paquetes pequeños con fronteras que se comprueban solas.',
     body: [
-      { p: 'Para no acabar con un monolito, cada pieza es un paquete con una única responsabilidad y una API pública declarada en exports:' },
+      { p: 'Para no acabar con un monolito, cada pieza es un paquete con una única responsabilidad y una API pública declarada en exports. Rust y JavaScript viven en carpetas separadas y sólo se comunican a través de un archivo .wasm.' },
+      {
+        code: `crates/          MUNDO RUST (workspace propio, toolchain fijada)
+  sim/           verx-sim    galaxia → .wasm (no_std, 6 KB)
+  guard/         verx-guard  guardián de las reglas
+packages/        MUNDO BUN (workspaces en modo aislado)
+  signals/       reactividad                     → nada
+  server/        HTTP sobre Bun.serve            → nada
+  ui/            JSX servidor + navegador        → signals
+  sim/           ÚNICO PUENTE con Rust           → nada
+  gl/            motor WebGL2                    → nada
+  kit/           meta-framework y CLI            → server, ui
+apps/web/        este sitio                      → kit, ui, sim, gl`,
+        title: 'Mapa del repositorio',
+      },
+      { p: 'Bun instala el workspace en modo aislado: un paquete sólo puede importar lo que declara en su package.json. El guardián comprueba el resto: nada de imports profundos a src/, nada de dependencias no declaradas, nada de ciclos, y ningún componente cliente puede llegar a código de servidor.' },
+    ],
+  },
+  {
+    slug: 'rust-3d',
+    title: '3D con Rust',
+    summary: 'La galaxia del inicio: física en Rust → WebAssembly, dibujo en WebGL2, sin copias.',
+    body: [
+      { p: 'El héroe del inicio son decenas de miles de partículas con física de verdad. La simulación está escrita en Rust (crates/sim) sin std, sin allocator y sin dependencias: el .wasm pesa 6 KB y calcula 40 000 partículas en unos 1,7 ms por frame.' },
+      { h: 'El recorrido de un frame' },
       {
         list: [
-          '@veloz/signals: reactividad. No depende de nada.',
-          '@veloz/server: HTTP sobre Bun.serve. No depende de nada.',
-          '@veloz/ui: JSX de servidor y de navegador. Depende de signals.',
-          '@veloz/kit: rutas, render, islas y CLI. Depende de server y ui.',
-          'apps/web: este sitio. Depende de kit y ui.',
+          'El puntero se convierte en un rayo desde la cámara, que corta el plano de la galaxia (@verx/gl, rayToPlaneY).',
+          'Rust empuja y arremolina las partículas cercanas; un muelle amortiguado las devuelve a su órbita.',
+          'JS lee las posiciones con una vista Float32Array sobre la memoria del .wasm y la GPU las recibe sin copias intermedias.',
+          'WebGL2 dibuja dos pasadas aditivas (halo y núcleo) sobre un fondo de nebulosa.',
         ],
       },
-      { p: 'Bun instala el workspace en modo aislado: un paquete sólo puede importar lo que declara en su package.json. Además, bun run check revisa las fronteras: nada de imports profundos a src/, nada de dependencias no declaradas, nada de ciclos, y los componentes cliente no pueden importar código de servidor.' },
+      { code: `import { createGalaxy } from '@verx/sim'\n\nconst galaxy = await createGalaxy({ count: 38_000, seed: 7 })\ncloud.update(galaxy.step(dt, puntero)) // Rust → GPU`, title: 'apps/web/lib/galaxy-scene.js' },
+      { h: 'Responsable con el equipo' },
+      { p: 'El bucle se pausa si el lienzo no está en pantalla o la pestaña está oculta, dibuja un solo frame si el sistema pide reducir el movimiento, baja la resolución si los frames van lentos y usa menos partículas en móviles. Sin WebGL2, queda un degradado CSS.' },
+      { code: 'bun run wasm   # recompila crates/sim y publica packages/sim/sim.wasm', title: 'Al cambiar el código Rust' },
+    ],
+  },
+  {
+    slug: 'reglas',
+    title: 'Reglas y guardián',
+    summary: 'Las 12 reglas del repo y los tres sitios donde se hacen cumplir.',
+    body: [
+      { p: 'verx-guard es un binario en Rust, sin dependencias, que revisa todo el repositorio. Cada regla tiene un id estable y una indicación de cómo arreglarla.' },
+      {
+        list: [
+          'solo-bun · cero-deps-js · cero-deps-rust: Bun es el único gestor y no hay dependencias de terceros.',
+          'nombres · paquete-completo: packages/x se llama @verx/x y todo tiene README y tests.',
+          'frontera-rust-js · wasm-al-dia: Rust y JS sólo se hablan mediante @verx/sim, y el .wasm siempre corresponde al código.',
+          'unsafe-acotado: unsafe sólo en crates/sim/src/abi.rs.',
+          'sin-restos · tamano · lf: nada de test.only ni dbg!, archivos de 400 líneas como máximo, saltos de línea LF.',
+          'imports-js: las fronteras de los imports, analizadas con el AST de Bun.',
+        ],
+      },
+      { h: 'Dónde bloquea' },
+      {
+        list: [
+          'Hooks de git: pre-commit (guardián + tests) y commit-msg (mensajes convencionales).',
+          'Hooks de Claude Code: deniegan npm, bun add, cargo add y --no-verify; revisan cada edición; no dejan terminar con reglas rotas.',
+          'bun run verify: lo mismo a mano, más clippy pedantic y rustfmt.',
+        ],
+      },
+      { code: 'bun run check   # el guardián\nbun run rules   # la lista con explicaciones', title: 'Comandos' },
     ],
   },
 ]

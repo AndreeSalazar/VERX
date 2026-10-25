@@ -1,0 +1,13 @@
+{
+  "name": "@verx/gl",
+  "version": "0.3.0",
+  "description": "Motor WebGL2 mínimo sin dependencias: matemática 3D, contexto, bucle de render y nubes de puntos",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

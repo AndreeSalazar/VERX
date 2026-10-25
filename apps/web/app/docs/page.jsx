@@ -1,7 +1,7 @@
 import DocsSearch from '../../components/DocsSearch.jsx'
 import { docs } from '../../lib/docs.js'
 
-export const metadata = { title: 'Documentación', description: 'Todo lo que hace Veloz, en ocho páginas cortas.' }
+export const metadata = { title: 'Documentación', description: 'Todo lo que hace VERX, en ocho páginas cortas.' }
 
 export default function DocsIndex() {
   const items = docs.map(({ slug, title, summary }) => ({ slug, title, summary }))

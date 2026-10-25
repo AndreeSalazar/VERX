@@ -20,13 +20,13 @@ const ROOT = resolve(import.meta.dir, '..')
 const SOURCE = /\.(jsx?|tsx?)$/
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.git'])
 const USE_CLIENT = /^(?:\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*['"]use client['"]/
-const SERVER_ONLY = (spec) => spec.startsWith('node:') || spec === 'bun' || spec.startsWith('bun:') || spec.startsWith('@veloz/kit') || spec.startsWith('@veloz/server') || spec === '@veloz/ui/server'
+const SERVER_ONLY = (spec) => spec.startsWith('node:') || spec === 'bun' || spec.startsWith('bun:') || spec.startsWith('@verx/kit') || spec.startsWith('@verx/server') || spec === '@verx/ui/server'
 
 const transpilers = {}
 const transpiler = (ext) =>
   (transpilers[ext] ??= new Bun.Transpiler({
     loader: ext.slice(1),
-    tsconfig: { compilerOptions: { jsx: 'react-jsx', jsxImportSource: '@veloz/ui' } },
+    tsconfig: { compilerOptions: { jsx: 'react-jsx', jsxImportSource: '@verx/ui' } },
   }))
 
 // ── Workspaces ─────────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ for (const w of workspaces) {
       imports = transpiler(extname(file))
         .scanImports(code)
         // El transpilador añade un require('react') implícito en archivos JSX;
-        // el import real del runtime (@veloz/ui/jsx-dev-runtime) sí se revisa.
+        // el import real del runtime (@verx/ui/jsx-dev-runtime) sí se revisa.
         .filter((i) => !(i.kind === 'require-call' && i.path === 'react'))
         .map((i) => i.path)
     } catch (err) {

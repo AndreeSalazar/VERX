@@ -1,9 +1,9 @@
-# @veloz/signals
+# @verx/signals
 
 Reactividad de grano fino, inspirada en Solid y Preact Signals. No depende de nada y funciona igual en el servidor que en el navegador.
 
 ```js
-import { signal, computed, effect, batch } from '@veloz/signals'
+import { signal, computed, effect, batch } from '@verx/signals'
 
 const count = signal(0)              // count() lee · count.set(1) escribe
 const double = computed(() => count() * 2)

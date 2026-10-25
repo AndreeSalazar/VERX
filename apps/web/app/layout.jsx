@@ -1,9 +1,9 @@
-import { asset } from '@veloz/kit'
+import { asset } from '@verx/kit'
 
 export const metadata = {
-  title: { default: 'Veloz', template: '%s · Veloz' },
-  description: 'Framework web para Bun inspirado en Next.js, Astro y Solid. Cero dependencias, cero JS por defecto.',
-  themeColor: '#111114',
+  title: { default: 'VERX', template: '%s · VERX' },
+  description: 'Framework web sobre Bun y Rust, inspirado en Next.js, Astro y Solid. Cero dependencias, cero JS por defecto y 3D en WebAssembly.',
+  themeColor: '#07070b',
 }
 
 // Lo que el layout añade al <head> (el resto lo genera `metadata`).
@@ -20,7 +20,7 @@ export default function RootLayout({ children }) {
       <header class="top">
         <a class="brand" href="/">
           <img src={asset('/favicon.svg')} alt="" width="24" height="24" />
-          Veloz
+          VERX
         </a>
         <nav>
           <a href="/docs">Docs</a>
@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
       </header>
       <main>{children}</main>
       <footer>
-        <span>Hecho con Bun, JSX propio y cero dependencias.</span>
+        <span>VERX · Bun + Rust, JSX propio y cero dependencias.</span>
         <a href="/privacidad">Privacidad</a>
       </footer>
     </>

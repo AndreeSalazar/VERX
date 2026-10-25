@@ -1,18 +1,22 @@
 import Counter from '../components/Counter.jsx'
 import Code from '../components/Code.jsx'
+import Hero from '../components/sections/Hero.jsx'
+import Architecture from '../components/sections/Architecture.jsx'
+import Bench from '../components/sections/Bench.jsx'
+import Rules from '../components/sections/Rules.jsx'
 import { posts } from '../lib/posts.js'
 
-export const metadata = { title: { absolute: 'Veloz · Rápido por diseño' } }
+export const metadata = { title: { absolute: 'VERX · Rápido por diseño' } }
 
 const features = [
   ['Rutas por archivos', 'app/blog/[slug]/page.jsx → /blog/:slug, con layouts anidados y metadata. Como Next.js.'],
   ['Estática por defecto', 'Cada página se renderiza una vez, se comprime con brotli 11 y se sirve desde memoria.'],
   ['ISR', 'export const revalidate = 60 y la página se regenera en segundo plano. Como en Vercel.'],
   ['Islas', "Sólo los componentes 'use client' mandan JS, y cuando se ven en pantalla. Como Astro."],
-  ['Signals', 'Reactividad de grano fino sin DOM virtual: se actualiza sólo el nodo que cambia. Como Solid.'],
-  ['Formularios sin JS', 'Acciones en la propia página que funcionan aunque el JavaScript falle. Como Remix.'],
+  ['Signals', 'Reactividad de grano fino sin DOM virtual: sólo cambia el nodo que depende. Como Solid.'],
+  ['Rust + WASM', 'El cálculo pesado en Rust sin dependencias, 6 KB de WebAssembly y cero copias hasta la GPU.'],
+  ['WebGL2 propio', 'Motor 3D mínimo: sin Three.js, se pausa fuera de pantalla y respeta reduced-motion.'],
   ['Navegación instantánea', 'Speculation Rules y View Transitions: prerender al pasar el ratón, sin router en JS.'],
-  ['Paquetes aislados', 'Monorepo con fronteras comprobadas: server, signals, ui y kit no se pisan.'],
 ]
 
 const inspirations = [
@@ -21,46 +25,30 @@ const inspirations = [
   ['Astro', 'Islas, cero JS por defecto, directivas client:*'],
   ['Solid', 'Signals y JSX que crea nodos reales, sin diffing'],
   ['Remix', 'Acciones de formulario con mejora progresiva'],
-  ['Fastify', 'Esquemas de respuesta compilados que filtran campos'],
+  ['Rust', 'Un compilador que bloquea errores antes de que existan, aplicado a todo el repo'],
 ]
 
 export default function Home() {
   return (
     <>
-      <section class="hero">
-        <p class="eyebrow">Bun · JSX · cero dependencias</p>
-        <h1>
-          Rápido <span>por diseño.</span>
-        </h1>
-        <p class="lead">
-          Un framework web inspirado en Next.js, Astro y Solid que hace al arrancar todo lo que otros hacen en cada petición. Sin dependencias y sin
-          JavaScript en el navegador salvo donde haga falta.
-        </p>
-        <div class="actions">
-          <a class="button" href="/docs/empezar">
-            Empezar
-          </a>
-          <a class="button ghost" href="/docs">
-            Documentación
-          </a>
-        </div>
-      </section>
+      <Hero />
 
-      <section class="grid">
-        {features.map(([title, text]) => (
-          <article class="card">
+      <section class="grid reveal">
+        {features.map(([title, text], i) => (
+          <article class="card" style={{ '--i': i }}>
             <h3>{title}</h3>
             <p>{text}</p>
           </article>
         ))}
       </section>
 
-      <section class="split">
+      <Architecture />
+
+      <section class="split reveal">
         <div>
           <h2>Una isla de verdad</h2>
-          <p>
-            Este contador se renderizó en el servidor junto con el resto de la página. Su JavaScript (un par de KB) se descarga cuando aparece en
-            pantalla. Lo demás de esta página no lleva JS.
+          <p class="section-lead">
+            Este contador se renderizó en el servidor con el resto de la página. Su JavaScript (un par de KB) se descarga cuando aparece en pantalla.
           </p>
           <Counter start={3} />
         </div>
@@ -71,7 +59,10 @@ export default function Home() {
 }`}</Code>
       </section>
 
-      <section>
+      <Bench />
+      <Rules />
+
+      <section class="reveal">
         <h2>Lo mejor de cada casa</h2>
         <table class="table">
           <thead>
@@ -91,7 +82,7 @@ export default function Home() {
         </table>
       </section>
 
-      <section>
+      <section class="reveal">
         <h2>Del blog</h2>
         <ul class="list">
           {posts.map((p) => (

@@ -11,7 +11,7 @@ export const posts = [
     authorEmail: 'interno@ejemplo.com',
     body: [
       'La mayoría de frameworks hacen en cada petición trabajo que podría hacerse una vez: recorrer middlewares, probar expresiones regulares, leer el disco, renderizar la misma página y comprimirla mil veces.',
-      'Veloz mueve ese trabajo al arranque. Una página estática ya está renderizada, comprimida con brotli 11 y con sus cabeceras calculadas antes de que llegue nadie.',
+      'VERX mueve ese trabajo al arranque. Una página estática ya está renderizada, comprimida con brotli 11 y con sus cabeceras calculadas antes de que llegue nadie.',
     ],
   },
   {

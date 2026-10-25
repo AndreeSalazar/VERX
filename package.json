@@ -1,5 +1,5 @@
 {
-  "name": "veloz-monorepo",
+  "name": "verx-monorepo",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -7,11 +7,18 @@
     "apps/*"
   ],
   "scripts": {
+    "postinstall": "git config core.hooksPath .githooks",
     "dev": "cd apps/web && bun run dev",
     "build": "cd apps/web && bun run build",
     "start": "cd apps/web && bun run start",
     "test": "bun test",
-    "check": "bun scripts/check-architecture.js",
+    "check": "cd crates && cargo run -q --release -p verx-guard -- check",
+    "check:quick": "cd crates && cargo run -q --release -p verx-guard -- check --quick",
+    "rules": "cd crates && cargo run -q --release -p verx-guard -- rules",
+    "wasm": "cd crates && cargo run -q --release -p verx-guard -- wasm",
+    "test:rust": "cd crates && cargo test -q",
+    "lint:rust": "cd crates && cargo fmt --all --check && cargo clippy -q --workspace --all-targets -- -D warnings && cargo clippy -q -p verx-sim --target wasm32-unknown-unknown -- -D warnings",
+    "verify": "bun run check && bun test && bun run lint:rust && bun run test:rust",
     "bench": "cd packages/server && bun run bench"
   }
 }

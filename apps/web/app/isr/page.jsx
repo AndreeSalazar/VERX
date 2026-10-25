@@ -1,6 +1,6 @@
 // ISR: se sirve desde caché como una página estática y, pasados 10 s, la
 // siguiente visita recibe la versión anterior al instante mientras se
-// regenera en segundo plano. Mira la cabecera x-veloz-cache (HIT/STALE/MISS).
+// regenera en segundo plano. Mira la cabecera x-verx-cache (HIT/STALE/MISS).
 export const revalidate = 10
 export const metadata = { title: 'ISR en vivo' }
 

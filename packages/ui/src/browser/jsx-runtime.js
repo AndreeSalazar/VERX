@@ -3,10 +3,10 @@
 // las funciones: {count} o {() => count() * 2} crean un efecto que actualiza
 // exactamente ese trozo del DOM cuando cambian los signals que lee.
 
-import { effect, untrack } from '@veloz/signals'
+import { effect, untrack } from '@verx/signals'
 
-const MARK = Symbol.for('veloz.html')
-export const Fragment = Symbol.for('veloz.fragment')
+const MARK = Symbol.for('verx.html')
+export const Fragment = Symbol.for('verx.fragment')
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const SVG = new Set([

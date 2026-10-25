@@ -4,7 +4,7 @@
 //    el ratón por un enlace → navegación instantánea con 0 KB de JS.
 //  · Islas: sólo si la página usa alguna se añade el runtime (y se precarga).
 
-import { escape } from '@veloz/ui/server'
+import { escape } from '@verx/ui/server'
 
 const SPECULATION = (mode) =>
   JSON.stringify({
@@ -52,13 +52,13 @@ export function renderDocument({ body, meta, head = '', lang = 'es', siteUrl, is
   tags.push(head)
   if (speculation) tags.push(`<script type="speculationrules">${SPECULATION(speculation)}</script>`)
   if (islands && runtime) {
-    tags.push('<style>veloz-island{display:contents}</style>')
+    tags.push('<style>verx-island{display:contents}</style>')
     for (const href of runtime.preload) tags.push(`<link rel="modulepreload" href="${href}">`)
     tags.push(`<script type="module" src="${runtime.src}"></script>`)
   }
   if (dev) {
     // Recarga en vivo: al reiniciar el servidor cambia el id de arranque.
-    tags.push(`<script>(()=>{let b;const s=new EventSource('/_veloz/dev');s.onmessage=e=>{if(b&&b!==e.data)location.reload();b=e.data}})()</script>`)
+    tags.push(`<script>(()=>{let b;const s=new EventSource('/_verx/dev');s.onmessage=e=>{if(b&&b!==e.data)location.reload();b=e.data}})()</script>`)
   }
   return `<!doctype html>\n<html lang="${escape(lang)}">\n<head>\n${tags.filter(Boolean).join('\n')}\n</head>\n<body>${body}</body>\n</html>\n`
 }

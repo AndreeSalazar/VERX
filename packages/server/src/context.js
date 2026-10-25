@@ -2,8 +2,8 @@ import { HttpError } from './errors.js'
 
 // Protocolo para reconocer HTML de confianza sin depender de ningún paquete de
 // plantillas: cualquier objeto con esta marca se envía como text/html usando
-// su toString(). @veloz/ui lo implementa en el resultado de su JSX de servidor.
-export const HTML_MARK = Symbol.for('veloz.html')
+// su toString(). @verx/ui lo implementa en el resultado de su JSX de servidor.
+export const HTML_MARK = Symbol.for('verx.html')
 
 const isHtml = (v) => v !== null && typeof v === 'object' && v[HTML_MARK] === true
 

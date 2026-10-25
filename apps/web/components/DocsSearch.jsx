@@ -1,5 +1,5 @@
 'use client'
-import { signal } from '@veloz/ui'
+import { signal } from '@verx/ui'
 
 const normalize = (s) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
 

@@ -1,5 +1,5 @@
 // El corazón del meta-framework: lee app/, decide cómo se sirve cada página y
-// lo registra todo en @veloz/server.
+// lo registra todo en @verx/server.
 //
 // Modo de cada página (como en Next.js, pero decidido al arrancar):
 //   · estática  (por defecto)                → se renderiza una vez y se sirve
@@ -17,9 +17,9 @@ import { pathToFileURL } from 'node:url'
 import { STATUS_CODES } from 'node:http'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { brotliCompressSync, constants as Z } from 'node:zlib'
-import { veloz } from '@veloz/server'
-import { IMMUTABLE } from '@veloz/server/assets'
-import { renderToString, onIsland, raw } from '@veloz/ui/server'
+import { verx } from '@verx/server'
+import { IMMUTABLE } from '@verx/server/assets'
+import { renderToString, onIsland, raw } from '@verx/ui/server'
 import { scanRoutes, fillPath } from './scan.js'
 import { buildClient } from './client.js'
 import { mergeMetadata, renderDocument } from './document.js'
@@ -33,7 +33,7 @@ const EMPTY = Object.freeze({})
 const BOOT = Date.now().toString(36)
 
 export async function loadConfig(root) {
-  for (const name of ['veloz.config.js', 'veloz.config.ts']) {
+  for (const name of ['verx.config.js', 'verx.config.ts']) {
     const file = join(root, name)
     if (existsSync(file)) return (await import(pathToFileURL(file).href)).default ?? {}
   }
@@ -48,7 +48,7 @@ export async function createKit({ root = process.cwd(), dev = false } = {}) {
   const appDir = join(root, 'app')
   if (!existsSync(appDir)) throw new Error(`No existe ${appDir}: crea al menos app/page.jsx`)
 
-  const app = veloz({ headers: config.headers, bodyLimit: config.bodyLimit })
+  const app = verx({ headers: config.headers, bodyLimit: config.bodyLimit })
   const kit = { root, dev, config, app, pages: [], dynamic: [], apis: [], client: null, routes: null }
   setCurrent(kit)
 
@@ -57,7 +57,7 @@ export async function createKit({ root = process.cwd(), dev = false } = {}) {
   kit.publicDir = existsSync(publicDir) ? publicDir : null
 
   const client = (kit.client = await buildClient({ root, dev }))
-  for (const f of client.files) app.prerender(f.path, () => f.bytes, { type: JS, cache: IMMUTABLE })
+  for (const f of client.files) app.prerender(f.path, () => f.bytes, { type: f.type || JS, cache: IMMUTABLE })
 
   const routes = (kit.routes = scanRoutes(appDir))
   const isr = new IsrCache({ headers: app.defaultHeaders })
@@ -139,7 +139,7 @@ export async function createKit({ root = process.cwd(), dev = false } = {}) {
     }
   }
 
-  // ── API: route.js exporta GET/POST/… como handlers de @veloz/server ─────
+  // ── API: route.js exporta GET/POST/… como handlers de @verx/server ─────
   for (const a of routes.apis) {
     const m = await load(a.file)
     const methods = METHODS.filter((method) => m[method])
@@ -186,7 +186,7 @@ export async function createKit({ root = process.cwd(), dev = false } = {}) {
 
   // ── Recarga en vivo (sólo en desarrollo) ────────────────────────────────
   if (dev) {
-    app.get('/_veloz/dev', (ctx) => {
+    app.get('/_verx/dev', (ctx) => {
       ctx.server?.timeout(ctx.req, 0)
       const body = new ReadableStream({ start: (c) => c.enqueue(new TextEncoder().encode(`retry: 300\ndata: ${BOOT}\n\n`)) })
       return new Response(body, { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store' } })

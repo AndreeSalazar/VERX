@@ -1,11 +1,11 @@
-// Entrada de @veloz/ui en el navegador (la elige Bun.build con la condición "browser").
-import { root, untrack, onCleanup, getOwner, runWithOwner } from '@veloz/signals'
+// Entrada de @verx/ui en el navegador (la elige Bun.build con la condición "browser").
+import { root, untrack, onCleanup, getOwner, runWithOwner } from '@verx/signals'
 import { jsx, Fragment } from './jsx-runtime.js'
 
-export { signal, computed, effect, batch, untrack, onCleanup, root } from '@veloz/signals'
+export { signal, computed, effect, batch, untrack, onCleanup, root } from '@verx/signals'
 export { Fragment }
 
-const MARK = Symbol.for('veloz.html')
+const MARK = Symbol.for('verx.html')
 
 export function raw(value) {
   return { [MARK]: true, toString: () => String(value) }

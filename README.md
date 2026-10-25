@@ -1,4 +1,4 @@
-# Veloz ⚡
+# VERX ⚡
 
 Framework web para **Bun**, inspirado en Next.js, Vercel, Astro, Solid y Remix.
 **Cero dependencias, cero JavaScript en el navegador por defecto**, y todo lo que
@@ -20,10 +20,10 @@ Solo hace falta [Bun](https://bun.sh) ≥ 1.3, sin npm.
 
 ```
 packages/
-  signals/   @veloz/signals   reactividad (signal, computed, effect)    → no depende de nada
-  server/    @veloz/server    HTTP sobre Bun.serve, estáticos, prerender → no depende de nada
-  ui/        @veloz/ui        JSX propio: string en servidor, DOM real   → signals
-  kit/       @veloz/kit       rutas por archivos, render, islas, CLI     → server, ui
+  signals/   @verx/signals   reactividad (signal, computed, effect)    → no depende de nada
+  server/    @verx/server    HTTP sobre Bun.serve, estáticos, prerender → no depende de nada
+  ui/        @verx/ui        JSX propio: string en servidor, DOM real   → signals
+  kit/       @verx/kit       rutas por archivos, render, islas, CLI     → server, ui
 apps/
   web/                        el sitio (la web del propio framework)    → kit, ui
 scripts/check-architecture.js las fronteras se comprueban, no se prometen
@@ -50,7 +50,7 @@ Cada paquete tiene su README, sus tests y su `tsconfig.json`, y se puede entende
 | | Metadata | `metadata`, `generateMetadata`, plantillas de título, Open Graph |
 | | Datos | componentes `async`, `generateStaticParams`, `notFound()`, `redirect()` |
 | **Vercel** | ISR | `export const revalidate = 60` con stale-while-revalidate y `s-maxage` para CDN |
-| | Despliegue | `veloz build` → `dist/` precomprimido y `_headers` |
+| | Despliegue | `verx build` → `dist/` precomprimido y `_headers` |
 | **Astro** | Islas | solo los archivos `'use client'` mandan JS, con `client:load / idle / visible / none` |
 | **Solid** | Reactividad | signals de grano fino; el JSX crea nodos reales, sin DOM virtual |
 | **Remix** | Formularios | `export async function action()`, que funciona sin JavaScript |
@@ -80,14 +80,14 @@ misma máquina, 8 s por escenario (`bun run bench`). Entre una ejecución y otra
 |---|---:|---:|
 | node:http puro · texto | 33 845 | 4,43 ms |
 | Bun.serve puro · texto | 53 332 | 3,04 ms |
-| **Veloz · texto** | **49 107** | 3,67 ms |
+| **VERX · texto** | **49 107** | 3,67 ms |
 | node:http puro · JSON | 30 966 | 6,38 ms |
 | Bun.serve puro · JSON | 55 242 | 2,90 ms |
-| **Veloz · `/user/:id` con esquema** | **49 150** | 3,31 ms |
-| **Veloz · página prerenderizada (brotli)** | **47 304** | 3,58 ms |
-| **Veloz · CSS estático (brotli)** | **45 830** | 3,60 ms |
+| **VERX · `/user/:id` con esquema** | **49 150** | 3,31 ms |
+| **VERX · página prerenderizada (brotli)** | **47 304** | 3,58 ms |
+| **VERX · CSS estático (brotli)** | **45 830** | 3,60 ms |
 
-**Cómo leerlo:** Veloz cuesta entre un 3 y un 11 % respecto a `Bun.serve` sin nada encima
+**Cómo leerlo:** VERX cuesta entre un 3 y un 11 % respecto a `Bun.serve` sin nada encima
 (que es su techo) y rinde entre un 45 y un 60 % más que `node:http` sin nada encima. Hay que
 tenerlo en cuenta: en un sitio real casi todo son páginas prerenderizadas y archivos con huella,
 así que la mayoría de visitas repetidas ni siquiera llegan al servidor.

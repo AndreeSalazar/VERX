@@ -1,4 +1,4 @@
-// bun bench/run.js [--duration 8] [--connections 100] [--threads 4] [--only veloz]
+// bun bench/run.js [--duration 8] [--connections 100] [--threads 4] [--only verx]
 // Cada servidor corre en su propio proceso; el generador de carga (load.js)
 // usa varios hilos y habla HTTP/1.1 directamente sobre TCP.
 import { parseArgs } from 'node:util'
@@ -20,12 +20,12 @@ const target = (name) => fileURLToPath(new URL(`./targets/${name}`, import.meta.
 const scenarios = [
   { name: 'node:http puro · texto', cmd: ['node', target('node-raw.js')], path: '/' },
   { name: 'Bun.serve puro · texto', cmd: [process.execPath, target('bun-raw.js')], path: '/' },
-  { name: 'Veloz · texto', cmd: [process.execPath, target('veloz.js')], path: '/' },
+  { name: 'VERX · texto', cmd: [process.execPath, target('verx.js')], path: '/' },
   { name: 'node:http puro · JSON', cmd: ['node', target('node-raw.js')], path: '/user/42' },
   { name: 'Bun.serve puro · JSON', cmd: [process.execPath, target('bun-raw.js')], path: '/user/42' },
-  { name: 'Veloz · /user/:id + esquema', cmd: [process.execPath, target('veloz.js')], path: '/user/42' },
-  { name: 'Veloz · prerender (brotli)', cmd: [process.execPath, target('veloz.js')], path: '/page', headers: br },
-  { name: 'Veloz · style.css (brotli)', cmd: [process.execPath, target('veloz.js')], path: '/style.css', headers: br },
+  { name: 'VERX · /user/:id + esquema', cmd: [process.execPath, target('verx.js')], path: '/user/42' },
+  { name: 'VERX · prerender (brotli)', cmd: [process.execPath, target('verx.js')], path: '/page', headers: br },
+  { name: 'VERX · style.css (brotli)', cmd: [process.execPath, target('verx.js')], path: '/style.css', headers: br },
 ].filter((s) => !args.only || s.name.toLowerCase().includes(args.only.toLowerCase()))
 
 const opts = { connections: Number(args.connections), threads: Number(args.threads), duration: Number(args.duration) }

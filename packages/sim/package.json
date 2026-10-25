@@ -1,0 +1,14 @@
+{
+  "name": "@verx/sim",
+  "version": "0.3.0",
+  "description": "Puente JS ↔ Rust: carga sim.wasm (compilado desde crates/sim) y expone la galaxia",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": ["src", "sim.wasm", "sim.manifest.json"],
+  "scripts": {
+    "test": "bun test"
+  }
+}

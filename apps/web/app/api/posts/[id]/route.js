@@ -1,4 +1,4 @@
-import { HttpError } from '@veloz/kit'
+import { HttpError } from '@verx/kit'
 import { posts } from '../../../../lib/posts.js'
 import { postSchema } from '../route.js'
 

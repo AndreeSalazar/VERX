@@ -1,6 +1,6 @@
 import { test, expect, afterEach } from 'bun:test'
-import { signal, raw } from '@veloz/ui'
-import { renderToString, registerIsland, clearIslands, onIsland } from '@veloz/ui/server'
+import { signal, raw } from '@verx/ui'
+import { renderToString, registerIsland, clearIslands, onIsland } from '@verx/ui/server'
 
 afterEach(() => {
   clearIslands()
@@ -51,7 +51,7 @@ test('componentes async (como Server Components)', async () => {
 
 test('islas: envoltorio con props serializadas y directivas client:*', async () => {
   const Counter = ({ start }) => <button>{start}</button>
-  registerIsland(Counter, { src: '/_veloz/c.js', exportName: 'default' })
+  registerIsland(Counter, { src: '/_verx/c.js', exportName: 'default' })
   const used = []
   onIsland((meta) => used.push(meta.src))
   const html = await renderToString(
@@ -61,9 +61,9 @@ test('islas: envoltorio con props serializadas y directivas client:*', async () 
     </main>,
   )
   expect(html).toBe(
-    '<main><veloz-island data-src="/_veloz/c.js" data-export="default" data-load="idle" data-props="{&quot;start&quot;:5}"><button>5</button></veloz-island><button>6</button></main>',
+    '<main><verx-island data-src="/_verx/c.js" data-export="default" data-load="idle" data-props="{&quot;start&quot;:5}"><button>5</button></verx-island><button>6</button></main>',
   )
-  expect(used).toEqual(['/_veloz/c.js'])
+  expect(used).toEqual(['/_verx/c.js'])
 })
 
 test('islas: pasar funciones como props es un error claro', async () => {

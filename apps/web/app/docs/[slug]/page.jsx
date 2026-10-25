@@ -1,4 +1,4 @@
-import { notFound } from '@veloz/kit'
+import { notFound } from '@verx/kit'
 import Code from '../../../components/Code.jsx'
 import { docs, findDoc } from '../../../lib/docs.js'
 

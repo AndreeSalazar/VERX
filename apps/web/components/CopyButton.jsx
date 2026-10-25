@@ -1,5 +1,5 @@
 'use client'
-import { signal } from '@veloz/ui'
+import { signal } from '@verx/ui'
 
 export default function CopyButton({ text }) {
   const copied = signal(false)

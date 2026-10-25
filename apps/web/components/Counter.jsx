@@ -1,5 +1,5 @@
 'use client'
-import { signal, computed } from '@veloz/ui'
+import { signal, computed } from '@verx/ui'
 
 // Se renderiza en el servidor con `start` y se hidrata en el navegador.
 // Al pulsar, sólo cambian los dos nodos de texto que leen los signals.

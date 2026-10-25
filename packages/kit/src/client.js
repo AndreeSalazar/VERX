@@ -5,7 +5,7 @@
 // Al arrancar:
 //  1. Buscamos los archivos 'use client' del proyecto.
 //  2. Bun.build los empaqueta para el navegador (minificado, con code splitting:
-//     el runtime de @veloz/ui va en un chunk compartido) con nombres con hash.
+//     el runtime de @verx/ui va en un chunk compartido) con nombres con hash.
 //  3. Importamos esos mismos archivos en el servidor y registramos cada export
 //     como isla, para que <Contador /> en una página se renderice en HTML y
 //     se envuelva con lo necesario para hidratarlo en el navegador.
@@ -13,13 +13,13 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, resolve, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { registerIsland, clearIslands } from '@veloz/ui/server'
+import { registerIsland, clearIslands } from '@verx/ui/server'
 
 const IGNORE = new Set(['node_modules', 'dist', 'public', 'test', 'tests'])
 const SOURCE = /\.(jsx|tsx|js|ts)$/
 const DIRECTIVE = /^(?:\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*['"]use client['"]/
 const RUNTIME = fileURLToPath(new URL('../client/runtime.js', import.meta.url))
-export const CLIENT_PREFIX = '/_veloz/'
+export const CLIENT_PREFIX = '/_verx/'
 
 export function findClientFiles(root) {
   const out = []
@@ -53,6 +53,8 @@ export async function buildClient({ root, dev }) {
     minify: !dev,
     sourcemap: dev ? 'inline' : 'none',
     naming: { entry: '[name]-[hash].[ext]', chunk: 'chunk-[hash].[ext]', asset: '[name]-[hash].[ext]' },
+    // URLs absolutas para chunks y assets (p. ej. sim.wasm importado con type: 'file').
+    publicPath: CLIENT_PREFIX,
     define: { 'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production') },
     metafile: true,
   })
@@ -72,6 +74,7 @@ export async function buildClient({ root, dev }) {
   const outputs = await Promise.all(result.outputs.map(async (o) => ({
     path: CLIENT_PREFIX + o.path.replace(/^\.\//, ''),
     bytes: Buffer.from(await o.arrayBuffer()),
+    type: o.type.replace(';charset', '; charset'), // .wasm → application/wasm (instantiateStreaming lo exige)
   })))
 
   for (const file of files) {
@@ -85,7 +88,8 @@ export async function buildClient({ root, dev }) {
   // Chunks que el runtime importa estáticamente: se precargan con modulepreload.
   const runtimeSrc = urlFor(RUNTIME)
   const runtimeCode = outputs.find((o) => o.path === runtimeSrc).bytes.toString()
-  const preload = [...runtimeCode.matchAll(/(?:from|import)\s*["']\.\/([^"']+)["']/g)].map((m) => CLIENT_PREFIX + m[1])
+  const chunkImport = new RegExp(String.raw`(?:from|import)\s*["'](?:\./|${CLIENT_PREFIX})([^"']+)["']`, 'g')
+  const preload = [...runtimeCode.matchAll(chunkImport)].map((m) => CLIENT_PREFIX + m[1])
 
   return { files: outputs, runtime: { src: runtimeSrc, preload }, count: files.length }
 }

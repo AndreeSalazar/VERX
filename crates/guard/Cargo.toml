@@ -1,0 +1,15 @@
+[package]
+name = "verx-guard"
+description = "Guardián de las reglas del repositorio VERX (Rust y JS), sin dependencias"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "verx-guard"
+path = "src/main.rs"
+
+[lints]
+workspace = true

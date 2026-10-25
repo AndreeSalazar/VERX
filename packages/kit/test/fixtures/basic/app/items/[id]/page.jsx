@@ -1,4 +1,4 @@
-import { notFound } from '@veloz/kit'
+import { notFound } from '@verx/kit'
 export const generateStaticParams = () => [{ id: '1' }, { id: '2' }]
 export const generateMetadata = ({ params }) => ({ title: `Item ${params.id}` })
 export default ({ params }) => {

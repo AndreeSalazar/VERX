@@ -1,13 +1,13 @@
-// `veloz build`: exporta todo lo estático a dist/ para subirlo a cualquier
+// `verx build`: exporta todo lo estático a dist/ para subirlo a cualquier
 // hosting estático o CDN (Cloudflare Pages, Netlify, Vercel, GitHub Pages, nginx…).
 //  · Páginas como carpeta/index.html, con hermanos .br y .gz precomprimidos
 //    (nginx brotli_static/gzip_static, Caddy `precompressed`, etc.).
 //  · Archivos con huella y _headers (formato Netlify/Cloudflare) para cachearlos un año.
-//  · Lo que necesita servidor (SSR, API, acciones) se lista: eso va con `veloz start`.
+//  · Lo que necesita servidor (SSR, API, acciones) se lista: eso va con `verx start`.
 
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, extname, join, resolve } from 'node:path'
-import { encode, MIME } from '@veloz/server/assets'
+import { encode, MIME } from '@verx/server/assets'
 import { CLIENT_PREFIX } from './client.js'
 
 const HTML = 'text/html; charset=utf-8'
@@ -35,7 +35,7 @@ export async function exportStatic(kit, outDir = 'dist') {
     write(page.path === '/' ? '/index.html' : page.path + '/index.html', Buffer.from(await page.render()), HTML)
   }
   write('/404.html', Buffer.from(await kit.renderNotFound()), HTML)
-  for (const f of kit.client.files) write(f.path, f.bytes, MIME['.js'])
+  for (const f of kit.client.files) write(f.path, f.bytes, f.type || MIME['.js'])
 
   if (kit.publicDir) {
     const walk = (dir, rel) => {

@@ -1,4 +1,4 @@
-import { notFound } from '@veloz/kit'
+import { notFound } from '@verx/kit'
 import { posts, findPost } from '../../../lib/posts.js'
 
 export const generateStaticParams = () => posts.map((p) => ({ slug: p.slug }))

@@ -1,4 +1,4 @@
-import { redirect } from '@veloz/kit'
+import { redirect } from '@verx/kit'
 export async function action({ form }) {
   if (form.go) redirect('/')
   return { echo: form.name }

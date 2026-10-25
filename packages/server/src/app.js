@@ -201,16 +201,16 @@ export class App {
     await this.compile()
     if (workers === 'auto') workers = navigator.hardwareConcurrency
     workers = Number(workers) || 1
-    const isWorker = process.env.VELOZ_WORKER === '1'
+    const isWorker = process.env.VERX_WORKER === '1'
 
     if (workers > 1 && process.platform !== 'linux') {
-      if (log) console.warn('[veloz] varios workers sólo reparten carga en Linux (SO_REUSEPORT); arranco 1')
+      if (log) console.warn('[verx] varios workers sólo reparten carga en Linux (SO_REUSEPORT); arranco 1')
       workers = 1
     }
     if (workers > 1 && !isWorker) {
       for (let i = 1; i < workers; i++) {
         this.workers.push(Bun.spawn([process.execPath, ...process.argv.slice(1)], {
-          env: { ...process.env, VELOZ_WORKER: '1' },
+          env: { ...process.env, VERX_WORKER: '1' },
           stdio: ['inherit', 'inherit', 'inherit'],
         }))
       }
@@ -228,7 +228,7 @@ export class App {
       reusePort: workers > 1,
       ...serveOptions,
     })
-    if (log && !isWorker) console.log(`[veloz] escuchando en ${this.server.url}${workers > 1 ? ` (${workers} procesos)` : ''}`)
+    if (log && !isWorker) console.log(`[verx] escuchando en ${this.server.url}${workers > 1 ? ` (${workers} procesos)` : ''}`)
     return this.server
   }
 
@@ -238,7 +238,7 @@ export class App {
   }
 }
 
-export const veloz = (options) => new App(options)
+export const verx = (options) => new App(options)
 
 // '/docs/*path' → { path: '/docs/*', wildcard: { name: 'path', prefix: 6 } }
 function toBunPattern(raw) {

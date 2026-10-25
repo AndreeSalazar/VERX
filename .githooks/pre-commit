@@ -1,0 +1,12 @@
+#!/bin/sh
+# Ningún commit pasa si el guardián o los tests fallan. Saltárselo con
+# --no-verify está prohibido por las reglas del repo (CLAUDE.md).
+set -e
+echo "verx: guardián (todas las reglas)…"
+(cd crates && cargo run -q --release -p verx-guard -- check)
+echo "verx: tests JS…"
+bun test 2>&1 | tail -n 4
+if git diff --cached --name-only | grep -q '^crates/'; then
+  echo "verx: cambios en Rust → fmt, clippy y tests…"
+  (cd crates && cargo fmt --all --check && cargo clippy -q --workspace --all-targets -- -D warnings && cargo test -q)
+fi

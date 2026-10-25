@@ -4,7 +4,7 @@
     "module": "Preserve",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "jsxImportSource": "@veloz/ui",
+    "jsxImportSource": "@verx/ui",
     "allowJs": true,
     "noEmit": true,
     "strict": true,

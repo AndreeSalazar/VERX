@@ -9,8 +9,8 @@
 
 import { ISLAND_TAG } from '../shared.js'
 
-const MARK = Symbol.for('veloz.html')
-export const Fragment = Symbol.for('veloz.fragment')
+const MARK = Symbol.for('verx.html')
+export const Fragment = Symbol.for('verx.fragment')
 
 export class Html {
   constructor(value) {
@@ -115,8 +115,8 @@ export async function renderToString(node) {
 }
 
 // ── Islas ────────────────────────────────────────────────────────────────
-// @veloz/kit registra aquí los componentes de archivos con 'use client'.
-// Al renderizarlos se envuelven en <veloz-island> con lo necesario para que el
+// @verx/kit registra aquí los componentes de archivos con 'use client'.
+// Al renderizarlos se envuelven en <verx-island> con lo necesario para que el
 // navegador cargue su JS sólo cuando haga falta (visible, idle o al cargar).
 
 const islands = new Map()

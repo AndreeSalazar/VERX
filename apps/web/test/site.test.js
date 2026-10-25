@@ -1,7 +1,7 @@
-// Prueba el sitio de punta a punta tal como lo sirve `veloz start`.
+// Prueba el sitio de punta a punta tal como lo sirve `verx start`.
 import { test, expect, beforeAll, afterAll } from 'bun:test'
 import { fileURLToPath } from 'node:url'
-import { createKit } from '@veloz/kit'
+import { createKit } from '@verx/kit'
 import { docs } from '../lib/docs.js'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -26,8 +26,21 @@ test('inicio: islas sólo donde hay interacción, cabeceras de seguridad y brotl
   const r = await html('/', { headers: { 'accept-encoding': 'br' } })
   expect(r.headers.get('x-content-type-options')).toBe('nosniff')
   const page = await r.text()
-  expect(page.match(/<veloz-island/g)).toHaveLength(2) // Counter + CopyButton
-  expect(page).toContain('<title>Veloz · Rápido por diseño</title>')
+  expect(page.match(/<verx-island/g)).toHaveLength(3) // Galaxy + Counter + CopyButton
+  expect(page).toContain('<title>VERX · Rápido por diseño</title>')
+})
+
+test('el héroe 3D: la galaxia carga ya y su .wasm se sirve como application/wasm, inmutable', async () => {
+  const page = await (await html('/')).text()
+  const src = page.match(/<verx-island data-src="([^"]+)" data-export="default" data-load="load"/)?.[1]
+  expect(src).toMatch(/^\/_verx\/Galaxy-\w+\.js$/)
+  const code = await (await fetch(base + src)).text()
+  const wasm = code.match(/\/_verx\/sim-\w+\.wasm/)?.[0]
+  expect(wasm).toBeTruthy()
+  const r = await fetch(base + wasm)
+  expect(r.headers.get('content-type')).toBe('application/wasm')
+  expect(r.headers.get('cache-control')).toContain('immutable')
+  expect(WebAssembly.validate(await r.arrayBuffer())).toBe(true)
 })
 
 test('una página sin islas no manda ni un byte de JavaScript', async () => {
@@ -59,7 +72,7 @@ test('formulario de contacto: errores y éxito sin JavaScript', async () => {
 
 test('ISR y URL canónica sin barra final', async () => {
   const isr = await html('/isr')
-  expect(['MISS', 'HIT', 'STALE']).toContain(isr.headers.get('x-veloz-cache'))
+  expect(['MISS', 'HIT', 'STALE']).toContain(isr.headers.get('x-verx-cache'))
   const slash = await html('/docs/')
   expect(slash.status).toBe(308)
   expect(slash.headers.get('location')).toBe('/docs')

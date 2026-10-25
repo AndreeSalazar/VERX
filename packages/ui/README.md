@@ -1,6 +1,6 @@
-# @veloz/ui
+# @verx/ui
 
-JSX propio, sin React. Depende solo de `@veloz/signals`.
+JSX propio, sin React. Depende solo de `@verx/signals`.
 
 Un mismo componente sirve en los dos lados, porque `package.json` publica dos implementaciones con la condición `browser`:
 
@@ -14,11 +14,11 @@ Un mismo componente sirve en los dos lados, porque `package.json` publica dos im
 Para activarlo en un paquete, pon en su `tsconfig.json`:
 
 ```json
-{ "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "@veloz/ui" } }
+{ "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "@verx/ui" } }
 ```
 
-**Para componentes (`@veloz/ui`):** `signal`, `computed`, `effect`, `batch`, `untrack`, `onCleanup`, `onMount` (solo corre en el navegador), `raw` (HTML de confianza) y `Fragment`.
+**Para componentes (`@verx/ui`):** `signal`, `computed`, `effect`, `batch`, `untrack`, `onCleanup`, `onMount` (solo corre en el navegador), `raw` (HTML de confianza) y `Fragment`.
 
-**Para el framework (`@veloz/ui/server`):** `renderToString`, `escape`, `registerIsland` y `onIsland`.
+**Para el framework (`@verx/ui/server`):** `renderToString`, `escape`, `registerIsland` y `onIsland`.
 
 **Reactividad:** los componentes se ejecutan una sola vez. Lo reactivo son las funciones: `{count}` o `{() => count() * 2}`.

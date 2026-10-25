@@ -3,12 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "veloz dev",
-    "build": "veloz build",
-    "start": "veloz start"
+    "dev": "verx dev",
+    "build": "verx build",
+    "start": "verx start"
   },
   "dependencies": {
-    "@veloz/kit": "workspace:*",
-    "@veloz/ui": "workspace:*"
+    "@verx/gl": "workspace:*",
+    "@verx/kit": "workspace:*",
+    "@verx/sim": "workspace:*",
+    "@verx/ui": "workspace:*"
   }
 }
