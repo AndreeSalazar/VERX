@@ -1,0 +1,5 @@
+[install]
+# Cada paquete sólo ve las dependencias que declara en su package.json
+# (como pnpm). Importar algo no declarado falla en vez de "funcionar de casualidad".
+linker = "isolated"
+exact = true

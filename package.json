@@ -1,0 +1,17 @@
+{
+  "name": "veloz-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "cd apps/web && bun run dev",
+    "build": "cd apps/web && bun run build",
+    "start": "cd apps/web && bun run start",
+    "test": "bun test",
+    "check": "bun scripts/check-architecture.js",
+    "bench": "cd packages/server && bun run bench"
+  }
+}

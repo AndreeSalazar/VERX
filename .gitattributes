@@ -1,0 +1,11 @@
+# Siempre LF en el repositorio, en cualquier sistema: sin diffs fantasma por CRLF.
+* text=auto eol=lf
+
+# Binarios: git no debe tocarlos ni intentar diffs de texto.
+*.wasm binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff2 binary

@@ -1,0 +1,19 @@
+{
+  "name": "@veloz/kit",
+  "version": "0.2.0",
+  "description": "Meta-framework al estilo Next.js sobre Bun: rutas por archivos, layouts, islas, ISR y exportación estática",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "bin": {
+    "veloz": "./bin/veloz.js"
+  },
+  "dependencies": {
+    "@veloz/server": "workspace:*",
+    "@veloz/ui": "workspace:*"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

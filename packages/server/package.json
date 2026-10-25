@@ -1,0 +1,14 @@
+{
+  "name": "@veloz/server",
+  "version": "0.2.0",
+  "description": "Núcleo HTTP sobre Bun.serve: router nativo, estáticos precomprimidos y prerender",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./assets": "./src/assets.js"
+  },
+  "scripts": {
+    "test": "bun test",
+    "bench": "bun bench/run.js"
+  }
+}

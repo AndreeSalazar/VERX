@@ -1,0 +1,28 @@
+{
+  "name": "@veloz/ui",
+  "version": "0.2.0",
+  "description": "JSX propio sin dependencias: string en el servidor, DOM reactivo en el navegador",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "browser": "./src/browser/index.js",
+      "default": "./src/server/index.js"
+    },
+    "./jsx-runtime": {
+      "browser": "./src/browser/jsx-runtime.js",
+      "default": "./src/server/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "browser": "./src/browser/jsx-runtime.js",
+      "default": "./src/server/jsx-runtime.js"
+    },
+    "./server": "./src/server/render.js"
+  },
+  "dependencies": {
+    "@veloz/signals": "workspace:*"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}
