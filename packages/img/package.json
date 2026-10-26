@@ -1,0 +1,14 @@
+{
+  "name": "@verx/img",
+  "version": "0.3.0",
+  "description": "Puente JS ↔ Rust: carga img.wasm (compilado desde crates/img) para redimensionar PNG y crear placeholders",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": ["src", "img.wasm", "img.manifest.json"],
+  "scripts": {
+    "test": "bun test"
+  }
+}

@@ -10,6 +10,7 @@ crates/        MUNDO RUST (workspace propio, toolchain fijada en rust-toolchain.
   sim/         verx-sim    galaxia 3D → .wasm   (unsafe SOLO en src/abi.rs)
   search/      verx-search buscador BM25 → .wasm (unsafe SOLO en src/abi.rs)
   md/          verx-md     Markdown → HTML  (unsafe SOLO en src/abi.rs)
+  img/         verx-img    PNG y redimensionado (unsafe SOLO en src/abi.rs)
   guard/       verx-guard  guardián de reglas (std, sin crates)
 packages/      MUNDO JS (workspaces de Bun en modo aislado)
   signals/     reactividad                      → nada
@@ -18,9 +19,10 @@ packages/      MUNDO JS (workspaces de Bun en modo aislado)
   sim/         puente con verx-sim (sim.wasm)   → nada
   search/      puente con verx-search           → nada
   md/          puente con verx-md (servidor)    → nada
+  img/         puente con verx-img (servidor)   → nada
   gl/          motor WebGL2                     → nada
-  kit/         meta-framework estilo Next.js    → server, ui
-apps/web/      el sitio                         → kit, ui, sim, search, md, gl
+  kit/         meta-framework estilo Next.js    → server, ui, img
+apps/web/      el sitio                         → kit, ui, sim, search, md, img, gl
 ```
 
 ## Reglas (las hace cumplir `verx-guard`; `bun run rules` las lista)
@@ -28,7 +30,7 @@ apps/web/      el sitio                         → kit, ui, sim, search, md, gl
 1. **Solo Bun.** Nunca npm, npx, yarn ni pnpm. Usa `bun install`, `bun run`, `bunx`.
 2. **Cero dependencias de terceros**, ni en JS ni en Rust. Si hace falta algo, se escribe como paquete en `packages/` o como crate en `crates/`.
 3. **Fronteras:** un paquete solo importa lo que declara y solo la API de sus `exports`; nada de `../../otro/src`.
-4. **Rust y JS no se tocan.** Los únicos puentes son los paquetes que un crate declara en su `Cargo.toml` (`[package.metadata.verx]`): hoy, `@verx/sim`, `@verx/search` y `@verx/md`. Si cambias un crate puente, ejecuta `bun run wasm`. La ABI está versionada: si cambia una firma o un formato, sube `ABI_VERSION` en los dos lados.
+4. **Rust y JS no se tocan.** Los únicos puentes son los paquetes que un crate declara en su `Cargo.toml` (`[package.metadata.verx]`): hoy, `@verx/sim`, `@verx/search`, `@verx/md` y `@verx/img`. Si cambias un crate puente, ejecuta `bun run wasm`. La ABI está versionada: si cambia una firma o un formato, sube `ABI_VERSION` en los dos lados.
 5. **`unsafe` solo en `crates/*/src/abi.rs`**, y siempre con un comentario `// SAFETY:`.
 6. **Los componentes `'use client'` no tocan código de servidor** (`@verx/kit`, `@verx/server`, `node:*`, `bun`), ni siquiera de forma indirecta.
 7. **Ningún archivo de código pasa de 400 líneas**: divide por responsabilidades.

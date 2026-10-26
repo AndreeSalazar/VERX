@@ -1,4 +1,4 @@
-import { notFound } from '@verx/kit'
+import { Image, notFound } from '@verx/kit'
 import { raw } from '@verx/ui'
 import CodeCopy from '../../../components/CodeCopy.jsx'
 import { posts, findPost } from '../../../lib/posts.js'
@@ -24,6 +24,7 @@ export default function Post({ params }) {
       </p>
       <h1>{post.title}</h1>
       <p class="lead">{post.summary}</p>
+      {post.cover && <Image class="cover" src={post.cover} alt={post.coverAlt} sizes="(min-width: 900px) 720px, 100vw" priority />}
       {raw(post.body)}
       <p>
         <a href="/blog">← Todos los artículos</a>

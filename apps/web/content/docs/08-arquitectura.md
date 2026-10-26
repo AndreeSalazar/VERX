@@ -10,6 +10,7 @@ crates/          MUNDO RUST (workspace propio, toolchain fijada)
   sim/           verx-sim    galaxia → .wasm (no_std, 6 KB)
   search/        verx-search buscador BM25 → .wasm (no_std, 12 KB)
   md/            verx-md     Markdown → HTML con resaltado (servidor)
+  img/           verx-img    PNG y redimensionado (servidor)
   guard/         verx-guard  guardián de las reglas
 packages/        MUNDO BUN (workspaces en modo aislado)
   signals/       reactividad                     → nada
@@ -18,9 +19,10 @@ packages/        MUNDO BUN (workspaces en modo aislado)
   sim/           puente con verx-sim             → nada
   search/        puente con verx-search          → nada
   md/            puente con verx-md              → nada
+  img/           puente con verx-img             → nada
   gl/            motor WebGL2                    → nada
   kit/           meta-framework y CLI            → server, ui
-apps/web/        este sitio                      → kit, ui, sim, search, md, gl
+apps/web/        este sitio                      → kit, ui, sim, search, md, img, gl
 ```
 
 Bun instala el workspace en modo aislado: un paquete sólo puede importar lo que declara en su `package.json`. El guardián comprueba el resto: nada de imports profundos a src/, nada de dependencias no declaradas, nada de ciclos, y ningún componente cliente puede llegar a código de servidor.

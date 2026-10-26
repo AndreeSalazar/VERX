@@ -10,6 +10,7 @@
     "verx": "./bin/verx.js"
   },
   "dependencies": {
+    "@verx/img": "workspace:*",
     "@verx/server": "workspace:*",
     "@verx/ui": "workspace:*"
   },

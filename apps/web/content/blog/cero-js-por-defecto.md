@@ -5,6 +5,8 @@ date: 2026-10-25
 summary: "React manda todo el árbol al navegador. Aquí sólo viajan las islas."
 tags: [islas, signals]
 authorEmail: interno@ejemplo.com
+cover: /portadas/cero-js-por-defecto.png
+coverAlt: "Un agujero negro con el disco dorado sobre una nebulosa roja y violeta"
 ---
 
 En una app de React cada componente se descarga y se ejecuta en el navegador, aunque sólo pinte texto. Aquí los componentes se ejecutan en el servidor y sólo los archivos `'use client'` viajan al navegador.

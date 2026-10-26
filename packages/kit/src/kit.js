@@ -26,6 +26,7 @@ import { mergeMetadata, renderDocument } from './document.js'
 import { IsrCache } from './isr.js'
 import { NotFoundError, RedirectError, setCurrent } from './navigation.js'
 import { desktopGuard, desktopAllows } from './desktop.js'
+import { IMAGE_PREFIX, createImageStore } from './images.js'
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 const HTML = 'text/html; charset=utf-8'
@@ -58,6 +59,13 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
   const publicDir = join(root, 'public')
   if (existsSync(publicDir)) app.static(publicDir)
   kit.publicDir = existsSync(publicDir) ? publicDir : null
+  // Imágenes de public/ con variantes y placeholder (verx-img): ver images.js.
+  kit.images = kit.publicDir ? await createImageStore(kit.publicDir) : null
+  app.get(IMAGE_PREFIX + ':file', (ctx) => {
+    const png = kit.images?.files.get(ctx.path)
+    if (!png) return ctx.status(404).text('Not Found')
+    return new Response(png, { headers: { 'content-type': 'image/png', 'cache-control': IMMUTABLE } })
+  })
 
   const client = (kit.client = await buildClient({ root, dev }))
   for (const f of client.files) app.prerender(f.path, () => f.bytes, { type: f.type || JS, cache: IMMUTABLE })

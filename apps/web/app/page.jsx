@@ -4,6 +4,7 @@ import Hero from '../components/sections/Hero.jsx'
 import Architecture from '../components/sections/Architecture.jsx'
 import Bench from '../components/sections/Bench.jsx'
 import Rules from '../components/sections/Rules.jsx'
+import PostCards from '../components/PostCards.jsx'
 import { posts } from '../lib/posts.js'
 
 export const metadata = { title: { absolute: 'VERX · Rápido por diseño' } }
@@ -84,14 +85,7 @@ export default function Home() {
 
       <section class="reveal">
         <h2>Del blog</h2>
-        <ul class="list">
-          {posts.map((p) => (
-            <li>
-              <a href={`/blog/${p.slug}`}>{p.title}</a>
-              <span>{p.summary}</span>
-            </li>
-          ))}
-        </ul>
+        <PostCards posts={posts} />
       </section>
     </>
   )

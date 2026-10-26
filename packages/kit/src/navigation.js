@@ -29,6 +29,7 @@ export function redirect(location, status = 303) {
 // Instancia activa, para que asset() funcione desde cualquier componente.
 let current = null
 export const setCurrent = (kit) => (current = kit)
+export const currentKit = () => current
 
 // URL con huella de un archivo de public/ ('/styles.css' → '/styles.3f9a2c1b4e.css').
 export function asset(path) {

@@ -49,7 +49,7 @@ Una comparación cualitativa, sin favoritismos: aparece lo que VERX ya hace mejo
 | **Streaming SSR** (enviar HTML mientras carga) | Next.js, Remix, SolidStart | `renderToStream` en `@verx/ui` con límites `<Suspense>` | Bun |
 | **Hidratación que reutiliza el DOM** | Svelte, Solid, Qwik | Recorrer el HTML del servidor en lugar de volver a pintar la isla | Bun |
 | **Reactividad automática** (sin `() =>`) | Solid, Svelte | Plugin de Bun que envuelva las expresiones JSX al compilar | Bun |
-| **Optimización de imágenes** | Next.js, Astro | Redimensionar y codificar en Rust con un crate propio, sin dependencias | 🦀 Rust |
+| ~~**Optimización de imágenes**~~ ✅ | Next.js, Astro | **Hecho (PNG):** `verx-img` en Rust, con PNG y DEFLATE propios, reducción en luz lineal y placeholder; `<Image>` sin JS. Falta un formato con pérdida (JPEG/WebP) | 🦀 Rust |
 | **Tipos TypeScript** | todos | `.d.ts` para cada paquete y `tsc --noEmit` dentro de `verify` | Bun |
 | **HMR que conserva el estado** | Vite (Astro, SvelteKit…) | `bun --hot` más recarga parcial de islas | Bun |
 | **Adaptadores de despliegue** (edge, serverless) | Next.js, Astro, SvelteKit | Adaptadores para Cloudflare y Vercel sobre `fetch` estándar | Bun |
@@ -71,6 +71,7 @@ crates/          MUNDO RUST (workspace propio, toolchain 1.99.1 fijada)
   sim/           verx-sim     galaxia → .wasm · no_std · 6 KB · unsafe sólo en abi.rs
   search/        verx-search  buscador BM25 → .wasm · no_std · 12 KB · unsafe sólo en abi.rs
   md/            verx-md      Markdown → HTML con resaltado · no_std · en el servidor
+  img/           verx-img     PNG, DEFLATE y redimensionado en luz lineal · en el servidor
   guard/         verx-guard   guardián de 13 reglas (std, sin crates)
 packages/        MUNDO BUN (workspaces aislados: cada uno ve sólo lo que declara)
   signals/       @verx/signals   reactividad de grano fino            → nada
@@ -79,9 +80,10 @@ packages/        MUNDO BUN (workspaces aislados: cada uno ve sólo lo que declar
   sim/           @verx/sim       puente con verx-sim (ABI v2)          → nada
   search/        @verx/search    puente con verx-search (ABI v1)       → nada
   md/            @verx/md        puente con verx-md (ABI v1)           → nada
+  img/           @verx/img       puente con verx-img (ABI v1)          → nada
   gl/            @verx/gl        motor WebGL2 propio                   → nada
-  kit/           @verx/kit       rutas, islas, ISR, CLI (estilo Next)  → server, ui
-apps/web/        el sitio                                      → kit, ui, sim, search, md, gl
+  kit/           @verx/kit       rutas, islas, ISR, CLI (estilo Next)  → server, ui, img
+apps/web/        el sitio                                      → kit, ui, sim, search, md, img, gl
 ```
 
 - **Los puentes:** un crate se declara puente en su `Cargo.toml` (`[package.metadata.verx] bridge = "packages/…"`). `bun run wasm` compila cada uno y publica su `.wasm` en el paquete JS correspondiente, junto con un manifiesto que lleva la huella del código. Solo esos paquetes pueden cargar un `.wasm`, y si alguno no corresponde a su código Rust, la regla `wasm-al-dia` falla.

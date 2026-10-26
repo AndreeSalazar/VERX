@@ -4,6 +4,7 @@ const rust = [
   ['verx-sim', 'galaxia → .wasm · no_std · 6 KB'],
   ['verx-search', 'buscador BM25 → .wasm · 5 KB'],
   ['verx-md', 'Markdown → HTML con resaltado'],
+  ['verx-img', 'PNG y redimensionado en luz lineal'],
   ['verx-guard', 'el guardián de las reglas'],
 ]
 const js = [
@@ -18,6 +19,7 @@ const bridges = [
   ['@verx/sim', 'sim.wasm · ABI v2'],
   ['@verx/search', 'search.wasm · ABI v1'],
   ['@verx/md', 'md.wasm · ABI v1'],
+  ['@verx/img', 'img.wasm · ABI v1'],
 ]
 
 const Box = ({ name, desc }) => (

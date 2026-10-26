@@ -7,10 +7,12 @@
     "build": "verx build",
     "start": "verx start",
     "budget": "verx budget",
+    "portadas": "bun scripts/portadas.js",
     "desktop": "verx desktop"
   },
   "dependencies": {
     "@verx/gl": "workspace:*",
+    "@verx/img": "workspace:*",
     "@verx/kit": "workspace:*",
     "@verx/md": "workspace:*",
     "@verx/search": "workspace:*",

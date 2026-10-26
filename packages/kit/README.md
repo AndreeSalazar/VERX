@@ -22,3 +22,18 @@ verx desktop # la misma app como programa de escritorio (ventana propia, solo 12
 | `verx.config.js` | `lang`, `siteUrl`, `speculation`, `headers`, `bodyLimit` |
 
 Desde páginas y layouts: `import { notFound, redirect, asset, HttpError } from '@verx/kit'`.
+
+## Imágenes: `<Image>` e `image()`
+
+```jsx
+import { Image, image } from '@verx/kit'
+
+<Image src="/foto.png" alt="…" sizes="(min-width: 900px) 720px, 100vw" priority />
+const { src, srcset, width, height, color, placeholder } = image('/foto.png', { widths: [480, 960] })
+```
+
+Lee el PNG de `public/` y, con `@verx/img` (Rust → WASM), genera una vez sus variantes (anchos por defecto: 480, 800, 1200 y 1600; nunca agranda), la miniatura del placeholder y el color medio.
+
+- Las variantes se sirven en `/_verx/img/<nombre>-<ancho>.<huella>.png` con caché inmutable, y `verx build` las exporta.
+- El `<img>` sale con `srcset`, `sizes`, `width`/`height` reales, `loading="lazy"` (o `fetchpriority="high"` con `priority`), y el placeholder desenfocado de fondo. Cero JS.
+- `alt` es obligatorio; `src` no puede salir de `public/`.

@@ -9,6 +9,7 @@
       "name": "web",
       "dependencies": {
         "@verx/gl": "workspace:*",
+        "@verx/img": "workspace:*",
         "@verx/kit": "workspace:*",
         "@verx/md": "workspace:*",
         "@verx/search": "workspace:*",
@@ -20,6 +21,10 @@
       "name": "@verx/gl",
       "version": "0.3.0",
     },
+    "packages/img": {
+      "name": "@verx/img",
+      "version": "0.3.0",
+    },
     "packages/kit": {
       "name": "@verx/kit",
       "version": "0.2.0",
@@ -27,6 +32,7 @@
         "verx": "./bin/verx.js",
       },
       "dependencies": {
+        "@verx/img": "workspace:*",
         "@verx/server": "workspace:*",
         "@verx/ui": "workspace:*",
       },
@@ -61,6 +67,8 @@
   },
   "packages": {
     "@verx/gl": ["@verx/gl@workspace:packages/gl"],
+
+    "@verx/img": ["@verx/img@workspace:packages/img"],
 
     "@verx/kit": ["@verx/kit@workspace:packages/kit"],
 

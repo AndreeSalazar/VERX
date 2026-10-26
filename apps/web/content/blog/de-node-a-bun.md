@@ -5,6 +5,8 @@ date: 2026-10-25
 summary: "El mismo framework sobre Bun.serve: un 65 % más de peticiones por segundo en texto y el doble en JSON."
 tags: [bun, benchmarks]
 authorEmail: interno@ejemplo.com
+cover: /portadas/de-node-a-bun.png
+coverAlt: "Un agujero negro de luz fría entre nubes azules y violetas"
 ---
 
 La primera versión iba sobre `node:http` y ya empataba con `node:http` a pelo, que es el techo de cualquier framework montado encima. Para pasar de ahí había que cambiar de motor.
