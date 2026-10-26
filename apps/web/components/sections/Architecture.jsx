@@ -31,7 +31,7 @@ const Box = ({ name, desc }) => (
 
 export default function Architecture() {
   return (
-    <section class="arch reveal">
+    <section class="arch">
       <h2>Dos mundos, una frontera</h2>
       <p class="section-lead">
         Rust y JavaScript no se tocan. Sólo se hablan a través de archivos .wasm con una ABI versionada, cada uno con su paquete puente, y lo vigila el guardián.

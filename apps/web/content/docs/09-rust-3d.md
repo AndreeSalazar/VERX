@@ -35,7 +35,7 @@ bun run wasm   # recompila crates/sim y publica packages/sim/sim.wasm
 
 ## El agujero negro del fondo
 
-Detrás de cada página hay un agujero negro de Schwarzschild trazado en la GPU. Por cada píxel se lanza un rayo de luz y se integra su órbita en el espacio-tiempo curvo. Todo lo que se ve sale de esa física: la sombra, el anillo de fotones, el lado de atrás del disco curvado por encima y por debajo, las estrellas deformadas en un anillo de Einstein, el Doppler relativista y el corrimiento al rojo gravitacional.
+Detrás de cada página hay un sistema triple de agujeros negros de Schwarzschild trazado en la GPU: un gigante y dos compañeros que lo orbitan, cada uno con su disco inclinado, sus chorros relativistas y un lazo de filamentos magnéticos que los une. Por cada píxel se lanza un rayo de luz y se integra su órbita en el espacio-tiempo curvo. Todo lo que se ve sale de esa física: la sombra, el anillo de fotones, el lado de atrás del disco curvado por encima y por debajo, las estrellas deformadas en un anillo de Einstein, el Doppler relativista y el corrimiento al rojo gravitacional.
 
 ```jsx title="apps/web/lib/blackhole-shader.js"
 // Ecuación de los fotones (rs = 1), integrada en cada píxel
@@ -46,8 +46,9 @@ pos += dir * dt
 alpha = 2.0 / b + 15.0 * PI / (16.0 * b * b)
 ```
 
-- Pesa 3,5 KB y se carga cuando el navegador queda libre: el HTML llega con un agujero hecho sólo con CSS, que sigue ahí si no hay WebGL2 o se pide menos movimiento.
-- Los rayos que pasan lejos usan la fórmula de Einstein en vez de integrarse: el shader va unas 18 veces más rápido.
+- Pesa 5,6 KB y se carga cuando el navegador queda libre: el HTML llega con un agujero hecho sólo con CSS, que sigue ahí si no hay WebGL2 o se pide menos movimiento.
+- Cada rayo se integra sólo alrededor del agujero que roza; los otros dos lo desvían con la fórmula de Einstein, pero sólo en el tramo del camino que de verdad pasa junto a ellos. Los rayos que pasan lejos de todos no se integran: así el shader va unas 18 veces más rápido.
+- Al bajar por la página, la cámara rodea el sistema. Las órbitas, la cámara y dónde se ve cada agujero (desviado por los otros) se calculan en JS una vez por frame (`lib/blackhole-system.js`), no en cada píxel.
 - Dibuja a resolución reducida, la baja más si el equipo no llega y, si ni así, se rinde y deja el CSS.
 - Usa `@verx/gl/core`: sólo el contexto y el bucle, sin el resto del motor 3D.
 

@@ -173,7 +173,7 @@ Windows 11, Bun 1.3.14, 12 núcleos, 100 conexiones keep-alive, 8 s por escenari
 | `bun run dev` · `build` · `start` | desarrollo, exportación estática y producción |
 | `bun run check` · `rules` | el guardián y su lista de reglas |
 | `bun run wasm` | recompila la simulación Rust y la publica |
-| `bun run budget` | JS + WASM por página contra el presupuesto (14 KB por página, 9 KB por isla) |
+| `bun run budget` | JS + WASM por página contra el presupuesto (16 KB por página, 9 KB por isla) |
 | `bun run desktop` | la misma app como programa de escritorio (VERX Desktop) |
 | `bun run grafo` | el repo en nodos, con los bloqueos del guardián en tiempo real (VERX Grafo; `bun run dev` ya lo abre) |
 | `bun run vscode` | instala la extensión de VS Code: el grafo en un panel y los bloqueos en «Problemas» |

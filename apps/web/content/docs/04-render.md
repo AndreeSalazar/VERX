@@ -48,3 +48,15 @@ import { Image } from '@verx/kit'
 
 > [!TIP]
 > Las portadas de este blog son PNG de 1600 px y unos 500 KB. Servidas por `<Image>` en JPEG, la variante de 480 px pesa 13 KB y la de 800 px, 28 KB.
+
+## Transiciones sin JavaScript
+
+Todo el sitio se mueve con el scroll, y no cuesta ni un byte de JS: son animaciones de CSS ligadas a la posición de cada bloque (`animation-timeline: view()`).
+
+- Cada bloque (título, párrafo, tarjeta, imagen, código, fila de tabla) emerge desde el vacío al entrar por abajo y se disuelve al irse por arriba, justo antes de la cabecera. Las imágenes, en vez de subir, se destapan desde el centro.
+- Sólo se anima el bloque más externo: lo que va dentro de una tarjeta viaja con ella.
+- En las rejillas, cada columna llega un poco después que la anterior.
+- Una línea de luz bajo la cabecera crece mientras lees, y al navegar entre páginas la vieja se hunde y la nueva emerge (View Transitions).
+
+> [!NOTE]
+> Los navegadores sin `animation-timeline` (Firefox, por ahora) enseñan la página quieta, tal cual. Con «reducir movimiento» activado, no se anima nada.

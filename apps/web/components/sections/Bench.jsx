@@ -10,7 +10,7 @@ const max = Math.max(...rows.map((r) => r[1]))
 
 export default function Bench() {
   return (
-    <section class="bench reveal">
+    <section class="bench">
       <h2>Medido, no supuesto</h2>
       <p class="section-lead">Peticiones por segundo en un solo núcleo. VERX se queda a un 3-11 % de Bun.serve sin nada encima, que es su techo.</p>
       <ul class="bars">

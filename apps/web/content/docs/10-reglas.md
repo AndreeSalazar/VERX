@@ -11,7 +11,7 @@ verx-guard es un binario en Rust, sin dependencias, que revisa todo el repositor
 - unsafe-acotado: unsafe sólo en `crates/sim/src/abi.rs`.
 - sin-restos · tamano · lf: nada de test.only ni dbg!, archivos de 400 líneas como máximo, saltos de línea LF.
 - imports-js: las fronteras de los imports, analizadas con el AST de Bun.
-- presupuesto: ninguna página transfiere más JS + WASM del límite fijado en verx.`config.js` (14 KB en este sitio).
+- presupuesto: ninguna página transfiere más JS + WASM del límite fijado en verx.`config.js` (16 KB en este sitio).
 
 ## Presupuesto de rendimiento
 
@@ -19,7 +19,7 @@ verx-guard es un binario en Rust, sin dependencias, que revisa todo el repositor
 
 ```jsx title="verx.config.js"
 budget: {
-  page: 14 * 1024,   // por página
+  page: 16 * 1024,   // por página
   island: 9 * 1024,  // por isla (sin contar el runtime)
 }
 ```

@@ -13,7 +13,7 @@ const lines = [
 
 export default function Rules() {
   return (
-    <section class="rules reveal">
+    <section class="rules">
       <div>
         <h2>Reglas que no se negocian</h2>
         <p class="section-lead">

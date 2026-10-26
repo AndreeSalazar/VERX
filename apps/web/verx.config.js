@@ -20,8 +20,13 @@ export default defineConfig({
   // `island` subió de 8 a 9 KB por la lente gravitacional del héroe (Galaxy:
   // galaxia en una textura + pase de lente, ~0,3 KB) y porque el núcleo de
   // @verx/gl ahora va en un chunk compartido con BlackHoleGL (comprime aparte).
+  // `page` subió de 14 a 16 KB por el sistema triple del fondo (BlackHoleGL de
+  // 3,5 a 5,6 KB): tres agujeros trazados con sus discos inclinados, chorros y
+  // filamentos magnéticos, más blackhole-system.js (órbitas, cámara y lentes
+  // calculadas una vez por frame, no por píxel). Compactar el GLSL sólo
+  // ahorraría 0,25 KB; la isla sigue muy por debajo de sus 9 KB.
   budget: {
-    page: 14 * 1024,
+    page: 16 * 1024,
     island: 9 * 1024,
   },
 })

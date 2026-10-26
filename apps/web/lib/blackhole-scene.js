@@ -1,6 +1,8 @@
-// Escena del agujero negro de fondo: un triángulo a pantalla completa con el
-// trazador de rayos de blackhole-shader.js. Se coloca donde está el agujero CSS
-// (`anchor`, que queda como respaldo) y con su mismo tamaño aparente.
+// Escena del fondo: un triángulo a pantalla completa con el trazador de rayos de
+// blackhole-shader.js. El sistema se centra donde está el agujero CSS (`anchor`,
+// que queda como respaldo); el gigante sale a SCALE de su tamaño para que quepan
+// los dos compañeros. Las órbitas, la cámara y dónde se ve cada agujero los
+// calcula blackhole-system.js una vez por frame, no el shader por cada píxel.
 //
 // Cuida la GPU: dibuja a resolución reducida, la baja más si el equipo no llega
 // y, si ni así, se rinde y deja el agujero CSS. Con prefers-reduced-motion no
@@ -8,11 +10,12 @@
 
 import { FULLSCREEN, createGL, createLoop, prefersReducedMotion } from '@verx/gl/core'
 import { FRAGMENT } from './blackhole-shader.js'
+import { DIST, HOLES, apparent, camera, positions } from './blackhole-system.js'
 
 const QUALITY = 0.65 // píxeles del lienzo por píxel CSS
 const MIN_QUALITY = 0.3
 const SHADOW = (3 * Math.sqrt(3)) / 2 // radio aparente de la sombra, en rs
-const DIST = 26 // distancia de la cámara (la misma que en el shader)
+const SCALE = 0.5 // sombra del gigante / tamaño del agujero CSS
 
 export function startBlackHole(canvas, anchor, { onLive, onGiveUp } = {}) {
   if (prefersReducedMotion() || !anchor) return null
@@ -25,6 +28,10 @@ export function startBlackHole(canvas, anchor, { onLive, onGiveUp } = {}) {
   const hero = document.querySelector('.hero')
   const look = { x: 0, y: 0, tx: 0, ty: 0 }
   const place = { width: 0, height: 0, x: 0, y: 0, focal: 1 }
+  const holes = new Float32Array(12)
+  const seen = new Float32Array(6)
+  const axes = new Float32Array(HOLES.flatMap((h) => h.axis))
+  let scroll = 0
   let quality = QUALITY
   let time = 0
   let live = false
@@ -47,7 +54,7 @@ export function startBlackHole(canvas, anchor, { onLive, onGiveUp } = {}) {
     place.height = height
     place.x = (r.left + r.width / 2 - c.left) * dpr
     place.y = (c.bottom - (r.top + r.height / 2)) * dpr
-    place.focal = ((r.width / 2) * dpr) / (SHADOW / DIST)
+    place.focal = ((r.width / 2) * dpr * SCALE) / (SHADOW / DIST)
   }
 
   // Calidad adaptativa: cada 45 frames mira cuánto tardan de media. Los saltos de
@@ -80,12 +87,24 @@ export function startBlackHole(canvas, anchor, { onLive, onGiveUp } = {}) {
     const k = 1 - Math.exp(-dt * 2)
     look.x += (look.tx - look.x) * k
     look.y += (look.ty - look.y) * k
+    // Al bajar por la página, la cámara rodea el sistema (suavizado, sin saltos).
+    const room = document.documentElement.scrollHeight - innerHeight
+    scroll += ((room > 0 ? scrollY / room : 0) - scroll) * k
+    const view = camera(look, scroll)
+    positions(time, holes)
+    apparent(view, holes, seen)
     gl.useProgram(program)
     gl.bindVertexArray(vao)
     gl.uniform2f(u.uCenter, place.x, place.y)
     gl.uniform1f(u.uFocal, place.focal)
     gl.uniform1f(u.uTime, time)
-    gl.uniform2f(u.uLook, look.x, look.y)
+    gl.uniform3fv(u.uCam, view.cam)
+    gl.uniform3fv(u.uFw, view.fw)
+    gl.uniform3fv(u.uRt, view.rt)
+    gl.uniform3fv(u.uUp, view.up)
+    gl.uniform4fv(u['uHole[0]'], holes)
+    gl.uniform3fv(u['uAxis[0]'], axes)
+    gl.uniform2fv(u['uSeen[0]'], seen)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     if (!live) {
       live = true

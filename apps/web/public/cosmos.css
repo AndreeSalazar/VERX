@@ -24,8 +24,8 @@ body {
 
 /* ══ El fondo ═══════════════════════════════════════════════════════ */
 .cosmos {
-  --bh-x: 76%;
-  --bh-y: 46%;
+  --bh-x: 64%;
+  --bh-y: 44%;
   --bh-size: clamp(120px, 13vw, 210px);
   position: fixed;
   inset: 0;
@@ -590,35 +590,59 @@ footer::before {
   background: linear-gradient(90deg, transparent, var(--line-strong), rgba(255, 213, 107, 0.5), var(--line-strong), transparent);
 }
 
-/* Todo lo que entra en pantalla aparece desde el vacío (scroll-driven, sin JS).
-   Con `backwards`: al terminar no queda ningún filtro aplicado (un blur(0px)
-   residual crea una capa por elemento y rompe background-clip: text). */
+/* ══ Todo el sitio, en transición con el scroll (scroll-driven, sin JS) ═══
+   Una sola regla para todas las páginas: cada bloque (título, párrafo,
+   tarjeta, imagen, código, fila, elemento de lista…) emerge desde el vacío al
+   entrar por abajo y se disuelve al irse por arriba, justo antes de la
+   cabecera (los 60 px de arriba no cuentan como pantalla).
+   · Sólo se anima el bloque más externo de la lista: lo que va dentro de una
+     tarjeta viaja con ella (si no, se apilarían desenfoques y retrasos).
+   · Los rangos van en píxeles, no en %: un bloque de código de 2000 px
+     emerge en sus primeros 240 px y se disuelve en sus últimos 160 (con %
+     se apagaría mientras aún lo estás leyendo); uno corto, sólo mientras
+     pasa bajo la cabecera.
+   · En las rejillas, cada columna llega un poco después que la anterior (--i).
+   · Cada bloque elige su entrada (--in: emerge, o unveil en las imágenes) y
+     su animación de reposo (--idle: el código late con hum).
+   · El héroe y los títulos de página tienen su propia entrada (materialize).
+   · Con `backwards`, la entrada no deja ningún filtro aplicado al terminar
+     (un blur(0px) residual crea una capa por elemento y rompe
+     background-clip: text). La salida sí lo deja, pero ya fuera de pantalla.
+   Sin animation-timeline (Firefox, por ahora), todo se ve quieto, tal cual. */
 @supports (animation-timeline: view()) {
-  main h2,
-  .prose > *,
-  .card,
-  .list li,
-  .stack > *,
-  .stats div,
-  .pager,
-  .table tr,
-  .bars li,
-  .arch-world,
-  .counter {
-    animation: emerge linear backwards;
-    animation-timeline: view();
-    animation-range: entry 0% cover 22%;
+  :where(main, footer)
+    :is(h2, h3, h4, p, li, blockquote, figure, img, pre, tr, hr, details, form, dl, .card, .post-card, .actions, .code, .terminal, .callout, .arch-world, .stats div, .pager, .counter, .on-page):not(
+      :is(.hero, h2, h3, h4, p, li, blockquote, figure, pre, tr, details, form, dl, .card, .post-card, .actions, .code, .terminal, .callout, .arch-world, .stats div, .pager, .counter, .on-page) *
+    ),
+  footer > * {
+    animation:
+      var(--in, emerge) linear backwards,
+      recede linear forwards,
+      var(--idle, none) 6s ease-in-out infinite;
+    animation-timeline: view(block 60px 0px), view(block 60px 0px), auto;
+    animation-range:
+      entry calc(var(--i, 0) * 30px) entry calc(240px + var(--i, 0) * 30px),
+      exit max(0%, calc(100% - 160px)) exit 100%,
+      normal;
   }
-  .card {
-    animation-range: entry calc(var(--i, 0) * 3%) cover calc(20% + var(--i, 0) * 3%);
+  :where(.grid, .posts, .stats) > :nth-child(3n + 2) {
+    --i: 1;
+  }
+  :where(.grid, .posts, .stats) > :nth-child(3n) {
+    --i: 2;
+  }
+  :where(main) img {
+    --in: unveil;
+  }
+  /* El héroe entra a su manera (materialize), pero también se va disolviéndose. */
+  .hero-inner {
+    animation: recede linear forwards;
+    animation-timeline: view(block 60px 0px);
+    animation-range: exit calc(100% - 260px) exit 100%;
   }
   .code,
   .terminal {
-    animation:
-      emerge linear backwards,
-      hum 6s ease-in-out infinite;
-    animation-timeline: view(), auto;
-    animation-range: entry 0% cover 22%, normal;
+    --idle: hum;
   }
 }
 @keyframes emerge {
@@ -626,6 +650,54 @@ footer::before {
     opacity: 0;
     filter: blur(6px);
     transform: translateY(26px) scale(0.985);
+  }
+}
+/* Al irse, aún se lee durante el primer tercio; después se disuelve. */
+@keyframes recede {
+  35% {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    filter: blur(5px);
+    transform: translateY(-16px) scale(0.985);
+  }
+}
+/* Las imágenes no suben: se destapan desde el centro y se asientan. */
+@keyframes unveil {
+  from {
+    opacity: 0;
+    clip-path: inset(12% 10% round 18px);
+    transform: scale(1.06);
+    filter: blur(4px);
+  }
+}
+
+/* La cabecera lleva la cuenta: una línea de luz que crece mientras lees. */
+@supports (animation-timeline: scroll()) {
+  .top::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    z-index: 1;
+    height: 2px;
+    background: linear-gradient(90deg, var(--violet), var(--gold), var(--coral));
+    box-shadow: 0 0 12px rgba(255, 213, 107, 0.45);
+    transform-origin: 0 50%;
+    animation: progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+@keyframes progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
 

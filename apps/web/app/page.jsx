@@ -34,9 +34,9 @@ export default function Home() {
     <>
       <Hero />
 
-      <section class="grid reveal">
-        {features.map(([title, text], i) => (
-          <article class="card" style={{ '--i': i }}>
+      <section class="grid">
+        {features.map(([title, text]) => (
+          <article class="card">
             <h3>{title}</h3>
             <p>{text}</p>
           </article>
@@ -45,7 +45,7 @@ export default function Home() {
 
       <Architecture />
 
-      <section class="split reveal">
+      <section class="split">
         <div>
           <h2>Una isla de verdad</h2>
           <p class="section-lead">
@@ -63,7 +63,7 @@ export default function Home() {
       <Bench />
       <Rules />
 
-      <section class="reveal">
+      <section>
         <h2>Lo mejor de cada casa</h2>
         <table class="table">
           <thead>
@@ -83,7 +83,7 @@ export default function Home() {
         </table>
       </section>
 
-      <section class="reveal">
+      <section>
         <h2>Del blog</h2>
         <PostCards posts={posts} />
       </section>
