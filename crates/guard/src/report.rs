@@ -5,7 +5,8 @@
 //! ```json
 //! {"ok":false,"quick":true,"files":240,"rules":[
 //!   {"id":"sin-restos","title":"…","fix":"…","skipped":false,
-//!    "problems":[{"file":"apps/web/a.js","line":3,"message":"resto de depuración: debugger"}]}]}
+//!    "problems":[{"file":"apps/web/a.js","line":3,"message":"resto de depuración: debugger"}]}],
+//!  "compat":{"target":{…},"features":[…],"files":{"apps/web/a.css":[["has",12,false]]}}}
 //! ```
 
 use std::fmt::Write;
@@ -41,6 +42,13 @@ fn string(out: &mut String, s: &str) {
     out.push('"');
 }
 
+/// Una cadena JSON (con sus comillas), para quien construya JSON a mano.
+pub(crate) fn quote(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 2);
+    string(&mut out, s);
+    out
+}
+
 /// `ruta:línea` → (`ruta`, `Some(línea)`); sin línea, `None`.
 fn location(file: &str) -> (&str, Option<u32>) {
     match file.rsplit_once(':') {
@@ -49,8 +57,9 @@ fn location(file: &str) -> (&str, Option<u32>) {
     }
 }
 
-/// El informe completo en JSON.
-pub(crate) fn json(outcomes: &[Outcome<'_>], files: usize, quick: bool) -> String {
+/// El informe completo en JSON. `compat` es el mapa de navegadores ya en JSON
+/// (`compat::json`): qué usa cada archivo y dónde falta.
+pub(crate) fn json(outcomes: &[Outcome<'_>], files: usize, quick: bool, compat: &str) -> String {
     let ok = outcomes.iter().all(|o| o.problems.is_empty());
     let mut out = format!("{{\"ok\":{ok},\"quick\":{quick},\"files\":{files},\"rules\":[");
     for (i, o) in outcomes.iter().enumerate() {
@@ -83,7 +92,7 @@ pub(crate) fn json(outcomes: &[Outcome<'_>], files: usize, quick: bool) -> Strin
         }
         out.push_str("]}");
     }
-    out.push_str("]}");
+    let _ = write!(out, "],\"compat\":{compat}}}");
     out
 }
 
@@ -114,7 +123,7 @@ mod tests {
                 skipped: false,
             },
         ];
-        let text = json(&outcomes, 7, true);
+        let text = json(&outcomes, 7, true, "{\"target\":{}}");
         let doc = parse(&text);
         assert!(doc.is_ok(), "JSON inválido: {text}");
         let Ok(doc) = doc else { return };

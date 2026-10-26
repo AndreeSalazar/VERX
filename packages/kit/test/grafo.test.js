@@ -192,3 +192,35 @@ test('«ver en el grafo» desde el sitio: abre la ventana y la lleva al archivo'
   expect(text).toContain('event: focus\ndata: {"node":"packages/a/src/usa.js","line":2}')
   ctrl.abort()
 })
+
+test('navegadores: cada carpeta suma lo que exigen sus archivos y dónde se pierde', async () => {
+  const { browserMap, lacking, badge, section } = await import('../src/grafo/ui/browsers.js')
+  const compat = {
+    target: { chrome: '120', safari: '17', firefox: '128' },
+    features: [
+      { id: 'animaciones-con-scroll', title: 'Animaciones con scroll', policy: 'proteger', missing: ['safari', 'firefox'], respaldo: '@verx/compat/reveal' },
+      { id: 'has', title: ':has()', policy: 'degrada', missing: [], respaldo: null },
+    ],
+    files: { 'apps/web/a.css': [['animaciones-con-scroll', 4, true], ['has', 9, false]], 'apps/web/b.css': [['has', 2, false]] },
+  }
+  const parents = { 'apps/web/a.css': 'apps/web', 'apps/web/b.css': 'apps/web', 'apps/web': '' }
+  const ancestors = (id) => {
+    const out = []
+    for (let n = id; n !== undefined; n = parents[n]) out.push(n)
+    return out
+  }
+  const map = browserMap(compat, ancestors)
+  const web = map.get('apps/web')
+  expect([...web.keys()]).toEqual(['animaciones-con-scroll', 'has'])
+  expect(web.get('has').files.size).toBe(2)
+  // Lo de a.css va protegido (y tiene respaldo): no cuenta como pérdida.
+  expect(lacking(web, compat)).toEqual([])
+  const unguarded = browserMap({ ...compat, files: { 'apps/web/c.css': [['animaciones-con-scroll', 1, false]] } }, () => ['apps/web/c.css'])
+  expect(lacking(unguarded.get('apps/web/c.css'), compat)).toEqual(['safari', 'firefox'])
+  expect(lacking(map.get('apps/web/b.css'), compat)).toEqual([])
+  expect(badge(['safari', 'firefox'])).toBe('Safari · Firefox')
+  const html = section(map.get('apps/web/a.css'), compat, (s) => String(s))
+  expect(html).toContain('✔ falta en Safari 17, Firefox 128 · protegido')
+  expect(html).toContain('↳ @verx/compat/reveal')
+  expect(html).toContain('✔ en todos')
+})

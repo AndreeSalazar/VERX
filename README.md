@@ -72,7 +72,7 @@ crates/          MUNDO RUST (workspace propio, toolchain 1.99.1 fijada)
   search/        verx-search  buscador BM25 → .wasm · no_std · 12 KB · unsafe sólo en abi.rs
   md/            verx-md      Markdown → HTML con resaltado · no_std · en el servidor
   img/           verx-img     PNG, DEFLATE y redimensionado en luz lineal · en el servidor
-  guard/         verx-guard   guardián de 13 reglas (std, sin crates)
+  guard/         verx-guard   guardián de 14 reglas (std, sin crates)
 packages/        MUNDO BUN (workspaces aislados: cada uno ve sólo lo que declara)
   signals/       @verx/signals   reactividad de grano fino            → nada
   server/        @verx/server    HTTP sobre Bun.serve + estáticos      → nada
@@ -122,9 +122,21 @@ Y te guía también donde estás trabajando:
 
 Todo va en tiempo real, solo en `127.0.0.1` y con el mismo candado de token que VERX Desktop.
 
+## Todos los navegadores, sin dependencias
+
+Lo que un navegador no trae no se puede hacer nativo en él, pero sí se puede proteger y suplir:
+
+1. **El objetivo:** `browsers: { chrome: 120, safari: 17, firefox: 128 }` en `verx.config.js`.
+2. **El guardián sabe qué exige cada carpeta.** La regla `navegadores` busca en el CSS y el JS las funciones de su tabla y bloquea lo que falta en un navegador objetivo sin protección. En VERX Grafo, cada carpeta enseña en ámbar dónde pierde algo, y su panel dice qué, en qué versión y si tiene respaldo.
+3. **Respaldos propios** (`@verx/compat`), que solo descarga el navegador que los necesita:
+   - las transiciones con el scroll, con `IntersectionObserver`, para Firefox y Safari < 26;
+   - la precarga al pasar el ratón, para Safari y Firefox.
+
+   En Chrome no se descarga nada nuevo. Firefox baja 1,4 KB más.
+
 ## Reglas que bloquean
 
-Las 13 reglas de `verx-guard` (`bun run rules`) se aplican en tres sitios:
+Las 14 reglas de `verx-guard` (`bun run rules`) se aplican en tres sitios:
 
 | Dónde | Qué hace |
 |---|---|
@@ -173,7 +185,7 @@ Windows 11, Bun 1.3.14, 12 núcleos, 100 conexiones keep-alive, 8 s por escenari
 | `bun run dev` · `build` · `start` | desarrollo, exportación estática y producción |
 | `bun run check` · `rules` | el guardián y su lista de reglas |
 | `bun run wasm` | recompila la simulación Rust y la publica |
-| `bun run budget` | JS + WASM por página contra el presupuesto (16 KB por página, 9 KB por isla) |
+| `bun run budget` | JS + WASM por página contra el presupuesto (18 KB por página en el peor navegador, 9 KB por isla) |
 | `bun run desktop` | la misma app como programa de escritorio (VERX Desktop) |
 | `bun run grafo` | el repo en nodos, con los bloqueos del guardián en tiempo real (VERX Grafo; `bun run dev` ya lo abre) |
 | `bun run vscode` | instala la extensión de VS Code: el grafo en un panel y los bloqueos en «Problemas» |

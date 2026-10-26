@@ -8,6 +8,7 @@
 //! verx-guard wasm              compila cada crate puente y lo publica en su paquete
 //! ```
 
+mod compat;
 mod hash;
 mod json;
 mod repo;
@@ -68,7 +69,10 @@ fn main() -> ExitCode {
 fn check(repo: &Repo, quick: bool, json: bool) -> ExitCode {
     let outcomes = rules::run(repo, quick);
     if json {
-        println!("{}", report::json(&outcomes, repo.files.len(), quick));
+        println!(
+            "{}",
+            report::json(&outcomes, repo.files.len(), quick, &compat::json(repo))
+        );
         let ok = outcomes.iter().all(|o| o.problems.is_empty());
         return if ok { ExitCode::SUCCESS } else { ExitCode::FAILURE };
     }

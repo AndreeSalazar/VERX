@@ -17,6 +17,10 @@
         "@verx/ui": "workspace:*",
       },
     },
+    "packages/compat": {
+      "name": "@verx/compat",
+      "version": "0.1.0",
+    },
     "packages/gl": {
       "name": "@verx/gl",
       "version": "0.3.0",
@@ -32,6 +36,7 @@
         "verx": "./bin/verx.js",
       },
       "dependencies": {
+        "@verx/compat": "workspace:*",
         "@verx/img": "workspace:*",
         "@verx/server": "workspace:*",
         "@verx/ui": "workspace:*",
@@ -64,8 +69,14 @@
         "@verx/signals": "workspace:*",
       },
     },
+    "packages/vscode": {
+      "name": "@verx/vscode",
+      "version": "0.1.0",
+    },
   },
   "packages": {
+    "@verx/compat": ["@verx/compat@workspace:packages/compat"],
+
     "@verx/gl": ["@verx/gl@workspace:packages/gl"],
 
     "@verx/img": ["@verx/img@workspace:packages/img"],
@@ -83,6 +94,8 @@
     "@verx/sim": ["@verx/sim@workspace:packages/sim"],
 
     "@verx/ui": ["@verx/ui@workspace:packages/ui"],
+
+    "@verx/vscode": ["@verx/vscode@workspace:packages/vscode"],
 
     "web": ["web@workspace:apps/web"],
   }

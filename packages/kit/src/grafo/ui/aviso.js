@@ -13,7 +13,7 @@ shadow.innerHTML = `<style>
   .pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; color: #fff; background: rgba(40, 8, 12, 0.92); box-shadow: 0 0 0 1px rgba(255, 77, 94, 0.7), 0 0 22px rgba(255, 77, 94, 0.45); animation: glow 1.6s ease-in-out infinite; }
   .pill.ok { background: rgba(10, 30, 18, 0.92); color: #4ee38a; box-shadow: 0 0 0 1px rgba(78, 227, 138, 0.5); animation: none; }
   @keyframes glow { 50% { box-shadow: 0 0 0 1px rgba(255, 77, 94, 0.9), 0 0 34px rgba(255, 77, 94, 0.7); } }
-  .card { width: min(520px, calc(100vw - 32px)); max-height: 70vh; overflow: auto; margin-bottom: 10px; padding: 14px 16px; border-radius: 16px; background: rgba(10, 10, 18, 0.96); box-shadow: 0 0 0 1px rgba(255, 77, 94, 0.45), 0 24px 70px rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px); }
+  .card { width: min(520px, calc(100vw - 32px)); max-height: 70vh; overflow: auto; margin-bottom: 10px; padding: 14px 16px; border-radius: 16px; background: rgba(10, 10, 18, 0.96); box-shadow: 0 0 0 1px rgba(255, 77, 94, 0.45), 0 24px 70px rgba(0, 0, 0, 0.7); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .head b { flex: 1; letter-spacing: 0.04em; }
   .head b span { color: #ffd56b; }

@@ -46,14 +46,18 @@ function graph(files) {
   return { closure, sum }
 }
 
-// Renderiza cada página estática/ISR y devuelve lo que transfiere.
+// Renderiza cada página estática/ISR y devuelve lo que transfiere. Cuenta el
+// peor caso: los respaldos de @verx/compat, que todas las páginas cargan en
+// los navegadores a los que les falta algo (Firefox los carga todos).
 export async function measureBudget(kit) {
   const { closure, sum } = graph(kit.client.files)
   const runtime = kit.client.runtime ? closure(kit.client.runtime.src) : new Set()
+  const fallbacks = Object.values(kit.client.compat ?? {})
+  const compat = new Set(fallbacks.flatMap((src) => [...closure(src)]))
   const pages = []
   for (const page of kit.pages) {
     const { islands } = await page.measure()
-    const all = new Set(islands.length ? runtime : [])
+    const all = new Set([...(islands.length ? runtime : []), ...compat])
     for (const src of islands) for (const p of closure(src)) all.add(p)
     pages.push({
       path: page.path,
@@ -61,7 +65,7 @@ export async function measureBudget(kit) {
       islands: islands.map((src) => ({ name: label(src), bytes: sum([...closure(src)].filter((p) => !runtime.has(p))) })),
     })
   }
-  return { pages, runtime: sum(runtime), unmeasured: kit.dynamic }
+  return { pages, runtime: sum(runtime), compat: sum(compat), unmeasured: kit.dynamic }
 }
 
 // Lo que se pasa del presupuesto. Cada isla se informa una sola vez.

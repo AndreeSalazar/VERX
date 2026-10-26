@@ -1,0 +1,14 @@
+{
+  "name": "@verx/compat",
+  "version": "0.1.0",
+  "description": "Respaldos propios para los navegadores a los que les falta algo: transiciones con el scroll y precarga al pasar el ratón",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./reveal": "./src/reveal.js",
+    "./prefetch": "./src/prefetch.js"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

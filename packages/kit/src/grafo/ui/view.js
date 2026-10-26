@@ -117,8 +117,9 @@ function hotBoxes(graph, bad) {
   return hot
 }
 
-// Dibuja todo el grafo en `root` (un <g>). `bad`: id → nº de bloqueos (propios + de dentro).
-export function draw(root, graph, lay, bad) {
+// Dibuja todo el grafo en `root` (un <g>). `bad`: id → nº de bloqueos (propios +
+// de dentro). `warn`: id → navegadores en los que pierde algo («Safari · Firefox»).
+export function draw(root, graph, lay, bad, warn = new Map()) {
   root.replaceChildren()
   const hot = hotBoxes(graph, bad)
   const edges = el('g', { class: 'edges' }, root)
@@ -141,6 +142,7 @@ export function draw(root, graph, lay, bad) {
     if (n.kind === 'file') {
       const g = el('g', { class: `node file${count ? ' bad' : ''}${n.broken ? ' broken' : ''}`, 'data-id': n.id, transform: `translate(${p.x},${p.y})` }, dots)
       if (count) el('circle', { r: 11, class: 'pulse' }, g)
+      if (warn.has(n.id)) el('circle', { r: 7, class: 'warn-ring' }, g)
       el('circle', { r: count ? 4.6 : 3.4, fill: EXT_COLOR[n.ext] ?? '#c8c8d8' }, g)
       const t = el('text', { x: p.x + 7, y: p.y + 3, class: 'label file-label', 'data-for': n.id }, labels)
       t.textContent = n.label
@@ -154,6 +156,10 @@ export function draw(root, graph, lay, bad) {
     if (count) {
       const badge = el('text', { x: p.x, y: p.y - p.r + 14, class: 'badge', 'text-anchor': 'middle' }, labels)
       badge.textContent = `✖ ${count}`
+    }
+    if (warn.has(n.id)) {
+      const w = el('text', { x: p.x, y: p.y - p.r + (count ? 27 : 14), class: `warn-badge ${n.kind}-warn`, 'text-anchor': 'middle' }, labels)
+      w.textContent = `◐ ${warn.get(n.id)}`
     }
   }
 }

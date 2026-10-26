@@ -4,6 +4,7 @@
 
 import { camera, draw, layout, showLinks } from './view.js'
 import { createEditor } from './editor.js'
+import { badge, browserMap, lacking, section } from './browsers.js'
 
 const $ = (sel) => document.querySelector(sel)
 // Dentro del panel de VS Code la cookie no viaja: el token llega en el #hash
@@ -14,7 +15,7 @@ if (token) history.replaceState(null, '', location.pathname)
 const api = (path, opts = {}) => fetch(path, token ? { ...opts, headers: { ...opts.headers, 'x-verx-token': token } } : opts)
 const svg = $('#graph')
 const world = $('#world')
-const state = { graph: null, lay: null, byId: new Map(), problems: [], bad: new Map(), selected: null, hover: null, shape: '' }
+const state = { graph: null, lay: null, byId: new Map(), problems: [], bad: new Map(), compat: null, browsers: new Map(), selected: null, hover: null, shape: '' }
 
 const cam = camera(svg, world, (k) => svg.setAttribute('data-zoom', k > 2.2 ? 'near' : k > 0.9 ? 'mid' : 'far'))
 // Abre el archivo en VS Code: desde su panel, por mensaje; si no, con vscode://.
@@ -72,7 +73,13 @@ function render() {
   }
   state.bad = new Map()
   for (const p of state.problems) for (const id of ancestors(p.node)) state.bad.set(id, (state.bad.get(id) ?? 0) + 1)
-  draw(world, g, state.lay, state.bad)
+  // En ámbar, lo que pierde algo en alguno de los navegadores objetivo.
+  const warn = new Map()
+  for (const [id, byFeature] of state.browsers) {
+    const where = lacking(byFeature, state.compat)
+    if (where.length) warn.set(id, badge(where))
+  }
+  draw(world, g, state.lay, state.bad, warn)
   for (const id of [state.selected, editor.current()]) world.querySelector(`[data-id="${CSS.escape(id ?? '')}"]`)?.classList.add('selected')
   showLinks(world, g, state.lay, state.hover ?? state.selected)
   panel()
@@ -102,6 +109,7 @@ function panel() {
     <p class="path">${esc(id || '(raíz)')}</p>
     ${n.kind === 'file' ? `<div class="actions"><button data-edit="${esc(id)}">Editar aquí</button> <button data-code="${esc(id)}">Abrir en VS Code</button></div>` : ''}
     ${problems.length ? `<h4 class="bad">Bloqueado <small>${problems.length}</small></h4>${problems.map(problemCard).join('')}` : '<p class="ok-line">✔ Nada bloqueado aquí</p>'}
+    ${section(state.browsers.get(id), state.compat, esc)}
     ${list(n.kind === 'file' ? 'Importa' : 'Depende de', out)}
     ${list(n.kind === 'file' ? 'Lo importan' : 'Lo usan', inn)}`
 }
@@ -188,6 +196,8 @@ events.onmessage = (e) => {
   state.graph = data
   state.byId = new Map(data.nodes.map((n) => [n.id, n]))
   state.problems = data.problems
+  state.compat = data.compat
+  state.browsers = browserMap(data.compat, (file) => (state.byId.has(file) ? ancestors(file) : []))
   if (state.selected && !state.byId.has(state.selected)) state.selected = null
   if (!data.status.checking) {
     const now = new Set(state.problems.map((p) => p.node))

@@ -1,6 +1,6 @@
 ---
 title: "Reglas y guardián"
-summary: "Las 13 reglas del repo y los tres sitios donde se hacen cumplir."
+summary: "Las 14 reglas del repo y los tres sitios donde se hacen cumplir."
 ---
 
 verx-guard es un binario en Rust, sin dependencias, que revisa todo el repositorio. Cada regla tiene un id estable y una indicación de cómo arreglarla.
@@ -11,7 +11,8 @@ verx-guard es un binario en Rust, sin dependencias, que revisa todo el repositor
 - unsafe-acotado: unsafe sólo en `crates/sim/src/abi.rs`.
 - sin-restos · tamano · lf: nada de test.only ni dbg!, archivos de 400 líneas como máximo, saltos de línea LF.
 - imports-js: las fronteras de los imports, analizadas con el AST de Bun.
-- presupuesto: ninguna página transfiere más JS + WASM del límite fijado en verx.`config.js` (16 KB en este sitio).
+- navegadores: lo que falta en alguno de los navegadores objetivo (`browsers` en verx.`config.js`) va protegido, y tiene su respaldo.
+- presupuesto: ninguna página transfiere más JS + WASM del límite fijado en verx.`config.js` (18 KB en este sitio, contando los respaldos que descarga Firefox).
 
 ## Presupuesto de rendimiento
 
@@ -19,7 +20,7 @@ verx-guard es un binario en Rust, sin dependencias, que revisa todo el repositor
 
 ```jsx title="verx.config.js"
 budget: {
-  page: 16 * 1024,   // por página
+  page: 18 * 1024,   // por página
   island: 9 * 1024,  // por isla (sin contar el runtime)
 }
 ```

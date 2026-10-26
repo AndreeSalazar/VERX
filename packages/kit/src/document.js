@@ -3,6 +3,8 @@
 //  · Speculation Rules: Chrome/Edge prerenderizan la página siguiente al pasar
 //    el ratón por un enlace → navegación instantánea con 0 KB de JS.
 //  · Islas: sólo si la página usa alguna se añade el runtime (y se precarga).
+//  · Respaldos (@verx/compat): una línea que, sólo en los navegadores a los
+//    que les falta algo (Firefox, Safari), importa lo que lo suple.
 
 import { escape } from '@verx/ui/server'
 
@@ -36,7 +38,16 @@ export function mergeMetadata(list) {
   return out
 }
 
-export function renderDocument({ body, meta, head = '', lang = 'es', siteUrl, islands, runtime, speculation, dev }) {
+// Respaldos (@verx/compat): cada uno, sólo si al navegador le falta lo que
+// suple. Con ?verx-compat en la URL se cargan siempre (para probarlos en Chrome).
+function compatLoader(compat, speculation) {
+  const parts = []
+  if (compat?.reveal) parts.push(`(f||!CSS.supports("animation-timeline: view()"))&&import("${compat.reveal}")`)
+  if (compat?.prefetch && speculation) parts.push(`(f||!HTMLScriptElement.supports?.("speculationrules"))&&import("${compat.prefetch}")`)
+  return parts.length ? `<script type="module">const f=/[?&]verx-compat\\b/.test(location.search);${parts.join(';')}</script>` : ''
+}
+
+export function renderDocument({ body, meta, head = '', lang = 'es', siteUrl, islands, runtime, compat, speculation, dev }) {
   const tags = ['<meta charset="utf-8">', '<meta name="viewport" content="width=device-width, initial-scale=1">']
   const abs = (u) => (siteUrl && u && u.startsWith('/') ? siteUrl.replace(/\/$/, '') + u : u)
   if (meta.title) tags.push(`<title>${escape(meta.title)}</title>`)
@@ -51,6 +62,7 @@ export function renderDocument({ body, meta, head = '', lang = 'es', siteUrl, is
 
   tags.push(head)
   if (speculation) tags.push(`<script type="speculationrules">${SPECULATION(speculation)}</script>`)
+  tags.push(compatLoader(compat, speculation))
   if (islands && runtime) {
     tags.push('<style>verx-island{display:contents}</style>')
     for (const href of runtime.preload) tags.push(`<link rel="modulepreload" href="${href}">`)

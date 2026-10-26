@@ -86,7 +86,9 @@ switch (command) {
     console.log(`[verx] JS + WASM por página (brotli) · página ≤ ${kb(budget.page)} · isla ≤ ${kb(budget.island)}`)
     const width = Math.max(...report.pages.map((p) => p.path.length))
     for (const p of report.pages) {
-      const detail = p.islands.length ? `runtime ${kb(report.runtime)} + ${p.islands.map((i) => `${i.name} ${kb(i.bytes)}`).join(' + ')}` : 'cero JS'
+      const parts = p.islands.length ? [`runtime ${kb(report.runtime)}`, ...p.islands.map((i) => `${i.name} ${kb(i.bytes)}`)] : []
+      if (report.compat) parts.push(`respaldos ${kb(report.compat)} (sólo Firefox/Safari)`)
+      const detail = parts.length ? parts.join(' + ') : 'cero JS'
       console.log(`  ${p.bytes > budget.page ? '✖' : '✔'} ${p.path.padEnd(width)}  ${kb(p.bytes).padStart(8)}   ${detail}`)
     }
     if (report.unmeasured.length) console.log(`  (sin medir, se renderizan bajo demanda: ${report.unmeasured.join(', ')})`)

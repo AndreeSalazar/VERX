@@ -38,13 +38,18 @@ test('metadata: plantilla de título y absolute', () => {
   expect(mergeMetadata([layout, { title: { absolute: 'Solo' } }]).title).toBe('Solo')
 })
 
-test('página estática: layout, metadata, CSS con huella y cero JS', async () => {
+test('página estática: layout, metadata, CSS con huella y cero JS (salvo el respaldo donde falte)', async () => {
   const html = await (await get('/')).text()
   expect(html).toContain('<div id="root"><h1>Inicio</h1></div>')
   expect(html).toContain('<title>Fixture</title>')
   expect(html).toMatch(/href="\/a\.[0-9a-f]{10}\.css"/)
   expect(html).toContain('type="speculationrules"')
-  expect(html).not.toContain('<script type="module"')
+  // Ni runtime ni islas: sólo una línea que trae la precarga a quien no tiene
+  // Speculation Rules (Safari, Firefox). Chrome no descarga nada.
+  expect(html).not.toContain('<script type="module" src=')
+  expect(html).toMatch(/\(f\|\|!HTMLScriptElement\.supports\?\.\("speculationrules"\)\)&&import\("\/_verx\/prefetch-\w+\.js"\)/)
+  // El fixture no marca bloques con --verx-reveal: no hay respaldo de transiciones.
+  expect(html).not.toContain('animation-timeline')
 })
 
 test('generateStaticParams prerenderiza; otros params van por SSR y pueden dar 404', async () => {
@@ -126,11 +131,13 @@ test('presupuesto: mide el JS de cada página y detecta lo que se pasa', async (
   const report = await measureBudget(kit)
   const home = report.pages.find((p) => p.path === '/')
   const island = report.pages.find((p) => p.path === '/island')
-  expect(home.bytes).toBe(0) // sin islas, cero JS
+  // Sin islas, sólo el respaldo de la precarga (el peor caso: Firefox, Safari).
+  expect(report.compat).toBeGreaterThan(0)
+  expect(home.bytes).toBe(report.compat)
   expect(island.islands.map((i) => i.name)).toEqual(['Clicker'])
-  expect(island.bytes).toBe(report.runtime + island.islands[0].bytes)
+  expect(island.bytes).toBe(report.runtime + island.islands[0].bytes + report.compat)
   expect(checkBudget(report, { page: 100_000, island: 100_000 })).toEqual([])
-  expect(checkBudget(report, { page: 10, island: 10 }).map((p) => p.where)).toEqual(['/island', 'Clicker'])
+  expect(checkBudget(report, { page: 10, island: 10 }).map((p) => p.where)).toEqual(expect.arrayContaining(['/', '/island', 'Clicker']))
 })
 
 test('route.js con export WS: WebSocket en tiempo real', async () => {

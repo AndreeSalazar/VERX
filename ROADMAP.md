@@ -34,6 +34,7 @@ Cada plan es un paquete (`packages/`) o un crate (`crates/`) nuevo, con su READM
 - [ ] **13. `bun create verx`**: un proyecto nuevo con un comando, con las reglas ya incluidas.
 - [ ] **14. Panel de desarrollo**: en modo dev, una capa que muestra cada isla, su peso y cuándo se hidrató.
 - [ ] **15. Adaptadores** para desplegar en Cloudflare y Vercel.
+- [x] **18. Todos los navegadores** ✅: regla `navegadores` en el guardián (tabla propia de compatibilidad y objetivo en `verx.config.js`), insignias en VERX Grafo con lo que cada carpeta exige y dónde se pierde, y `@verx/compat` con respaldos que sólo baja quien los necesita (transiciones con el scroll y precarga). Siguiente: un respaldo para las transiciones entre páginas en Firefox.
 - [x] **16. VERX Grafo** ✅: con `verx dev`, una segunda ventana con todo el repo en nodos (mundos, paquetes, carpetas, archivos, imports y puentes `.wasm`). Lo que bloquea el guardián late en rojo con su regla, su motivo y su línea. Todo se actualiza en tiempo real y se arregla ahí mismo. Además señala al culpable exacto, aunque la regla solo sepa «apps/web falla», y guía donde trabajas: con un aviso en el propio sitio, con una página que explica por qué el sitio no arranca y desde VS Code (`@verx/vscode`: panel, «Problemas» y barra de estado). Siguiente: el peso de cada isla sobre el grafo (une con el punto 14).
 
 ## 🖥️ VERX Desktop: la misma app como web y como escritorio

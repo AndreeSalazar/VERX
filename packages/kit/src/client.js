@@ -19,6 +19,12 @@ const IGNORE = new Set(['node_modules', 'dist', 'public', 'test', 'tests'])
 const SOURCE = /\.(jsx|tsx|js|ts)$/
 const DIRECTIVE = /^(?:\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*['"]use client['"]/
 const RUNTIME = fileURLToPath(new URL('../client/runtime.js', import.meta.url))
+// Respaldos para los navegadores a los que les falta algo (@verx/compat). Se
+// empaquetan aquí, con huella, y document.js sólo los importa donde hacen falta.
+const COMPAT = {
+  reveal: fileURLToPath(import.meta.resolve('@verx/compat/reveal')),
+  prefetch: fileURLToPath(import.meta.resolve('@verx/compat/prefetch')),
+}
 export const CLIENT_PREFIX = '/_verx/'
 
 export function findClientFiles(root) {
@@ -37,19 +43,49 @@ export function findClientFiles(root) {
 
 const key = (p) => (process.platform === 'win32' ? resolve(p).toLowerCase() : resolve(p))
 
-export async function buildClient({ root, dev }) {
+// `compat`: qué respaldos necesita el sitio ({ reveal, prefetch }, ver kit.js).
+export async function buildClient({ root, dev, compat = {} }) {
   clearIslands()
   const files = findClientFiles(root)
   for (const f of files) {
     if (/[\\/](page|layout|route)\.[jt]sx?$/.test(f)) throw new Error(`${relative(root, f)}: las páginas y layouts se renderizan en el servidor; mueve la parte interactiva a un componente 'use client'`)
   }
-  if (files.length === 0) return { files: [], runtime: null, count: 0 }
+  const fallbacks = Object.keys(COMPAT).filter((name) => compat[name])
+  if (files.length === 0 && fallbacks.length === 0) return { files: [], runtime: null, compat: {}, count: 0 }
 
+  // Dos builds: las islas comparten chunks entre ellas; los respaldos van
+  // aparte y sin trocear, para no mover nada de lo que baja Chrome.
+  const islands = files.length ? await bundle([RUNTIME, ...files], { dev, splitting: true }) : { outputs: [], urlFor: null }
+  const fixes = fallbacks.length ? await bundle(fallbacks.map((name) => COMPAT[name]), { dev, splitting: false }) : { outputs: [] }
+  const outputs = [...islands.outputs, ...fixes.outputs]
+  const compatUrls = Object.fromEntries(fallbacks.map((name) => [name, fixes.urlFor(COMPAT[name])]))
+  if (files.length === 0) return { files: outputs, runtime: null, compat: compatUrls, count: 0 }
+  const { urlFor } = islands
+
+  for (const file of files) {
+    const mod = await import(pathToFileURL(file).href)
+    const src = urlFor(file)
+    for (const [exportName, value] of Object.entries(mod)) {
+      if (typeof value === 'function') registerIsland(value, { src, exportName, file })
+    }
+  }
+
+  // Chunks que el runtime importa estáticamente: se precargan con modulepreload.
+  const runtimeSrc = urlFor(RUNTIME)
+  const runtimeCode = outputs.find((o) => o.path === runtimeSrc).bytes.toString()
+  const chunkImport = new RegExp(String.raw`(?:from|import)\s*["'](?:\./|${CLIENT_PREFIX})([^"']+)["']`, 'g')
+  const preload = [...runtimeCode.matchAll(chunkImport)].map((m) => CLIENT_PREFIX + m[1])
+
+  return { files: outputs, runtime: { src: runtimeSrc, preload }, compat: compatUrls, count: files.length }
+}
+
+// Un Bun.build para el navegador: sus salidas y la URL de cada entrada.
+async function bundle(entrypoints, { dev, splitting }) {
   const result = await Bun.build({
-    entrypoints: [RUNTIME, ...files],
+    entrypoints,
     target: 'browser',
     format: 'esm',
-    splitting: true,
+    splitting,
     minify: !dev,
     sourcemap: dev ? 'inline' : 'none',
     naming: { entry: '[name]-[hash].[ext]', chunk: 'chunk-[hash].[ext]', asset: '[name]-[hash].[ext]' },
@@ -70,26 +106,10 @@ export async function buildClient({ root, dev }) {
     if (!out) throw new Error(`No encuentro la salida de ${source} en el build`)
     return CLIENT_PREFIX + out
   }
-
   const outputs = await Promise.all(result.outputs.map(async (o) => ({
     path: CLIENT_PREFIX + o.path.replace(/^\.\//, ''),
     bytes: Buffer.from(await o.arrayBuffer()),
     type: o.type.replace(';charset', '; charset'), // .wasm → application/wasm (instantiateStreaming lo exige)
   })))
-
-  for (const file of files) {
-    const mod = await import(pathToFileURL(file).href)
-    const src = urlFor(file)
-    for (const [exportName, value] of Object.entries(mod)) {
-      if (typeof value === 'function') registerIsland(value, { src, exportName, file })
-    }
-  }
-
-  // Chunks que el runtime importa estáticamente: se precargan con modulepreload.
-  const runtimeSrc = urlFor(RUNTIME)
-  const runtimeCode = outputs.find((o) => o.path === runtimeSrc).bytes.toString()
-  const chunkImport = new RegExp(String.raw`(?:from|import)\s*["'](?:\./|${CLIENT_PREFIX})([^"']+)["']`, 'g')
-  const preload = [...runtimeCode.matchAll(chunkImport)].map((m) => CLIENT_PREFIX + m[1])
-
-  return { files: outputs, runtime: { src: runtimeSrc, preload }, count: files.length }
+  return { outputs, urlFor }
 }

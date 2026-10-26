@@ -55,3 +55,13 @@ Lee el PNG de `public/` y, con `@verx/img` (Rust → WASM), genera una vez sus v
 - **Seguro:** solo escucha en `127.0.0.1`. La ventana entra con el token, que se cambia por una cookie `HttpOnly`/`SameSite=Strict`; VS Code lo manda en la cabecera `x-verx-token`. Cada escritura comprueba el `Origin`, solo se editan archivos de texto del repo (nunca `node_modules`, `target` ni rutas de fuera) y un archivo que cambió en disco no se pisa: responde 409. El aviso del sitio solo lee, y solo responde al origen del sitio.
 - **Sin agotar el navegador:** el aviso pregunta cada 1,5 s y no se queda escuchando, porque el navegador solo abre 6 conexiones por host. Si cada pestaña del sitio tuviera un SSE abierto, los guardados del editor se quedarían esperando.
 - Corre en el proceso padre de `verx dev`, así que no se reinicia con cada cambio. Deja su dirección en `.verx/grafo.json` (fuera de git) para que VS Code lo encuentre.
+
+## Todos los navegadores
+
+- `browsers` en `verx.config.js` (`{ chrome: 120, safari: 17, firefox: 128 }`) fija el objetivo. La regla `navegadores` del guardián exige que lo que falte en alguno vaya protegido.
+- Los respaldos de `@verx/compat` se empaquetan aparte, así que no cambian lo que baja Chrome. Cada página lleva una línea que los importa solo si al navegador le falta lo que suplen:
+  - las transiciones con el scroll, si algún CSS de `public/` marca bloques con `--verx-reveal`;
+  - la precarga al pasar el ratón, si hay `speculation`.
+- `verx budget` los cuenta en cada página (el peor caso, Firefox) y los muestra aparte: «respaldos 1,4 KB (sólo Firefox/Safari)».
+- En VERX Grafo, cada carpeta lleva en ámbar los navegadores en los que pierde algo, y su panel lista qué funciones exige, dónde faltan y si están protegidas o tienen respaldo.
+- `?verx-compat` en la URL carga los respaldos aunque no hagan falta, para probarlos en Chrome.

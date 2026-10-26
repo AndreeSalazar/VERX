@@ -21,7 +21,8 @@ packages/      MUNDO JS (workspaces de Bun en modo aislado)
   md/          puente con verx-md (servidor)    → nada
   img/         puente con verx-img (servidor)   → nada
   gl/          motor WebGL2                     → nada
-  kit/         meta-framework estilo Next.js    → server, ui, img
+  kit/         meta-framework estilo Next.js    → server, ui, img, compat
+  compat/      respaldos para Firefox/Safari       → nada (sólo navegador)
   vscode/      extensión de VS Code (VERX Grafo) → nada (puede importar `vscode`)
 apps/web/      el sitio                         → kit, ui, sim, search, md, img, gl
 ```
@@ -39,7 +40,8 @@ apps/web/      el sitio                         → kit, ui, sim, search, md, im
 9. Cada paquete y crate tiene **README.md y tests**.
 10. Los commits siguen el formato convencional `tipo(ámbito): descripción`. **Nunca `--no-verify`** ni `push --force`.
 11. Rust compila con clippy pedantic en modo `-D warnings`. Una excepción a una lint necesita `#[allow(..., reason = "...")]`.
-12. **Presupuesto de rendimiento:** ninguna página transfiere más JS + WASM (brotli) del límite de `apps/web/verx.config.js` (`budget`). Si una isla crece, adelgázala o cárgala con `client:visible`/`client:idle`. Subir el límite solo con un motivo escrito en el commit.
+12. **Presupuesto de rendimiento:** ninguna página transfiere más JS + WASM (brotli) del límite de `apps/web/verx.config.js` (`budget`). Si una isla crece, adelgázala o cárgala con `client:visible`/`client:idle`. Subir el límite solo con un motivo escrito en el commit. Cuenta el peor navegador (los respaldos que baja Firefox).
+13. **Navegadores:** lo que falte en alguno de los navegadores objetivo (`browsers` en `apps/web/verx.config.js`) va protegido (`@supports` en CSS, `'x' in window` en JS) y, si hace falta, con un respaldo en `@verx/compat`. Una función nueva se añade a la tabla de `crates/guard/src/compat/table.rs` con sus versiones.
 
 ## Comandos
 

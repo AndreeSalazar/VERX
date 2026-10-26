@@ -27,7 +27,7 @@ import { runGuard } from './guard.js'
 
 const COOKIE = 'verx_grafo'
 export const ENTRY = '/entrar'
-const UI = ['index.html', 'app.js', 'view.js', 'editor.js', 'aviso.js']
+const UI = ['index.html', 'app.js', 'view.js', 'editor.js', 'browsers.js', 'aviso.js']
 const PUBLIC = new Set(['/', ...UI.map((f) => `/${f}`), '/aviso', '/enfocar'])
 const EDITABLE = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.rs', '.toml', '.json', '.md', '.css', '.html', '.sh', '.txt'])
 export const IGNORED = /(^|[\\/])(node_modules|target|dist|\.git|\.verx)([\\/]|$)/
@@ -93,6 +93,8 @@ export function createGraphApp({ root, token, appOrigins = [], onOpen = null }) 
     return {
       ...graph,
       problems: list,
+      // Qué funciones del navegador usa cada archivo y dónde faltan (regla `navegadores`).
+      compat: report?.compat ?? null,
       status: { checking, ok: report?.ok == null && !runtime ? null : list.length === 0, quick: report?.quick ?? true, error: report?.error ?? null, at: Date.now() },
     }
   }

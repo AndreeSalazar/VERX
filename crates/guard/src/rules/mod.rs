@@ -122,6 +122,13 @@ pub(crate) const RULES: &[Rule] = &[
         check: project::presupuesto,
         quick: false,
     },
+    Rule {
+        id: "navegadores",
+        title: "Lo que falta en un navegador objetivo va protegido (verx.config.js → browsers)",
+        fix: "protégelo con @supports en CSS o comprobando antes si existe ('x' in window) y da un respaldo (@verx/compat)",
+        check: crate::compat::rule,
+        quick: true,
+    },
 ];
 
 pub(crate) struct Outcome<'a> {

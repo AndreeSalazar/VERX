@@ -328,7 +328,7 @@ body:has(.hero) .cosmos {
 .table,
 .counter {
   background-color: rgba(8, 8, 14, 0.62);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 .prose,
 .list,
@@ -608,7 +608,22 @@ footer::before {
    · Con `backwards`, la entrada no deja ningún filtro aplicado al terminar
      (un blur(0px) residual crea una capa por elemento y rompe
      background-clip: text). La salida sí lo deja, pero ya fuera de pantalla.
-   Sin animation-timeline (Firefox, por ahora), todo se ve quieto, tal cual. */
+   Sin animation-timeline (Firefox; Safari antes del 26), lo mismo lo hace
+   @verx/compat/reveal con IntersectionObserver: busca los bloques marcados
+   con --verx-reveal (la regla de abajo, la misma lista) y los mueve igual. */
+@property --verx-reveal {
+  syntax: '<integer>';
+  inherits: false; /* sólo el bloque más externo: sus hijos viajan con él */
+  initial-value: 0;
+}
+:where(main, footer)
+  :is(h2, h3, h4, p, li, blockquote, figure, img, pre, tr, hr, details, form, dl, .card, .post-card, .actions, .code, .terminal, .callout, .arch-world, .stats div, .pager, .counter, .on-page):not(
+    :is(.hero, h2, h3, h4, p, li, blockquote, figure, pre, tr, details, form, dl, .card, .post-card, .actions, .code, .terminal, .callout, .arch-world, .stats div, .pager, .counter, .on-page) *
+  ),
+footer > *,
+.hero-inner {
+  --verx-reveal: 1;
+}
 @supports (animation-timeline: view()) {
   :where(main, footer)
     :is(h2, h3, h4, p, li, blockquote, figure, img, pre, tr, hr, details, form, dl, .card, .post-card, .actions, .code, .terminal, .callout, .arch-world, .stats div, .pager, .counter, .on-page):not(

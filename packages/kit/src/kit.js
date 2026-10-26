@@ -11,7 +11,7 @@
 // Una página con [param] + generateStaticParams prerenderiza esos params y
 // renderiza el resto bajo demanda (salvo export const dynamicParams = false).
 
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { STATUS_CODES } from 'node:http'
@@ -44,6 +44,10 @@ export async function loadConfig(root) {
 
 const load = (file) => import(pathToFileURL(file).href)
 
+// ¿Algún CSS de `dir` (o de sus carpetas) contiene `text`?
+const cssMentions = (dir, text) =>
+  readdirSync(dir, { recursive: true }).some((f) => String(f).endsWith('.css') && readFileSync(join(dir, String(f)), 'utf8').includes(text))
+
 // desktop: { token } activa el modo escritorio (ver desktop.js).
 export async function createKit({ root = process.cwd(), dev = false, desktop = null } = {}) {
   root = resolve(root)
@@ -67,7 +71,11 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
     return new Response(file.bytes, { headers: { 'content-type': file.type, 'cache-control': IMMUTABLE } })
   })
 
-  const client = (kit.client = await buildClient({ root, dev }))
+  // Respaldos (@verx/compat), sólo si el sitio usa lo que suplen: las
+  // transiciones con el scroll si algún CSS de public/ marca bloques con
+  // --verx-reveal; la precarga si hay Speculation Rules.
+  const compat = { reveal: kit.publicDir !== null && cssMentions(kit.publicDir, '--verx-reveal'), prefetch: Boolean(config.speculation) }
+  const client = (kit.client = await buildClient({ root, dev, compat }))
   for (const f of client.files) app.prerender(f.path, () => f.bytes, { type: f.type || JS, cache: IMMUTABLE })
 
   const routes = (kit.routes = scanRoutes(appDir))
@@ -101,6 +109,7 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
         siteUrl: config.siteUrl,
         islands: islands.length > 0,
         runtime: client.runtime,
+        compat: client.compat,
         speculation: config.speculation,
         dev,
       })

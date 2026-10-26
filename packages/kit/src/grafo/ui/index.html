@@ -8,7 +8,7 @@
   :root {
     color-scheme: dark;
     --void: #04040a; --panel: rgba(10, 10, 18, 0.86); --line: rgba(255, 255, 255, 0.09); --line-strong: rgba(255, 255, 255, 0.18);
-    --fg: #ececf4; --muted: #9a9aab; --gold: #ffd56b; --cyan: #5cc8ff; --violet: #a98bff; --ok: #4ee38a; --bad: #ff4d5e;
+    --fg: #ececf4; --muted: #9a9aab; --gold: #ffd56b; --cyan: #5cc8ff; --violet: #a98bff; --ok: #4ee38a; --bad: #ff4d5e; --warn: #ffb35c;
     --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
   }
   * { box-sizing: border-box; }
@@ -18,7 +18,7 @@
     content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
     background: radial-gradient(80% 70% at 35% 45%, rgba(110, 60, 200, 0.14), transparent 70%), radial-gradient(50% 50% at 70% 60%, rgba(255, 120, 50, 0.06), transparent 70%);
   }
-  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--line); background: rgba(6, 6, 12, 0.7); backdrop-filter: blur(12px); }
+  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--line); background: rgba(6, 6, 12, 0.7); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   header b { letter-spacing: 0.08em; }
   header b span { color: var(--gold); }
   #status { padding: 4px 12px; border-radius: 999px; font-size: 12.5px; background: rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 0 1px var(--line); }
@@ -67,6 +67,16 @@
   #graph[data-zoom='near'] .file-label { display: block; }
   #graph[data-zoom='far'] .folder-label { display: none; }
   .badge { fill: var(--bad); font-size: 10px; font-weight: 800; }
+  /* Ámbar: algo se pierde en alguno de los navegadores objetivo (regla navegadores). */
+  .warn-badge { fill: var(--warn); font-size: 8.5px; font-weight: 650; opacity: 0.85; }
+  .world-warn { font-size: 11px; }
+  #graph[data-zoom='far'] .folder-warn { display: none; }
+  .warn-ring { fill: none; stroke: var(--warn); stroke-width: 1; stroke-dasharray: 2 2; opacity: 0.8; }
+  .browsers { list-style: none; padding: 0; margin: 0; font-size: 12.5px; }
+  .browsers li { margin: 0 0 10px; }
+  .browsers small { font: 11px var(--mono); }
+  .warn-line { color: var(--warn); }
+  .bad-line { color: var(--bad); }
 
   aside { border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 18px; }
   aside h3 { margin: 2px 0 2px; font-size: 18px; word-break: break-all; }
@@ -110,7 +120,7 @@
   #tip { position: fixed; left: 16px; bottom: 12px; font: 12px var(--mono); color: var(--muted); pointer-events: none; }
   .legend { position: fixed; right: 376px; bottom: 12px; display: flex; gap: 12px; padding: 0 16px; font-size: 11.5px; color: var(--muted); }
   .legend i { display: inline-block; width: 18px; height: 2px; vertical-align: middle; margin-right: 4px; background: var(--cyan); }
-  .legend .in { background: var(--violet); } .legend .br { background: var(--gold); } .legend .bd { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 6px var(--bad); }
+  .legend .in { background: var(--violet); } .legend .br { background: var(--gold); } .legend .wr { width: 8px; height: 8px; border-radius: 50%; background: none; box-shadow: inset 0 0 0 1px var(--warn); } .legend .bd { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 6px var(--bad); }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
@@ -133,7 +143,7 @@
 </div>
 <div id="toasts"></div>
 <div id="tip"></div>
-<div class="legend"><span><i></i>importa</span><span><i class="in"></i>lo importan</span><span><i class="br"></i>puente .wasm</span><span><i class="bd"></i>bloqueado</span></div>
+<div class="legend"><span><i></i>importa</span><span><i class="in"></i>lo importan</span><span><i class="br"></i>puente .wasm</span><span><i class="bd"></i>bloqueado</span><span><i class="wr"></i>falta en algún navegador</span></div>
 <script type="module" src="/app.js"></script>
 </body>
 </html>
