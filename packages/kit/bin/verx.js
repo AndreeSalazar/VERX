@@ -12,6 +12,7 @@ const { values } = parseArgs({
     out: { type: 'string', short: 'o' },
     workers: { type: 'string', short: 'w' },
     dev: { type: 'boolean' },
+    'sin-ventana': { type: 'boolean' },
   },
   allowPositionals: true,
 })
@@ -25,8 +26,9 @@ if (typeof Bun === 'undefined') {
 
 switch (command) {
   case 'dev': {
+    // El grafo se abre solo en su ventana; --sin-ventana (o VERX_GRAFO_VENTANA=0) lo evita.
     const { dev } = await import('../src/dev.js')
-    dev({ root, port })
+    dev({ root, port, openGraph: !values['sin-ventana'] && process.env.VERX_GRAFO_VENTANA !== '0' })
     break
   }
   case 'serve': // lo usa `dev` internamente
@@ -94,5 +96,5 @@ switch (command) {
     process.exit(problems.length ? 1 : 0)
   }
   default:
-    console.log('Uso: verx <dev|grafo|build|start|desktop|budget> [--port 3000] [--out dist] [--workers auto]')
+    console.log('Uso: verx <dev|grafo|build|start|desktop|budget> [--port 3000] [--out dist] [--workers auto] [--sin-ventana]')
 }

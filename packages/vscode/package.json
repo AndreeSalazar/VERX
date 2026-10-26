@@ -1,0 +1,17 @@
+{
+  "name": "@verx/vscode",
+  "version": "0.1.0",
+  "description": "VERX Grafo dentro de VS Code: el grafo en un panel, los bloqueos del guardián en Problemas y en la barra de estado",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "exports": {
+    "./vsix": "./src/vsix.js"
+  },
+  "scripts": {
+    "instalar": "bun bin/instalar.js",
+    "test": "bun test"
+  }
+}

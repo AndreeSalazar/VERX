@@ -26,10 +26,12 @@ budget: {
 
 ## VERX Grafo
 
-Con `bun run dev`, el guardián también se ve. VERX Grafo, en `http://127.0.0.1:3001` (o en su propia ventana con `bun run grafo`), dibuja el repo en nodos: mundos, paquetes, carpetas, archivos, imports y puentes .wasm. Cada vez que guardas, revisa las reglas. Lo que bloquea late en rojo y el panel dice qué regla falla, por qué, en qué línea y cómo arreglarlo.
+Con `bun run dev`, el guardián también se ve. VERX Grafo se abre solo en su ventana (`http://127.0.0.1:3001`) y dibuja el repo en nodos: mundos, paquetes, carpetas, archivos, imports y puentes .wasm. Cada vez que guardas, revisa las reglas. Lo que bloquea late en rojo y el panel dice qué regla falla, por qué, en qué línea y cómo arreglarlo. Si la regla solo sabe que «apps/web falla», el grafo busca el archivo y la línea que importan mal.
 
 > [!TIP]
-> Pulsa «Arreglarlo aquí»: el archivo se abre con las líneas culpables en rojo. Arréglalo, guarda con Ctrl+S y el rojo se apaga solo en cuanto el guardián deja de ver el problema.
+> Pulsa el círculo rojo: el archivo se abre en la línea culpable. Arréglalo, guarda con Ctrl+S y el rojo se apaga solo en cuanto el guardián deja de ver el problema.
+
+También te avisa donde estás: el propio sitio enseña un aviso con el bloqueo, y si ni arranca, una página que explica por qué. Con `bun run vscode`, VS Code muestra el grafo en un panel y cada bloqueo en «Problemas».
 
 ## Dónde bloquea
 

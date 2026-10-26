@@ -41,10 +41,17 @@ Lee el PNG de `public/` y, con `@verx/img` (Rust → WASM), genera una vez sus v
 
 ## VERX Grafo: el proyecto en nodos, con los bloqueos en rojo
 
-`verx dev` abre, además del sitio, **VERX Grafo** en el puerto siguiente (`http://127.0.0.1:3001`; la URL con su token sale en la consola). `verx grafo` hace lo mismo y lo abre en su propia ventana.
+`verx dev` arranca, además del sitio, **VERX Grafo** en el puerto siguiente (`http://127.0.0.1:3001`) y lo abre solo en su propia ventana (`--sin-ventana` o `VERX_GRAFO_VENTANA=0` lo evitan; la URL con su token sale en la consola). Y te guía en tres sitios a la vez:
+
+| Dónde | Qué ves |
+|---|---|
+| **La ventana del grafo** | todo el repo en nodos; lo bloqueado late en rojo y se arregla ahí mismo |
+| **El propio sitio** (`localhost:3000`) | un aviso flotante con la regla, el archivo:línea, el motivo y el arreglo, con «Ver en el grafo» y «Abrir en VS Code». Si el sitio ni arranca, en vez de «no se puede acceder» sale una página que explica por qué y se recarga sola al arreglarlo |
+| **VS Code** (`bun run vscode`, ver `@verx/vscode`) | el grafo en un panel, cada bloqueo subrayado en «Problemas» y la barra de estado `VERX ✖ 2` |
 
 - **Todo el repo en un mapa:** mundos (Rust, Bun, la app), espacios de trabajo, carpetas y archivos, con sus aristas reales: dependencias de `package.json`, imports de JS (con el analizador de Bun), `mod` de Rust y, en dorado, los puentes `.wasm`.
-- **Por qué está bloqueado:** cada cambio en disco pasa por el guardián (`verx-guard check --json --quick`; «Revisar todo» lanza todas las reglas). El archivo culpable late en rojo y sus carpetas llevan la cuenta. Al pulsarlo, el panel dice la regla, el motivo, la línea y cómo arreglarlo.
-- **Tiempo real y edición ahí mismo:** el grafo llega por SSE. «Arreglarlo aquí» abre el archivo con las líneas bloqueadas en rojo. Ctrl+S guarda (un guardado a la vez) y, cuando el guardián deja de ver el problema, el rojo se apaga solo: «✔ Desbloqueado».
-- **Seguro:** solo escucha en `127.0.0.1`, pide el token (que se cambia por una cookie `HttpOnly`/`SameSite=Strict`) y comprueba el `Origin` en cada escritura. Solo edita archivos de texto del repo (nunca `node_modules`, `target` ni rutas de fuera), y si el archivo cambió en disco responde 409 en lugar de pisarlo.
-- Corre en el proceso padre de `verx dev`, así que no se reinicia con cada cambio.
+- **Por qué está bloqueado, y quién tiene la culpa:** cada cambio en disco pasa por el guardián (`verx-guard check --json`, primero la revisión rápida y después la completa). Cuando una regla solo sabe que «apps/web falla» (el presupuesto renderiza las páginas, y un import roto lo tumba), `blame.js` lee el error y señala el archivo y la línea que importa mal, con un arreglo concreto: «`postss` no existe en lib/posts.js: ¿quisiste decir `posts`?».
+- **Tiempo real y edición ahí mismo:** pulsar algo en rojo abre el editor en la línea culpable. Ctrl+S guarda (un guardado a la vez) y el rojo se apaga solo: «✔ Desbloqueado». Si guardas en VS Code, el editor del grafo se pone al día sin pisar nada.
+- **Seguro:** solo escucha en `127.0.0.1`. La ventana entra con el token, que se cambia por una cookie `HttpOnly`/`SameSite=Strict`; VS Code lo manda en la cabecera `x-verx-token`. Cada escritura comprueba el `Origin`, solo se editan archivos de texto del repo (nunca `node_modules`, `target` ni rutas de fuera) y un archivo que cambió en disco no se pisa: responde 409. El aviso del sitio solo lee, y solo responde al origen del sitio.
+- **Sin agotar el navegador:** el aviso pregunta cada 1,5 s y no se queda escuchando, porque el navegador solo abre 6 conexiones por host. Si cada pestaña del sitio tuviera un SSE abierto, los guardados del editor se quedarían esperando.
+- Corre en el proceso padre de `verx dev`, así que no se reinicia con cada cambio. Deja su dirección en `.verx/grafo.json` (fuera de git) para que VS Code lo encuentre.

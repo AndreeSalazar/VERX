@@ -1,0 +1,31 @@
+{
+  "name": "verx-grafo",
+  "displayName": "VERX Grafo",
+  "description": "El proyecto VERX en nodos, con lo que bloquea el guardián en rojo y en tiempo real",
+  "publisher": "verx",
+  "version": "0.1.0",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other", "Linters", "Visualization"],
+  "main": "./extension.cjs",
+  "activationEvents": ["workspaceContains:.verx/grafo.json", "workspaceContains:**/verx.config.js"],
+  "contributes": {
+    "commands": [
+      { "command": "verx.grafo", "title": "VERX: abrir el grafo del proyecto" },
+      { "command": "verx.enGrafo", "title": "VERX: ver este archivo en el grafo" },
+      { "command": "verx.dev", "title": "VERX: arrancar verx dev" }
+    ],
+    "configuration": {
+      "title": "VERX",
+      "properties": {
+        "verx.abrirGrafo": {
+          "type": "boolean",
+          "default": true,
+          "description": "Abrir el panel del grafo en cuanto arranca verx dev y cuando aparece un bloqueo nuevo."
+        }
+      }
+    }
+  }
+}

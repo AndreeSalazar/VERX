@@ -4,7 +4,8 @@
 //  1. Un import relativo no puede salir de su paquete (nada de ../../otro/src).
 //  2. Un paquete sólo importa paquetes que declara en su package.json.
 //  3. Sólo se importa lo que el otro paquete publica en "exports" (sin imports profundos).
-//  4. Cero dependencias externas: sólo paquetes del workspace, node:* y bun.
+//  4. Cero dependencias externas: sólo paquetes del workspace, node:* y bun
+//     (y los módulos del anfitrión: `vscode` en una extensión, host-modules.js).
 //  5. Los módulos de Node se importan con prefijo node: (node:fs, no fs).
 //  6. Sin ciclos entre paquetes.
 //  7. Un archivo 'use client' (y lo que importe) no puede tocar código de servidor.
@@ -15,9 +16,10 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { join, relative, resolve, dirname, extname } from 'node:path'
 import { builtinModules } from 'node:module'
+import { hostModules } from './host-modules.js'
 
 const ROOT = resolve(import.meta.dir, '..')
-const SOURCE = /\.(jsx?|tsx?)$/
+const SOURCE = /\.(jsx?|tsx?|cjs|mjs)$/
 const SKIP_DIRS = new Set(['node_modules', 'dist', '.git'])
 const USE_CLIENT = /^(?:\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*['"]use client['"]/
 const SERVER_ONLY = (spec) => spec.startsWith('node:') || spec === 'bun' || spec.startsWith('bun:') || spec.startsWith('@verx/kit') || spec.startsWith('@verx/server') || spec === '@verx/ui/server'
@@ -25,7 +27,7 @@ const SERVER_ONLY = (spec) => spec.startsWith('node:') || spec === 'bun' || spec
 const transpilers = {}
 const transpiler = (ext) =>
   (transpilers[ext] ??= new Bun.Transpiler({
-    loader: ext.slice(1),
+    loader: ext === '.cjs' || ext === '.mjs' ? 'js' : ext.slice(1),
     tsconfig: { compilerOptions: { jsx: 'react-jsx', jsxImportSource: '@verx/ui' } },
   }))
 
@@ -70,6 +72,7 @@ let files = 0
 
 for (const w of workspaces) {
   const declared = new Set(depsOf(w))
+  const host = hostModules(w.pkg)
   for (const file of walk(w.dir)) {
     files++
     const code = readFileSync(file, 'utf8').replace(/^#!.*/, '')
@@ -95,7 +98,7 @@ for (const w of workspaces) {
         else node.relatives.push(target)
         continue
       }
-      if (spec.startsWith('node:') || spec === 'bun' || spec.startsWith('bun:')) continue
+      if (spec.startsWith('node:') || spec === 'bun' || spec.startsWith('bun:') || host.includes(spec)) continue
       if (builtinModules.includes(spec.split('/')[0])) {
         report(file, `usa "node:${spec}" en vez de "${spec}"`)
         continue

@@ -6,12 +6,24 @@ import { camera, draw, layout, showLinks } from './view.js'
 import { createEditor } from './editor.js'
 
 const $ = (sel) => document.querySelector(sel)
+// Dentro del panel de VS Code la cookie no viaja: el token llega en el #hash
+// (que nunca sale hacia el servidor) y va en una cabecera.
+const token = new URLSearchParams(location.hash.slice(1)).get('token')
+const embedded = window.parent !== window
+if (token) history.replaceState(null, '', location.pathname)
+const api = (path, opts = {}) => fetch(path, token ? { ...opts, headers: { ...opts.headers, 'x-verx-token': token } } : opts)
 const svg = $('#graph')
 const world = $('#world')
 const state = { graph: null, lay: null, byId: new Map(), problems: [], bad: new Map(), selected: null, hover: null, shape: '' }
 
 const cam = camera(svg, world, (k) => svg.setAttribute('data-zoom', k > 2.2 ? 'near' : k > 0.9 ? 'mid' : 'far'))
-const editor = createEditor({ onClose: () => render() })
+// Abre el archivo en VS Code: desde su panel, por mensaje; si no, con vscode://.
+function openInCode(path, line) {
+  if (embedded) return window.parent.postMessage({ verx: 'abrir', path, line: line || 1 }, '*')
+  const full = `${state.graph.root.replaceAll('\\', '/')}/${path}`.replace(/^\/?/, '/')
+  location.href = `vscode://file${encodeURI(full)}:${line || 1}`
+}
+const editor = createEditor({ api, openInCode, onClose: () => render() })
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 const ancestors = (id) => {
@@ -88,7 +100,7 @@ function panel() {
     <p class="crumb">${esc(kind)}${n.lines ? ` · ${n.lines} líneas` : ''}</p>
     <h3>${esc(n.label)}</h3>
     <p class="path">${esc(id || '(raíz)')}</p>
-    ${n.kind === 'file' ? `<div class="actions"><button data-edit="${esc(id)}">Editar aquí</button></div>` : ''}
+    ${n.kind === 'file' ? `<div class="actions"><button data-edit="${esc(id)}">Editar aquí</button> <button data-code="${esc(id)}">Abrir en VS Code</button></div>` : ''}
     ${problems.length ? `<h4 class="bad">Bloqueado <small>${problems.length}</small></h4>${problems.map(problemCard).join('')}` : '<p class="ok-line">✔ Nada bloqueado aquí</p>'}
     ${list(n.kind === 'file' ? 'Importa' : 'Depende de', out)}
     ${list(n.kind === 'file' ? 'Lo importan' : 'Lo usan', inn)}`
@@ -99,7 +111,7 @@ function problemCard(p) {
     <p><b>${esc(p.rule)}</b> · ${esc(p.title)}</p>
     <p class="why">${esc(p.file)}${p.line ? `:${p.line}` : ''} — ${esc(p.message)}</p>
     <p class="fix">→ ${esc(p.fix)}</p>
-    ${state.byId.get(p.node)?.kind === 'file' ? `<button data-edit="${esc(p.node)}" data-line="${p.line ?? ''}">Arreglarlo aquí</button>` : `<a href="#" data-go="${esc(p.node)}">ver ${esc(p.node || 'raíz')}</a>`}
+    ${state.byId.get(p.node)?.kind === 'file' ? `<button data-edit="${esc(p.node)}" data-line="${p.line ?? ''}">Arreglarlo aquí</button> <button data-code="${esc(p.node)}" data-line="${p.line ?? ''}">VS Code</button>` : `<a href="#" data-go="${esc(p.node)}">ver ${esc(p.node || 'raíz')}</a>`}
   </div>`
 }
 
@@ -124,10 +136,13 @@ function openEditor(id, line) {
 }
 
 // ── Eventos ───────────────────────────────────────────────────────────────
+// Pulsar algo en rojo abre directamente la línea culpable; lo demás, se selecciona.
 svg.addEventListener('click', (e) => {
   if (svg.classList.contains('dragged')) return
-  const id = e.target.closest('[data-id]')?.dataset.id
-  select(id ?? null)
+  const id = e.target.closest('[data-id]')?.dataset.id ?? null
+  const culprit = id !== null && problemsOf(id).find((p) => state.byId.get(p.node)?.kind === 'file')
+  if (culprit) openEditor(culprit.node, culprit.line)
+  else select(id)
 })
 svg.addEventListener('dblclick', (e) => {
   const id = e.target.closest('[data-id]')?.dataset.id
@@ -144,7 +159,9 @@ svg.addEventListener('pointerover', (e) => {
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go]')
   const edit = e.target.closest('[data-edit]')
-  if (go) {
+  const code = e.target.closest('[data-code]')
+  if (code) openInCode(code.dataset.code, Number(code.dataset.line) || null)
+  else if (go) {
     e.preventDefault()
     select(go.dataset.go, { focus: true })
   } else if (edit) openEditor(edit.dataset.edit, edit.dataset.line)
@@ -159,11 +176,11 @@ $('#search').addEventListener('keydown', (e) => {
   const hit = state.graph.nodes.find((n) => n.kind === 'file' && n.id.toLowerCase().includes(q))
   if (hit) select(hit.id, { focus: true })
 })
-$('#check').addEventListener('click', () => fetch('/check', { method: 'POST' }))
+$('#check').addEventListener('click', () => api('/check', { method: 'POST' }))
 $('#fit').addEventListener('click', () => cam.fit(state.lay.bounds))
 
 // ── Tiempo real ───────────────────────────────────────────────────────────
-const events = new EventSource('/events')
+const events = new EventSource(token ? `/events?token=${encodeURIComponent(token)}` : '/events')
 events.onmessage = (e) => {
   const data = JSON.parse(e.data)
   const before = new Set(state.problems.map((p) => p.node))
@@ -181,8 +198,17 @@ events.onmessage = (e) => {
   render()
   if (first) cam.fit(state.lay.bounds)
   const open = editor.current()
-  if (open) editor.update(state.problems.filter((p) => p.node === open))
+  if (open) {
+    editor.update(state.problems.filter((p) => p.node === open))
+    editor.sync() // ¿lo cambió otro editor (VS Code)? se trae sin pisar nada
+  }
 }
+// El sitio (aviso.js) o VS Code piden enseñar algo: se abre ahí mismo.
+events.addEventListener('focus', (e) => {
+  const { node, line } = JSON.parse(e.data)
+  if (state.byId.get(node)?.kind === 'file') openEditor(node, line)
+  else if (state.byId.has(node)) select(node, { focus: true })
+})
 events.onerror = () => {
   $('#status').dataset.tone = 'bad'
   $('#status').textContent = 'sin conexión con verx dev…'

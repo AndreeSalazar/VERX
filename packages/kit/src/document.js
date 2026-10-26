@@ -59,6 +59,9 @@ export function renderDocument({ body, meta, head = '', lang = 'es', siteUrl, is
   if (dev) {
     // Recarga en vivo: al reiniciar el servidor cambia el id de arranque.
     tags.push(`<script>(()=>{let b;const s=new EventSource('/_verx/dev');s.onmessage=e=>{if(b&&b!==e.data)location.reload();b=e.data}})()</script>`)
+    // El aviso de VERX Grafo: qué bloquea el guardián, sin salir de la página.
+    const grafo = process.env.VERX_GRAFO
+    if (grafo && /^http:\/\/127\.0\.0\.1:\d+$/.test(grafo)) tags.push(`<script type="module" src="${grafo}/aviso.js"></script>`)
   }
   return `<!doctype html>\n<html lang="${escape(lang)}">\n<head>\n${tags.filter(Boolean).join('\n')}\n</head>\n<body>${body}</body>\n</html>\n`
 }

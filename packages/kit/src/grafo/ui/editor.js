@@ -1,10 +1,11 @@
 // VERX Grafo · editar un archivo ahí mismo. Las líneas que bloquea el guardián
 // se marcan en rojo (con el motivo al pasar por encima); al guardar (Ctrl+S),
-// el servidor revisa y, si el bloqueo desaparece, el rojo se apaga solo.
+// el servidor revisa y, si el bloqueo desaparece, el rojo se apaga solo. Si el
+// archivo cambia en disco (VS Code, git…), se trae al momento sin pisar nada.
 
 const $ = (sel, root = document) => root.querySelector(sel)
 
-export function createEditor({ onSaved, onClose }) {
+export function createEditor({ api = fetch, openInCode, onSaved, onClose }) {
   const panel = $('#editor')
   const area = $('textarea', panel)
   const gutter = $('.gutter', panel)
@@ -47,7 +48,7 @@ export function createEditor({ onSaved, onClose }) {
 
   async function open(path, line, fileProblems = []) {
     if (dirty() && !confirm('Hay cambios sin guardar. ¿Descartarlos?')) return
-    const r = await fetch(`/file?path=${encodeURIComponent(path)}`)
+    const r = await api(`/file?path=${encodeURIComponent(path)}`)
     const data = await r.json()
     if (!r.ok) return say(data.error ?? 'No se pudo abrir', 'bad')
     file = { path, hash: data.hash, saved: data.text }
@@ -86,7 +87,7 @@ export function createEditor({ onSaved, onClose }) {
     const ctrl = new AbortController()
     const timer = setTimeout(() => ctrl.abort(), 10_000)
     try {
-      const r = await fetch('/file', {
+      const r = await api('/file', {
         method: 'POST',
         signal: ctrl.signal,
         headers: { 'content-type': 'application/json' },
@@ -110,6 +111,32 @@ export function createEditor({ onSaved, onClose }) {
   function conflict(message) {
     say(message ?? 'El archivo cambió en disco', 'bad')
     reload.hidden = false
+  }
+
+  // Llega un grafo nuevo: ¿cambió el archivo abierto en disco?
+  let syncing = false
+  async function sync() {
+    if (!file || saving || syncing) return
+    syncing = true
+    try {
+      const target = file
+      const r = await api(`/file?path=${encodeURIComponent(target.path)}`)
+      const data = await r.json()
+      if (!r.ok || file !== target || data.hash === target.hash) return
+      if (dirty()) return conflict('El archivo cambió en disco (¿VS Code?) y aquí tienes cambios sin guardar')
+      const { selectionStart, selectionEnd, scrollTop } = area
+      target.hash = data.hash
+      target.saved = data.text
+      area.value = data.text
+      area.setSelectionRange(selectionStart, selectionEnd)
+      area.scrollTop = scrollTop
+      paint()
+      say('↻ Actualizado desde el disco', 'ok')
+    } catch {
+      // sin conexión: lo intentará con el próximo grafo
+    } finally {
+      syncing = false
+    }
   }
 
   function close() {
@@ -149,10 +176,15 @@ export function createEditor({ onSaved, onClose }) {
     if (path) open(path, null, problems)
   })
   $('.save', panel).addEventListener('click', () => save())
+  $('.code', panel).addEventListener('click', () => {
+    if (!file) return
+    const before = area.value.slice(0, area.selectionStart)
+    openInCode?.(file.path, before.split('\n').length)
+  })
   $('.close', panel).addEventListener('click', close)
   addEventListener('beforeunload', (e) => {
     if (dirty()) e.preventDefault()
   })
 
-  return { open, update, close, current: () => file?.path ?? null }
+  return { open, update, sync, close, current: () => file?.path ?? null }
 }

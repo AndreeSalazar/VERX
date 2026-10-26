@@ -4,19 +4,24 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { attachProblems, buildGraph, findRepoRoot } from '../src/grafo/model.js'
-import { createGraphApp, ENTRY } from '../src/grafo/server.js'
+import { createGraphApp, ENTRY, mergeReports, mergeSame } from '../src/grafo/server.js'
+import { pinpoint, tidy } from '../src/grafo/blame.js'
 
 let root
 let server
 let base
 let cookie
+let graphApp
+let opens = 0
 const token = 'token-de-prueba-123'
+const SITE = 'http://localhost:3000'
 
 const files = {
   'package.json': JSON.stringify({ workspaces: ['packages/*', 'apps/*'] }),
   'packages/a/package.json': JSON.stringify({ name: '@verx/a', dependencies: { '@verx/b': 'workspace:*' } }),
   'packages/a/src/index.js': "import { b } from '@verx/b'\nimport './util.js'\nexport const a = b\n",
   'packages/a/src/util.js': 'export const u = 1\n',
+  'packages/a/src/usa.js': "// usa util\nimport { uu } from './util.js'\nexport default uu\n",
   'packages/b/package.json': JSON.stringify({ name: '@verx/b' }),
   'packages/b/index.js': '#!/usr/bin/env bun\nexport const b = 2\n',
   'packages/b/node_modules/x/ignorado.js': 'export {}\n',
@@ -35,8 +40,8 @@ beforeAll(async () => {
     mkdirSync(dirname(join(root, path)), { recursive: true })
     writeFileSync(join(root, path), text)
   }
-  const graph = createGraphApp({ root, token })
-  server = await graph.app.listen(0, { hostname: '127.0.0.1', log: false })
+  graphApp = createGraphApp({ root, token, appOrigins: [SITE], onOpen: () => opens++ })
+  server = await graphApp.app.listen(0, { hostname: '127.0.0.1', log: false })
   base = `http://127.0.0.1:${server.port}`
 })
 afterAll(async () => {
@@ -111,12 +116,79 @@ test('editar: lee y guarda, pero nunca fuera del repo ni pisando cambios ajenos'
 })
 
 test('tiempo real: /events manda el grafo nada más conectar', async () => {
-  const r = await fetch(base + '/events', { headers: { cookie } })
+  const ctrl = new AbortController()
+  const r = await fetch(base + '/events', { headers: { cookie }, signal: ctrl.signal })
   expect(r.headers.get('content-type')).toBe('text/event-stream')
   const reader = r.body.getReader()
   const { value } = await reader.read()
   const text = new TextDecoder().decode(value)
   expect(text).toMatch(/^retry: 1000\ndata: \{/)
   expect(JSON.parse(text.slice(text.indexOf('{'))).nodes.some((n) => n.id === 'crates/c')).toBe(true)
-  await reader.cancel()
+  // Cerrar la conexión (como al cerrar la ventana) la saca de la lista de clientes.
+  expect(graphApp.clients.size).toBe(1)
+  ctrl.abort()
+  for (let i = 0; i < 40 && graphApp.clients.size > 0; i++) await Bun.sleep(10)
+  expect(graphApp.clients.size).toBe(0)
+})
+
+test('el culpable: quien importa mal, en su línea, y con el nombre parecido', () => {
+  const g = buildGraph(root)
+  const raw = `\x1b[31mSyntaxError\x1b[0m: Export named 'uu' not found in module '${join(root, 'packages', 'a', 'src', 'util.js')}'.\n\nBun v1.3.14 (Windows x64)\nerror: script "budget" exited with code 1`
+  expect(tidy(raw, root)).toBe("SyntaxError: Export named 'uu' not found in module 'packages/a/src/util.js'.")
+  expect(pinpoint(raw, g, root)).toEqual({ file: 'packages/a/src/usa.js', line: 2, fix: '«uu» no existe en packages/a/src/util.js: ¿quisiste decir «u»?' })
+  const missing = `Cannot find module './nada.js' from '${join(root, 'packages', 'a', 'src', 'usa.js')}'`
+  // Se sabe quién importa, pero ninguna línea lo nombra: el archivo, sin inventar línea.
+  expect(pinpoint(missing, g, root)).toEqual({ file: 'packages/a/src/usa.js', line: null, fix: '«./nada.js» no existe: revisa la ruta del import' })
+  expect(pinpoint('at packages/a/src/index.js:3:7', g, root)).toEqual({ file: 'packages/a/src/index.js', line: 3 })
+  expect(pinpoint('algo pasó', g, root)).toBe(null)
+})
+
+test('la revisión rápida conserva lo que sólo mide la completa; un error, un bloqueo', () => {
+  const full = { quick: false, ok: false, rules: [{ id: 'presupuesto', skipped: false, problems: [{ file: 'apps/web', message: 'x' }] }, { id: 'lf', skipped: false, problems: [] }] }
+  const quick = { quick: true, ok: true, rules: [{ id: 'presupuesto', skipped: true, problems: [] }, { id: 'lf', skipped: false, problems: [] }] }
+  const merged = mergeReports(full, quick)
+  expect(merged.ok).toBe(false)
+  expect(merged.quick).toBe(false)
+  expect(merged.rules[0]).toMatchObject({ id: 'presupuesto', stale: true, problems: [{ message: 'x' }] })
+  expect(mergeReports(null, quick)).toBe(quick)
+  const p = { node: 'a.js', line: 2, message: 'm' }
+  expect(mergeSame([{ ...p, rule: 'arranque' }, { ...p, rule: 'presupuesto' }, { ...p, line: 3, rule: 'x' }]).map((x) => x.rule)).toEqual(['arranque · presupuesto', 'x'])
+})
+
+test('el sitio no arranca: el bloqueo cae en el archivo y la línea culpables', async () => {
+  graphApp.setRuntime(`SyntaxError: Export named 'uu' not found in module '${join(root, 'packages', 'a', 'src', 'util.js')}'.`)
+  const [p] = graphApp.snapshot().problems.filter((x) => x.rule.includes('arranque'))
+  expect(p).toMatchObject({ node: 'packages/a/src/usa.js', line: 2 })
+  graphApp.setRuntime(null)
+  expect(graphApp.snapshot().problems.some((x) => x.rule.includes('arranque'))).toBe(false)
+})
+
+test('VS Code entra con la cabecera del token; el aviso, sólo desde el sitio', async () => {
+  expect((await fetch(base + '/data', { headers: { 'x-verx-token': token } })).status).toBe(200)
+  expect((await fetch(base + '/data', { headers: { 'x-verx-token': 'malo' } })).status).toBe(403)
+  expect((await fetch(base + '/', {})).status).toBe(200) // la interfaz no tiene secretos; los datos sí
+  const ok = await fetch(base + '/aviso', { headers: { origin: SITE } })
+  expect(ok.headers.get('access-control-allow-origin')).toBe(SITE)
+  const { version, problems } = await ok.json()
+  expect(Array.isArray(problems)).toBe(true)
+  // Sin cambios desde esa versión: 204 vacío (el aviso pregunta, no se queda escuchando).
+  expect((await fetch(`${base}/aviso?v=${version}`, { headers: { origin: SITE } })).status).toBe(204)
+  expect((await fetch(base + '/aviso', { headers: { origin: 'http://malo.test' } })).status).toBe(403)
+  expect((await fetch(base + '/aviso.js')).headers.get('access-control-allow-origin')).toBe('*')
+})
+
+test('«ver en el grafo» desde el sitio: abre la ventana y la lleva al archivo', async () => {
+  const focus = (origin) => fetch(base + '/enfocar', { method: 'POST', headers: { origin }, body: JSON.stringify({ node: 'packages/a/src/usa.js', line: 2 }) })
+  expect((await focus('http://malo.test')).status).toBe(403)
+  const r = await focus(SITE)
+  expect(await r.json()).toEqual({ ok: true, opened: true })
+  expect(opens).toBe(1)
+  // La ventana que se abre recibe el foco nada más conectar.
+  const ctrl = new AbortController()
+  const events = await fetch(`${base}/events?token=${token}`, { signal: ctrl.signal })
+  const reader = events.body.getReader()
+  let text = ''
+  while (!text.includes('event: focus')) text += new TextDecoder().decode((await reader.read()).value)
+  expect(text).toContain('event: focus\ndata: {"node":"packages/a/src/usa.js","line":2}')
+  ctrl.abort()
 })

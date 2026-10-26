@@ -12,9 +12,21 @@ use std::fmt::Write;
 
 use crate::rules::Outcome;
 
+// Los colores de terminal (`ESC [ … m`) no viajan en el JSON: ahí serían basura.
 fn string(out: &mut String, s: &str) {
     out.push('"');
-    for c in s.chars() {
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\u{1b}' && chars.peek() == Some(&'[') {
+            chars.next();
+            // Parámetros y, al final, una letra (0x40–0x7e) que cierra la secuencia.
+            for c in chars.by_ref() {
+                if ('\u{40}'..='\u{7e}').contains(&c) {
+                    break;
+                }
+            }
+            continue;
+        }
         match c {
             '"' => out.push_str("\\\""),
             '\\' => out.push_str("\\\\"),
@@ -109,5 +121,15 @@ mod tests {
         assert_eq!(doc.get("ok"), Some(&Json::Bool(false)));
         assert!(matches!(doc.get("rules"), Some(Json::Arr(rules)) if rules.len() == 2));
         assert!(text.contains(r#"{"file":"a/b.js","line":3,"message":"dice \"hola\"\n"}"#));
+    }
+
+    #[test]
+    fn sin_colores_de_terminal() {
+        let mut out = std::string::String::new();
+        super::string(
+            &mut out,
+            "\u{1b}[31mSyntaxError\u{1b}[0m: \u{1b}[1;2mx\u{1b}[0m\u{7}",
+        );
+        assert_eq!(out, r#""SyntaxError: x\u0007""#);
     }
 }

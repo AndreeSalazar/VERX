@@ -109,10 +109,18 @@ Las fases siguientes (ventana nativa en Rust y ejecutable único) están en el [
 ## VERX Grafo: ver por qué algo está bloqueado
 
 ```bash
-bun run grafo   # dev + el grafo en su propia ventana (con bun run dev, en http://127.0.0.1:3001)
+bun run dev      # el sitio y, en su propia ventana, el grafo (--sin-ventana para no abrirla)
+bun run vscode   # una vez: el grafo también dentro de VS Code
 ```
 
-Todo el repo en nodos: mundos, paquetes, carpetas, archivos, imports y puentes `.wasm`. Cuando el guardián bloquea algo, el archivo late en rojo y sus carpetas llevan la cuenta. Al pulsarlo se ven la regla, el motivo, la línea y cómo arreglarlo. Se edita ahí mismo con las líneas culpables marcadas, y al guardar el rojo se apaga solo. Todo va en tiempo real (SSE), solo en `127.0.0.1` y con el mismo candado de token que VERX Desktop.
+Todo el repo en nodos: mundos, paquetes, carpetas, archivos, imports y puentes `.wasm`. Cuando el guardián bloquea algo, el archivo culpable late en rojo y sus carpetas llevan la cuenta. Si una regla solo sabe que «apps/web falla», el grafo lee el error y señala el archivo y la línea que importan mal. Al pulsarlo se abre ahí mismo en esa línea, con la regla, el motivo y cómo arreglarlo, y al guardar el rojo se apaga solo.
+
+Y te guía también donde estás trabajando:
+
+- **En el sitio:** un aviso flotante con el bloqueo y dos botones, «Ver en el grafo» y «Abrir en VS Code». Si el sitio ni arranca, en vez de «no se puede acceder» sale una página que explica por qué y se recarga sola en cuanto lo arreglas.
+- **En VS Code:** el grafo en un panel, cada bloqueo subrayado en «Problemas» y `VERX ✖ 2` en la barra de estado. Lo que guardas allí se revisa al momento.
+
+Todo va en tiempo real, solo en `127.0.0.1` y con el mismo candado de token que VERX Desktop.
 
 ## Reglas que bloquean
 
@@ -167,7 +175,8 @@ Windows 11, Bun 1.3.14, 12 núcleos, 100 conexiones keep-alive, 8 s por escenari
 | `bun run wasm` | recompila la simulación Rust y la publica |
 | `bun run budget` | JS + WASM por página contra el presupuesto (14 KB por página, 9 KB por isla) |
 | `bun run desktop` | la misma app como programa de escritorio (VERX Desktop) |
-| `bun run grafo` | el repo en nodos, con los bloqueos del guardián en tiempo real (VERX Grafo) |
+| `bun run grafo` | el repo en nodos, con los bloqueos del guardián en tiempo real (VERX Grafo; `bun run dev` ya lo abre) |
+| `bun run vscode` | instala la extensión de VS Code: el grafo en un panel y los bloqueos en «Problemas» |
 | `bun test` · `bun run test:rust` | 53 tests JS · 16 tests de Rust |
 | `bun run verify` | todo junto: pásalo antes de dar algo por terminado |
 | `bun run bench` | benchmark del núcleo HTTP |

@@ -22,6 +22,7 @@ packages/      MUNDO JS (workspaces de Bun en modo aislado)
   img/         puente con verx-img (servidor)   → nada
   gl/          motor WebGL2                     → nada
   kit/         meta-framework estilo Next.js    → server, ui, img
+  vscode/      extensión de VS Code (VERX Grafo) → nada (puede importar `vscode`)
 apps/web/      el sitio                         → kit, ui, sim, search, md, img, gl
 ```
 
@@ -51,7 +52,8 @@ apps/web/      el sitio                         → kit, ui, sim, search, md, im
 | `bun run wasm` | recompila cada crate puente y publica su `.wasm` en su paquete |
 | `bun run budget` | tabla de JS + WASM por página y por isla, contra el presupuesto |
 | `bun run desktop` | la app como escritorio: ventana propia, servidor solo en 127.0.0.1 y candado por token |
-| `bun run grafo` | dev + VERX Grafo en su ventana: el repo en nodos, los bloqueos del guardián en rojo y en tiempo real, y edición ahí mismo (con `bun run dev` también está, en el puerto 3001) |
+| `bun run grafo` | dev + VERX Grafo en su ventana: el repo en nodos, los bloqueos del guardián en rojo y en tiempo real, y edición ahí mismo. `bun run dev` ya lo abre (`--sin-ventana` para no hacerlo) y pone un aviso en el propio sitio |
+| `bun run vscode` | instala la extensión de VS Code (`packages/vscode`): el grafo en un panel, los bloqueos en «Problemas» y en la barra de estado |
 | `bun test` · `bun run test:rust` | tests |
 | `bun run build` · `bun run start` | exportación estática y servidor de producción |
 

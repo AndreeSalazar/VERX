@@ -4,7 +4,9 @@
 // servidor vuelve con otro id de arranque, recarga.
 //
 // Además arranca VERX Grafo (src/grafo/) en ESTE proceso, que no se reinicia:
-// el proyecto entero como nodos, con lo que bloquea el guardián en rojo.
+// el proyecto entero como nodos, con lo que bloquea el guardián en rojo. Se
+// abre solo en su ventana (salvo con --sin-ventana) y, si el sitio no arranca,
+// este proceso ocupa su puerto con una página que explica por qué (caido.js).
 
 import { watch, readdirSync, realpathSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -12,9 +14,12 @@ import { fileURLToPath } from 'node:url'
 import { profileDir, windowCommand } from './desktop.js'
 import { findRepoRoot } from './grafo/model.js'
 import { startGraph } from './grafo/server.js'
+import { serveDown } from './grafo/caido.js'
 
 const BIN = fileURLToPath(new URL('../bin/verx.js', import.meta.url))
-const IGNORED = /(^|[\\/])(node_modules|dist|\.git)([\\/]|$)/
+const IGNORED = /(^|[\\/])(node_modules|dist|\.git|\.verx)([\\/]|$)/
+const READY = '[verx] desarrollo en'
+const TAIL = 6000 // lo último de stderr: ahí está el error si no arranca
 
 // Carpetas reales de los paquetes @verx/* enlazados (y sus dependencias).
 function linkedPackages(dir, seen = new Set()) {
@@ -30,43 +35,86 @@ function linkedPackages(dir, seen = new Set()) {
   return seen
 }
 
-// El grafo en su puerto (el de la app + 1, o uno libre). Con `open`, en su propia ventana.
-async function graph({ root, port, open }) {
+// El grafo en su puerto (el de la app + 1, o uno libre), con su ventana a mano.
+async function graph({ root, port }) {
+  const appOrigins = [`http://localhost:${port}`, `http://127.0.0.1:${port}`]
   let g
+  const open = () => {
+    const profile = profileDir(root) + '-grafo'
+    mkdirSync(profile, { recursive: true })
+    Bun.spawn(windowCommand({ url: g.url, profile }).cmd, { stdio: ['ignore', 'ignore', 'ignore'] })
+  }
+  const options = { root: findRepoRoot(root), appOrigins, onOpen: open }
   try {
-    g = await startGraph({ root: findRepoRoot(root), port: port + 1 })
+    g = await startGraph({ ...options, port: port + 1 })
   } catch {
-    g = await startGraph({ root: findRepoRoot(root), port: 0 })
+    g = await startGraph({ ...options, port: 0 })
   }
   console.log(`[verx] grafo del proyecto: ${g.url}`)
-  if (!open) return
-  const profile = profileDir(root) + '-grafo'
-  mkdirSync(profile, { recursive: true })
-  Bun.spawn(windowCommand({ url: g.url, profile }).cmd, { stdio: ['ignore', 'ignore', 'ignore'] })
+  return { ...g, open }
 }
 
-export function dev({ root, port, openGraph = false }) {
+// Copia un flujo del hijo a la consola y avisa de cada trozo.
+async function tee(stream, out, onChunk) {
+  const decoder = new TextDecoder()
+  for await (const chunk of stream) {
+    out.write(chunk)
+    onChunk(decoder.decode(chunk, { stream: true }))
+  }
+}
+
+export async function dev({ root, port, openGraph = true }) {
   let child = null
   let timer = null
   let changed = ''
+  let stopping = false
+  let down = null // la página de «el sitio no arranca», mientras haga falta
+
+  const g = await graph({ root, port }).catch((err) => {
+    console.warn(`[verx] el grafo no arrancó: ${err.message}`)
+    return null
+  })
+  if (g && openGraph) g.open()
 
   const start = () => {
-    child = Bun.spawn([process.execPath, BIN, 'serve', '--dev', '--port', String(port)], {
+    let errors = ''
+    stopping = false
+    const proc = (child = Bun.spawn([process.execPath, BIN, 'serve', '--dev', '--port', String(port)], {
       cwd: root,
-      stdio: ['inherit', 'inherit', 'inherit'],
-      env: { ...process.env, VERX_PARENT: String(process.pid) },
+      stdio: ['inherit', 'pipe', 'pipe'],
+      env: { ...process.env, VERX_PARENT: String(process.pid), ...(g ? { VERX_GRAFO: g.base } : {}) },
+    }))
+    tee(proc.stdout, process.stdout, (text) => {
+      if (text.includes(READY)) g?.setRuntime(null)
+    })
+    tee(proc.stderr, process.stderr, (text) => {
+      errors = (errors + text).slice(-TAIL)
+    })
+    proc.exited.then((code) => {
+      if (stopping || proc !== child || code === 0) return
+      // No arrancó: el grafo lo marca en rojo y el puerto enseña por qué.
+      g?.setRuntime(errors.trim() || `el servidor terminó con código ${code}`)
+      try {
+        down ??= serveDown({ port, grafo: g?.base })
+      } catch {
+        // el puerto sigue ocupado: sólo queda el aviso en el grafo
+      }
     })
   }
   const restart = async () => {
     const t = performance.now()
+    stopping = true
     child.kill()
     await child.exited
+    if (down) {
+      await down.stop(true)
+      down = null
+    }
     start()
     console.log(`[verx] ${changed} cambió → reiniciado en ${Math.round(performance.now() - t)} ms`)
   }
 
   start()
-  graph({ root, port, open: openGraph }).catch((err) => console.warn(`[verx] el grafo no arrancó: ${err.message}`))
   for (const dir of [root, ...linkedPackages(root)]) {
     watch(dir, { recursive: true }, (_, file) => {
       if (!file || IGNORED.test(file)) return

@@ -14,6 +14,7 @@
     "budget": "cd apps/web && bun run budget",
     "desktop": "cd apps/web && bun run desktop",
     "grafo": "cd apps/web && bun run grafo",
+    "vscode": "cd packages/vscode && bun run instalar",
     "test": "bun test",
     "check": "cd crates && cargo run -q --release -p verx-guard -- check",
     "check:quick": "cd crates && cargo run -q --release -p verx-guard -- check --quick",

@@ -10,6 +10,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, extname, join, posix, relative, resolve, sep } from 'node:path'
+import { pinpoint, tidy } from './blame.js'
 
 const SKIP = new Set(['node_modules', 'target', 'dist', 'out'])
 const TEXT = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.rs', '.toml', '.json', '.md', '.css', '.html', '.sh'])
@@ -161,15 +162,24 @@ export function buildGraph(root) {
 }
 
 // Cuelga cada problema del informe del guardián (`check --json`) del nodo más
-// profundo que lo contiene. «apps/web /blog» (presupuesto) → apps/web.
+// profundo que lo contiene. «apps/web /blog» (presupuesto) → apps/web; y si el
+// mensaje delata al archivo culpable (blame.js), de ese archivo y esa línea.
 export function attachProblems(graph, report) {
   const ids = new Set(graph.nodes.map((n) => n.id))
   const out = []
   for (const rule of report?.rules ?? []) {
     for (const p of rule.problems) {
-      let node = p.file.trim().split(' ')[0].replace(/\/$/, '')
+      const message = tidy(p.message, graph.root)
+      let file = p.file
+      let line = p.line
+      let fix = rule.fix
+      if (!line) {
+        const hit = pinpoint(p.message, graph, graph.root)
+        if (hit) ({ file, line, fix = rule.fix } = hit)
+      }
+      let node = file.trim().split(' ')[0].replace(/\/$/, '')
       while (node && !ids.has(node)) node = node.includes('/') ? node.slice(0, node.lastIndexOf('/')) : ''
-      out.push({ rule: rule.id, title: rule.title, fix: rule.fix, file: p.file, line: p.line, message: p.message, node })
+      out.push({ rule: rule.id, title: rule.title, fix, file, line, message, node })
     }
   }
   return out
