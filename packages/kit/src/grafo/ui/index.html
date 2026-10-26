@@ -47,7 +47,8 @@
   .box.world circle { stroke-dasharray: 2 6; stroke: color-mix(in srgb, var(--tone) 22%, transparent); fill: none; }
   .box.workspace circle { stroke-width: 1.4; fill: color-mix(in srgb, var(--tone) 4%, transparent); }
   .box.folder circle { stroke-dasharray: 3 4; }
-  .box.bad circle { stroke: var(--bad); stroke-width: 1.8; fill: rgba(255, 77, 94, 0.05); filter: drop-shadow(0 0 6px rgba(255, 77, 94, 0.55)); }
+  .box.bad circle { stroke: color-mix(in srgb, var(--bad) 70%, transparent); stroke-width: 1.2; fill: none; }
+  .box.hot circle { stroke: var(--bad); stroke-width: 1.8; fill: rgba(255, 77, 94, 0.06); filter: drop-shadow(0 0 6px rgba(255, 77, 94, 0.55)); }
   .box.selected circle { stroke: var(--gold); stroke-width: 2.2; }
   .file { cursor: pointer; }
   .file circle { transition: r 0.15s; }

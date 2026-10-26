@@ -100,9 +100,27 @@ function curve(a, b, bend = 0.18) {
   return `M${a.x},${a.y} Q${mx - dy * bend},${my + dx * bend} ${b.x},${b.y}`
 }
 
+// Los contenedores que brillan: los que tienen el bloqueo justo dentro (un
+// archivo suyo, o un bloqueo propio, como el presupuesto de apps/web). Los de
+// fuera sólo llevan el borde y la cuenta: si no, los velos rojos se apilaban
+// y todo el mundo se teñía de rojo.
+function hotBoxes(graph, bad) {
+  const hot = new Set()
+  const inner = new Map() // contenedor → bloqueos que vienen de sus hijos
+  for (const n of graph.nodes) {
+    const count = bad.get(n.id) ?? 0
+    if (!count || n.parent == null) continue
+    inner.set(n.parent, (inner.get(n.parent) ?? 0) + count)
+    if (n.kind === 'file') hot.add(n.parent)
+  }
+  for (const [id, count] of bad) if (count > (inner.get(id) ?? 0)) hot.add(id)
+  return hot
+}
+
 // Dibuja todo el grafo en `root` (un <g>). `bad`: id → nº de bloqueos (propios + de dentro).
 export function draw(root, graph, lay, bad) {
   root.replaceChildren()
+  const hot = hotBoxes(graph, bad)
   const edges = el('g', { class: 'edges' }, root)
   const boxes = el('g', { class: 'boxes' }, root)
   const dots = el('g', { class: 'dots' }, root)
@@ -129,7 +147,7 @@ export function draw(root, graph, lay, bad) {
       continue
     }
     if (n.kind === 'root') continue
-    const g = el('g', { class: `node box ${n.kind}${count ? ' bad' : ''}`, 'data-id': n.id }, boxes)
+    const g = el('g', { class: `node box ${n.kind}${count ? ' bad' : ''}${hot.has(n.id) ? ' hot' : ''}`, 'data-id': n.id }, boxes)
     el('circle', { cx: p.x, cy: p.y, r: p.r, style: `--tone:${WORLD_COLOR[n.world] ?? '#fff'}` }, g)
     const t = el('text', { x: p.x, y: p.y - p.r - 8, class: `label ${n.kind}-label`, 'text-anchor': 'middle' }, labels)
     t.textContent = n.kind === 'world' ? n.label.toUpperCase() : n.label

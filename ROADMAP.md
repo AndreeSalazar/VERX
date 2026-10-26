@@ -26,7 +26,8 @@ Cada plan es un paquete (`packages/`) o un crate (`crates/`) nuevo, con su READM
 ## ✨ Más 3D
 
 - [ ] **11. `@verx/gpu`**: WebGPU con *compute shaders* y WebGL2 como respaldo, para pasar de 40 mil a millones de partículas.
-- [ ] **12. Transiciones 3D entre páginas**: View Transitions más shaders; la galaxia se transforma al navegar.
+- [ ] **12. Transiciones 3D entre páginas**: View Transitions más shaders; la galaxia se transforma al navegar. Ya hay transiciones en todo el sitio, sin JS: cada bloque emerge al entrar y se disuelve al salir con el scroll, y la página vieja se hunde al navegar. Falta que el 3D también se transforme.
+- [x] **17. Sistema triple de agujeros negros** ✅: el fondo de todas las páginas es un gigante y dos compañeros trazados en la GPU, con discos inclinados, chorros relativistas, filamentos magnéticos y lentes entre ellos; la cámara lo rodea al bajar. Mantiene la calidad del agujero único gracias a `blackhole-system.js`, que calcula una vez por frame lo que es igual para todos los píxeles.
 
 ## 🌍 Ecosistema
 
