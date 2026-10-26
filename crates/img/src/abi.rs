@@ -7,26 +7,30 @@
 //!
 //! | Función | Descripción |
 //! |---|---|
-//! | `verx_abi() -> u32` | versión del contrato (1) |
+//! | `verx_abi() -> u32` | versión del contrato (2) |
 //! | `verx_alloc(len) -> *mut u8` | reserva la entrada y devuelve dónde escribirla |
 //! | `verx_decode(len) -> u32` | decodifica el PNG de la entrada (0 = bien; si no, ver `verx_error`) |
 //! | `verx_width()` · `verx_height()` · `verx_alpha()` | de la imagen decodificada |
 //! | `verx_color() -> u32` | su color medio, `0xRRGGBB` |
 //! | `verx_resize(width) -> u32` | la reduce a `width` (proporcional) y la codifica en PNG |
+//! | `verx_resize_jpeg(width, quality) -> u32` | igual, pero en JPEG de calidad 1..100 (sin alfa) |
 //! | `verx_placeholder(max) -> u32` | miniatura de `max` px de lado mayor, en PNG |
 //! | `verx_encode(width, height) -> u32` | codifica la entrada (RGBA en bruto) como PNG |
-//! | `verx_output() -> *const u8` · `verx_out_width()` · `verx_out_height()` | el último PNG |
+//! | `verx_output() -> *const u8` · `verx_out_width()` · `verx_out_height()` | la última imagen codificada |
 //! | `verx_error() -> *const u8` · `verx_error_len()` | el motivo del último error (UTF-8) |
+//!
+//! Historial: v1 sólo codificaba PNG; v2 añade `verx_resize_jpeg`.
 
 #![allow(unsafe_code)]
 
 use crate::Error;
 use crate::encode::encode;
+use crate::jpeg;
 use crate::png::{Image, decode};
 use crate::resize::{average, height_for, resize, thumbnail};
 
 /// Versión del contrato. Súbela si cambia cualquier firma o el formato de la memoria.
-pub const ABI_VERSION: u32 = 1;
+pub const ABI_VERSION: u32 = 2;
 
 struct State {
     input: Vec<u8>,
@@ -145,6 +149,18 @@ pub extern "C" fn verx_resize(width: u32) -> u32 {
     let out = resize(img, width, height_for(img, width.min(img.width)));
     // SAFETY: un solo llamador (ver `state`).
     emit(unsafe { state() }, &out)
+}
+
+/// Como `verx_resize`, pero en JPEG de calidad `quality` (1..100). El alfa se descarta.
+#[unsafe(no_mangle)]
+pub extern "C" fn verx_resize_jpeg(width: u32, quality: u32) -> u32 {
+    let Some(img) = image() else { return 0 };
+    let out = resize(img, width, height_for(img, width.min(img.width)));
+    // SAFETY: un solo llamador (ver `state`).
+    let s = unsafe { state() };
+    s.output = jpeg::encode(&out, quality.clamp(1, 100) as u8);
+    s.out_size = (out.width, out.height);
+    s.output.len() as u32
 }
 
 /// Miniatura de `max` píxeles de lado mayor, en PNG (para el placeholder).

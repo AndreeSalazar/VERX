@@ -62,9 +62,9 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
   // Imágenes de public/ con variantes y placeholder (verx-img): ver images.js.
   kit.images = kit.publicDir ? await createImageStore(kit.publicDir) : null
   app.get(IMAGE_PREFIX + ':file', (ctx) => {
-    const png = kit.images?.files.get(ctx.path)
-    if (!png) return ctx.status(404).text('Not Found')
-    return new Response(png, { headers: { 'content-type': 'image/png', 'cache-control': IMMUTABLE } })
+    const file = kit.images?.files.get(ctx.path)
+    if (!file) return ctx.status(404).text('Not Found')
+    return new Response(file.bytes, { headers: { 'content-type': file.type, 'cache-control': IMMUTABLE } })
   })
 
   const client = (kit.client = await buildClient({ root, dev }))

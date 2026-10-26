@@ -4,6 +4,7 @@
 //! Trabaja en el servidor (al arrancar y al exportar), así que usa `std`.
 //!
 //! - [`png`] y [`encode`]: decodificar y codificar PNG (con [`inflate`] y [`deflate`] propios).
+//! - [`jpeg`]: codificador JPEG «baseline» para las fotos.
 //! - [`resize`]: redimensionado gamma-correcto y el placeholder.
 //! - [`abi`]: el contrato con JavaScript.
 
@@ -13,6 +14,7 @@ pub mod deflate;
 pub mod encode;
 pub mod huffman;
 pub mod inflate;
+pub mod jpeg;
 pub mod png;
 pub mod resize;
 

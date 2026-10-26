@@ -150,15 +150,15 @@ test('docs y blog salen de Markdown: código resaltado, índice de la página y 
 
 test('portadas del blog: variantes de verx-img, la del artículo con prioridad y placeholder', async () => {
   const list = await (await html('/blog')).text()
-  expect(list.match(/<img src="\/_verx\/img\/[\w-]+-800\.\w{10}\.png" srcset="[^"]+ 480w, [^"]+ 800w"/g)).toHaveLength(3)
+  expect(list.match(/<img src="\/_verx\/img\/[\w-]+-800\.\w{10}\.jpg" srcset="[^"]+ 480w, [^"]+ 800w"/g)).toHaveLength(3)
   const post = await (await html('/blog/de-node-a-bun')).text()
   const cover = post.match(/<img [^>]*class="cover"[^>]*>/)?.[0] ?? ''
   expect(cover).toContain('width="1600" height="900"')
   expect(cover).toContain('alt="Un agujero negro de luz fría entre nubes azules y violetas"')
   expect(cover).toContain('fetchpriority="high"')
   expect(cover).toContain('url(&quot;data:image/svg+xml')
-  // La variante más pequeña pesa muchísimo menos que el original de 1600 px.
+  // Las portadas son opacas: JPEG, y la más pequeña pesa muchísimo menos que el original.
   const small = await fetch(base + list.match(/srcset="(\S+) 480w/)[1])
-  expect(small.headers.get('content-type')).toBe('image/png')
-  expect((await small.arrayBuffer()).byteLength).toBeLessThan(200_000)
+  expect(small.headers.get('content-type')).toBe('image/jpeg')
+  expect((await small.arrayBuffer()).byteLength).toBeLessThan(60_000)
 })

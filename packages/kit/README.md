@@ -34,6 +34,6 @@ const { src, srcset, width, height, color, placeholder } = image('/foto.png', { 
 
 Lee el PNG de `public/` y, con `@verx/img` (Rust → WASM), genera una vez sus variantes (anchos por defecto: 480, 800, 1200 y 1600; nunca agranda), la miniatura del placeholder y el color medio.
 
-- Las variantes se sirven en `/_verx/img/<nombre>-<ancho>.<huella>.png` con caché inmutable, y `verx build` las exporta.
+- Las variantes son JPEG si la imagen es opaca (unas 7 veces más ligeras) y PNG si tiene transparencia. Se sirven en `/_verx/img/<nombre>-<ancho>.<huella>.jpg|png` con caché inmutable, y `verx build` las exporta.
 - El `<img>` sale con `srcset`, `sizes`, `width`/`height` reales, `loading="lazy"` (o `fetchpriority="high"` con `priority`), y el placeholder desenfocado de fondo. Cero JS.
 - `alt` es obligatorio; `src` no puede salir de `public/`.

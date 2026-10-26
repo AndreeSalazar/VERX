@@ -115,7 +115,7 @@ test('exportación estática con precompresión y _headers', async () => {
   expect(readFileSync(join(dist, '_headers'), 'utf8')).toContain('/_verx/*')
   expect(r.needsServer).toEqual(expect.arrayContaining(['GET /items/:id', 'GET /live', 'POST /form', 'GET /api/ping']))
   // Las variantes de las imágenes también se exportan.
-  expect(readdirSync(join(dist, '_verx', 'img')).sort()).toEqual([expect.stringMatching(/^foto-300\.\w{10}\.png$/), expect.stringMatching(/^foto-600\.\w{10}\.png$/)])
+  expect(readdirSync(join(dist, '_verx', 'img')).sort()).toEqual([expect.stringMatching(/^foto-300\.\w{10}\.jpg$/), expect.stringMatching(/^foto-600\.\w{10}\.jpg$/)])
   expect([...readFileSync(join(dist, 'api', 'indice'))]).toEqual([86, 88, 83, 49, 1])
   expect(readFileSync(join(dist, '_headers'), 'utf8')).toContain('/api/indice\n  Content-Type: application/x-verx-test')
   expect(r.needsServer).not.toContain('GET /api/indice')
@@ -148,19 +148,20 @@ test('route.js con export WS: WebSocket en tiempo real', async () => {
 test('<Image>: variantes en /_verx/img, srcset, tamaño y placeholder sin JS', async () => {
   const html = await (await get('/galeria')).text()
   const img = html.match(/<img [^>]*>/)?.[0] ?? ''
-  expect(img).toMatch(/src="\/_verx\/img\/foto-600\.\w{10}\.png"/)
-  expect(img).toMatch(/srcset="\/_verx\/img\/foto-300\.\w{10}\.png 300w, \/_verx\/img\/foto-600\.\w{10}\.png 600w"/)
+  expect(img).toMatch(/src="\/_verx\/img\/foto-600\.\w{10}\.jpg"/)
+  expect(img).toMatch(/srcset="\/_verx\/img\/foto-300\.\w{10}\.jpg 300w, \/_verx\/img\/foto-600\.\w{10}\.jpg 600w"/)
   expect(img).toContain('width="900" height="500"')
   expect(img).toContain('alt="Un degradado"')
   expect(img).toContain('loading="eager" fetchpriority="high"')
   expect(img).toMatch(/style="background:#[0-9a-f]{6} url\(&quot;data:image\/svg\+xml/)
   expect(html).toMatch(/900×500 · #[0-9a-f]{6}/)
-  // La variante se sirve como PNG inmutable y mide lo que dice.
+  // La foto es opaca: la variante se sirve como JPEG inmutable y mide lo que dice.
   const r = await get(img.match(/src="([^"]+)"/)[1])
-  expect(r.headers.get('content-type')).toBe('image/png')
+  expect(r.headers.get('content-type')).toBe('image/jpeg')
   expect(r.headers.get('cache-control')).toContain('immutable')
-  const png = new Uint8Array(await r.arrayBuffer())
-  expect(new DataView(png.buffer).getUint32(16)).toBe(600) // ancho en el IHDR
+  const jpg = new Uint8Array(await r.arrayBuffer())
+  const sof = jpg.findIndex((b, i) => b === 0xff && jpg[i + 1] === 0xc0)
+  expect(new DataView(jpg.buffer).getUint16(sof + 7)).toBe(600) // ancho en el SOF0
   expect((await get('/_verx/img/no-existe.png')).status).toBe(404)
   expect(kit.pages.map((p) => p.path)).toContain('/galeria')
 })

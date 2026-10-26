@@ -36,7 +36,7 @@ export async function exportStatic(kit, outDir = 'dist') {
   }
   write('/404.html', Buffer.from(await kit.renderNotFound()), HTML)
   // Variantes de las imágenes que usaron las páginas (ya renderizadas arriba).
-  for (const [url, png] of kit.images?.files ?? []) write(url, Buffer.from(png), 'image/png')
+  for (const [url, file] of kit.images?.files ?? []) write(url, Buffer.from(file.bytes), file.type)
   // GET estáticos (force-static): su respuesta se guarda tal cual en la URL.
   for (const s of kit.statics) write(s.path, Buffer.from(s.bytes), s.type)
   for (const f of kit.client.files) write(f.path, f.bytes, f.type || MIME['.js'])

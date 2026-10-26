@@ -49,7 +49,7 @@ Una comparación cualitativa, sin favoritismos: aparece lo que VERX ya hace mejo
 | **Streaming SSR** (enviar HTML mientras carga) | Next.js, Remix, SolidStart | `renderToStream` en `@verx/ui` con límites `<Suspense>` | Bun |
 | **Hidratación que reutiliza el DOM** | Svelte, Solid, Qwik | Recorrer el HTML del servidor en lugar de volver a pintar la isla | Bun |
 | **Reactividad automática** (sin `() =>`) | Solid, Svelte | Plugin de Bun que envuelva las expresiones JSX al compilar | Bun |
-| ~~**Optimización de imágenes**~~ ✅ | Next.js, Astro | **Hecho (PNG):** `verx-img` en Rust, con PNG y DEFLATE propios, reducción en luz lineal y placeholder; `<Image>` sin JS. Falta un formato con pérdida (JPEG/WebP) | 🦀 Rust |
+| ~~**Optimización de imágenes**~~ ✅ | Next.js, Astro | **Hecho:** `verx-img` en Rust, con PNG, DEFLATE y JPEG propios, reducción en luz lineal y placeholder; `<Image>` sin JS (WebP/AVIF, más adelante) | 🦀 Rust |
 | **Tipos TypeScript** | todos | `.d.ts` para cada paquete y `tsc --noEmit` dentro de `verify` | Bun |
 | **HMR que conserva el estado** | Vite (Astro, SvelteKit…) | `bun --hot` más recarga parcial de islas | Bun |
 | **Adaptadores de despliegue** (edge, serverless) | Next.js, Astro, SvelteKit | Adaptadores para Cloudflare y Vercel sobre `fetch` estándar | Bun |

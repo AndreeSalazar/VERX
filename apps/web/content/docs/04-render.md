@@ -27,7 +27,7 @@ Para mostrar un 404 o redirigir desde cualquier página, usa `notFound()` o `red
 
 `<Image>` es como `next/image`, pero sin JavaScript en el navegador. `verx-img` (Rust → WASM) prepara cada PNG de `public/` **una vez**, al arrancar:
 
-- las variantes de cada ancho, reducidas en luz lineal y con alfa premultiplicado;
+- las variantes de cada ancho, reducidas en luz lineal y con alfa premultiplicado, en JPEG si la imagen es opaca y en PNG si tiene transparencia;
 - una miniatura desenfocada para el placeholder;
 - el color medio.
 
@@ -46,5 +46,5 @@ import { Image } from '@verx/kit'
 | `/_verx/img/…` con huella y caché de un año | se descarga una sola vez; `verx build` lo exporta |
 | `alt` obligatorio | usa `alt=""` si la imagen es decorativa |
 
-> [!NOTE]
-> Por ahora sólo PNG. Para fotos, un formato con pérdida (JPEG o WebP) pesaría bastante menos: es el siguiente paso de `verx-img`.
+> [!TIP]
+> Las portadas de este blog son PNG de 1600 px y unos 500 KB. Servidas por `<Image>` en JPEG, la variante de 480 px pesa 13 KB y la de 800 px, 28 KB.

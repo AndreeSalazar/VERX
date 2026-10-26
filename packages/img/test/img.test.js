@@ -33,7 +33,7 @@ test('codifica un PNG válido y lo vuelve a leer', () => {
 
 test('variantes proporcionales, sin agrandar nunca, y placeholder diminuto', () => {
   const png = img.encode(gradient(1600, 900), 1600, 900)
-  const out = img.process(png, { widths: [480, 960, 960, 4000], placeholder: 20 })
+  const out = img.process(png, { widths: [480, 960, 960, 4000], format: 'png', placeholder: 20 })
   expect(out.variants.map((v) => [v.width, v.height])).toEqual([
     [480, 270],
     [960, 540],
@@ -42,6 +42,34 @@ test('variantes proporcionales, sin agrandar nunca, y placeholder diminuto', () 
   for (const v of out.variants) expect(img.process(v.bytes, { placeholder: 0 })).toMatchObject({ width: v.width, height: v.height })
   expect([out.placeholder.width, out.placeholder.height]).toEqual([20, 11])
   expect(out.placeholder.bytes.length).toBeLessThan(1200)
+})
+
+test('JPEG para lo opaco (mucho más ligero) y PNG para lo transparente', () => {
+  // Un «paisaje» con detalle: es donde el PNG sufre y el JPEG brilla.
+  const w = 800
+  const h = 450
+  const rgba = new Uint8Array(w * h * 4)
+  for (let i = 0; i < w * h; i++) {
+    const x = i % w
+    const y = (i / w) | 0
+    const v = 128 + 60 * Math.sin(x / 7) * Math.cos(y / 11) + 40 * Math.sin((x + y) / 23)
+    rgba.set([v, v * 0.7, 255 - v, 255], i * 4)
+  }
+  const src = img.encode(rgba, w, h)
+  const auto = img.process(src, { widths: [400] })
+  const png = img.process(src, { widths: [400], format: 'png' })
+  expect(auto.variants[0]).toMatchObject({ type: 'image/jpeg', width: 400, height: 225 })
+  expect([...auto.variants[0].bytes.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff])
+  expect([...auto.variants[0].bytes.subarray(-2)]).toEqual([0xff, 0xd9])
+  expect(png.variants[0].type).toBe('image/png')
+  expect(auto.variants[0].bytes.length * 3).toBeLessThan(png.variants[0].bytes.length)
+  // A más calidad, más bytes.
+  const q95 = img.process(src, { widths: [400], quality: 95 }).variants[0].bytes.length
+  const q50 = img.process(src, { widths: [400], quality: 50 }).variants[0].bytes.length
+  expect(q95).toBeGreaterThan(q50)
+  // Con transparencia, aunque se pida JPEG, sale PNG.
+  const transparent = img.process(img.encode(gradient(64, 64, 128), 64, 64), { widths: [16], format: 'jpeg' })
+  expect(transparent.variants[0].type).toBe('image/png')
 })
 
 test('la transparencia se conserva', () => {

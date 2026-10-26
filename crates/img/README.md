@@ -10,7 +10,9 @@ Imágenes para VERX, en Rust compilado a WebAssembly y **sin una sola dependenci
 - **Placeholder:** una miniatura de pocos píxeles y el color medio, para que la página pinte algo antes de que llegue la imagen.
 - **A salvo de archivos hostiles:** comprueba todos los CRC y no admite imágenes de más de 16 384 px de lado ni de 64 megapíxeles. La descompresión se corta en cuanto pasa del tamaño esperado.
 
-No admite PNG entrelazado (Adam7). JPEG, WebP y AVIF quedan para más adelante.
+- **JPEG para las fotos:** codificador «baseline» (YCbCr 4:2:0, DCT, cuantización por calidad con las tablas del anexo K y Huffman estándar). Un test lo decodifica de vuelta y mide la PSNR. En las portadas del sitio pesa unas 7 veces menos que el PNG.
+
+No admite PNG entrelazado (Adam7) ni decodifica JPEG. WebP y AVIF quedan para más adelante.
 
 | Archivo | Responsabilidad | `unsafe` |
 |---|---|---|
@@ -18,6 +20,7 @@ No admite PNG entrelazado (Adam7). JPEG, WebP y AVIF quedan para más adelante.
 | `src/inflate.rs` | descompresión DEFLATE / zlib | no |
 | `src/huffman.rs` · `src/deflate.rs` | compresión DEFLATE / zlib | no |
 | `src/png.rs` | decodificar y codificar PNG | no |
+| `src/jpeg.rs` (+ `jpeg_check.rs`, sólo tests) | codificador JPEG y su comprobación | no |
 | `src/resize.rs` | redimensionado, miniatura y color medio | no |
 | `src/abi.rs` | contrato con JS: funciones `verx_*` | **solo aquí** |
 

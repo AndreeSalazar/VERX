@@ -8,7 +8,7 @@
 
 import wasmUrl from '../img.wasm' with { type: 'file' }
 
-export const ABI_VERSION = 1
+export const ABI_VERSION = 2
 export { wasmUrl }
 
 async function instantiate(source) {
@@ -39,9 +39,10 @@ export async function createImages({ source = wasmUrl } = {}) {
     return data.length
   }
   // Copia el último PNG fuera de la memoria del .wasm (que puede cambiar en la siguiente llamada).
-  const output = (len) => {
+  const output = (len, type = 'image/png') => {
     const ptr = e.verx_output()
     return {
+      type,
       bytes: new Uint8Array(e.memory.buffer, ptr, len).slice(),
       width: e.verx_out_width(),
       height: e.verx_out_height(),
@@ -50,21 +51,27 @@ export async function createImages({ source = wasmUrl } = {}) {
   const error = () => new TextDecoder().decode(new Uint8Array(e.memory.buffer, e.verx_error(), e.verx_error_len()))
 
   return {
-    // PNG → { width, height, alpha, color, variants: [{ width, height, bytes }], placeholder }.
+    // PNG → { width, height, alpha, color, variants: [{ type, width, height, bytes }], placeholder }.
     // `widths`: anchos a generar (los mayores que el original se quedan en el original: nunca agranda).
+    // `format`: 'auto' (JPEG si es opaca, PNG si tiene transparencia), 'jpeg' o 'png'.
+    // `quality`: calidad del JPEG, de 1 a 100.
     // `placeholder`: lado mayor de la miniatura en píxeles (0 = ninguna).
-    process(png, { widths = [], placeholder = 24 } = {}) {
+    process(png, { widths = [], format = 'auto', quality = 82, placeholder = 24 } = {}) {
       const code = e.verx_decode(write(png))
       if (code !== 0) throw new Error(`[verx/img] PNG no válido: ${error()}`)
       const width = e.verx_width()
       const height = e.verx_height()
       const unique = [...new Set(widths.map((w) => Math.min(Math.round(w), width)))].sort((a, b) => a - b)
+      const alpha = e.verx_alpha() === 1
+      // El JPEG no guarda transparencia: con alfa, PNG siempre.
+      const jpeg = !alpha && (format === 'jpeg' || format === 'auto')
+      const variant = (w) => (jpeg ? output(e.verx_resize_jpeg(w, quality), 'image/jpeg') : output(e.verx_resize(w)))
       return {
         width,
         height,
-        alpha: e.verx_alpha() === 1,
+        alpha,
         color: hex(e.verx_color()),
-        variants: unique.map((w) => output(e.verx_resize(w))),
+        variants: unique.map(variant),
         placeholder: placeholder > 0 ? output(e.verx_placeholder(placeholder)) : null,
       }
     },

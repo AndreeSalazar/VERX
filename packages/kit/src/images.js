@@ -3,7 +3,8 @@
 //   <Image src="/portadas/x.png" alt="…" sizes="(min-width: 900px) 720px, 100vw" />
 //
 // · verx-img (Rust → WASM) genera, UNA vez por imagen, las variantes de cada
-//   ancho (reducidas en luz lineal), la miniatura del placeholder y el color medio.
+//   ancho (reducidas en luz lineal; JPEG si la imagen es opaca, PNG si tiene
+//   transparencia), la miniatura del placeholder y el color medio.
 // · Se sirven desde /_verx/img/ con huella y caché de un año, y `verx build`
 //   las exporta como archivos.
 // · El <img> lleva srcset, width y height (sin saltos de diseño) y, de fondo, el
@@ -35,7 +36,7 @@ function blurred(thumb) {
 export async function createImageStore(publicDir) {
   const engine = await createImages()
   const cache = new Map()
-  const files = new Map() // URL → PNG
+  const files = new Map() // URL → { bytes, type }
 
   function get(src, { widths = DEFAULT_WIDTHS } = {}) {
     if (!publicDir) throw new Error(`[verx] image("${src}"): la app no tiene carpeta public/`)
@@ -49,9 +50,9 @@ export async function createImageStore(publicDir) {
     const hash = createHash('sha256').update(png).digest('hex').slice(0, 10)
     const name = basename(file, extname(file))
     const variants = out.variants.map((v) => {
-      const url = `${IMAGE_PREFIX}${name}-${v.width}.${hash}.png`
-      files.set(url, v.bytes)
-      return { url, width: v.width, height: v.height, bytes: v.bytes.length }
+      const url = `${IMAGE_PREFIX}${name}-${v.width}.${hash}.${v.type === 'image/jpeg' ? 'jpg' : 'png'}`
+      files.set(url, { bytes: v.bytes, type: v.type })
+      return { url, type: v.type, width: v.width, height: v.height, bytes: v.bytes.length }
     })
     const largest = variants.at(-1)
     const info = {
