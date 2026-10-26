@@ -44,6 +44,20 @@ export async function loadConfig(root) {
 
 const load = (file) => import(pathToFileURL(file).href)
 
+// En `verx dev`, una página que da un 500 se le cuenta a VERX Grafo (que vive
+// en el proceso padre): lo marca en rojo y abre su ventana en el culpable.
+// Sin grafo (verx start, tests), no hace nada; si no responde, tampoco pasa nada.
+function tellGraph(path, err) {
+  const base = process.env.VERX_GRAFO
+  const token = process.env.VERX_GRAFO_TOKEN
+  if (!base || !token) return
+  fetch(`${base}/fallo`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-verx-token': token, origin: base },
+    body: JSON.stringify({ path, message: String(err?.stack ?? err) }),
+  }).catch(() => {})
+}
+
 // ¿Algún CSS de `dir` (o de sus carpetas) contiene `text`?
 const cssMentions = (dir, text) =>
   readdirSync(dir, { recursive: true }).some((f) => String(f).endsWith('.css') && readFileSync(join(dir, String(f)), 'utf8').includes(text))
@@ -218,6 +232,7 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
     if (err instanceof NotFoundError) return app.notFoundHandler(ctx)
     const status = Number.isInteger(err?.status) && err.status >= 400 && err.status <= 599 ? err.status : 500
     if (status >= 500) console.error(err)
+    if (status >= 500 && dev) tellGraph(ctx.path, err)
     const message = err?.expose ? err.message : STATUS_CODES[status]
     if (!wantsHtml(ctx)) return ctx.status(status).send(wantsJson(ctx) ? { error: message } : message)
     const error = { status, message, stack: dev ? String(err?.stack ?? err) : undefined }

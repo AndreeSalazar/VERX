@@ -118,6 +118,7 @@ Todo el repo en nodos: mundos, paquetes, carpetas, archivos, imports y puentes `
 Y te guía también donde estás trabajando:
 
 - **En el sitio:** un aviso flotante con el bloqueo y dos botones, «Ver en el grafo» y «Abrir en VS Code». Si el sitio ni arranca, en vez de «no se puede acceder» sale una página que explica por qué y se recarga sola en cuanto lo arreglas.
+- **Cuando algo falla:** si el sitio no arranca o una página da error, la ventana del grafo se abre sola en el archivo y la línea culpables.
 - **En VS Code:** el grafo en un panel, cada bloqueo subrayado en «Problemas» y `VERX ✖ 2` en la barra de estado. Lo que guardas allí se revisa al momento.
 
 Todo va en tiempo real, solo en `127.0.0.1` y con el mismo candado de token que VERX Desktop.

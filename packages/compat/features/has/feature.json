@@ -1,0 +1,17 @@
+{
+  "id": "has",
+  "title": "Selector :has()",
+  "kind": "css",
+  "tokens": [
+    ":has("
+  ],
+  "since": {
+    "chrome": "105",
+    "safari": "15.4",
+    "firefox": "121"
+  },
+  "policy": "degrada",
+  "guards": [],
+  "respaldo": null,
+  "sin": "se ignora la regla entera que lo usa"
+}

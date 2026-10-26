@@ -1,0 +1,17 @@
+{
+  "id": "speculation-rules",
+  "title": "Prerender al pasar el ratón (Speculation Rules)",
+  "kind": "js",
+  "tokens": [
+    "speculationrules"
+  ],
+  "since": {
+    "chrome": "109",
+    "safari": null,
+    "firefox": null
+  },
+  "policy": "degrada",
+  "guards": [],
+  "respaldo": "@verx/compat/prefetch: precarga la página al pasar el ratón por el enlace",
+  "sin": "la página siguiente no se prepara antes del clic"
+}

@@ -155,12 +155,34 @@ test('la revisión rápida conserva lo que sólo mide la completa; un error, un 
   expect(mergeSame([{ ...p, rule: 'arranque' }, { ...p, rule: 'presupuesto' }, { ...p, line: 3, rule: 'x' }]).map((x) => x.rule)).toEqual(['arranque · presupuesto', 'x'])
 })
 
-test('el sitio no arranca: el bloqueo cae en el archivo y la línea culpables', async () => {
-  graphApp.setRuntime(`SyntaxError: Export named 'uu' not found in module '${join(root, 'packages', 'a', 'src', 'util.js')}'.`)
+test('el sitio no arranca: el bloqueo cae en el archivo culpable y la ventana se abre sola', async () => {
+  const before = opens
+  const crash = `SyntaxError: Export named 'uu' not found in module '${join(root, 'packages', 'a', 'src', 'util.js')}'.`
+  graphApp.setRuntime(crash)
   const [p] = graphApp.snapshot().problems.filter((x) => x.rule.includes('arranque'))
   expect(p).toMatchObject({ node: 'packages/a/src/usa.js', line: 2 })
+  expect(opens).toBe(before + 1) // sin ventana abierta: la abre, ya en usa.js:2
+  graphApp.setRuntime(null)
+  graphApp.setRuntime(crash)
+  expect(opens).toBe(before + 1) // el mismo fallo no la vuelve a abrir
   graphApp.setRuntime(null)
   expect(graphApp.snapshot().problems.some((x) => x.rule.includes('arranque'))).toBe(false)
+})
+
+test('una página que da 500 se cuenta por /fallo (con token) y señala la línea de la pila', async () => {
+  const fallo = (headers, body) => fetch(base + '/fallo', { method: 'POST', headers: { 'content-type': 'application/json', origin: base, ...headers }, body: JSON.stringify(body) })
+  const stack = `Error: boom\n    at Page (${join(root, 'packages', 'a', 'src', 'index.js')}:3:9)\n    at render (${join(root, 'packages', 'b', 'index.js')}:2:1)`
+  expect((await fallo({}, { path: '/', message: stack })).status).toBe(403) // sin token, nadie
+  expect((await fallo({ 'x-verx-token': token }, { path: '/' })).status).toBe(400)
+  expect((await fallo({ 'x-verx-token': token }, { path: '/blog', message: stack })).status).toBe(200)
+  const [p] = graphApp.snapshot().problems.filter((x) => x.rule.includes('render'))
+  expect(p).toMatchObject({ node: 'packages/a/src/index.js', line: 3 })
+  expect(p.message).toStartWith('/blog: Error: boom')
+  graphApp.refresh() // al guardar algo, se olvida: si sigue roto, el sitio lo volverá a contar
+  expect(graphApp.snapshot().problems.some((x) => x.rule.includes('render'))).toBe(false)
+  // refresh() lanza el guardián en el repo de juguete: se espera a que acabe
+  // (en Windows, un proceso vivo dentro de la carpeta impide borrarla).
+  for (let i = 0; i < 200 && graphApp.snapshot().status.checking; i++) await Bun.sleep(50)
 })
 
 test('VS Code entra con la cabecera del token; el aviso, sólo desde el sitio', async () => {
@@ -180,9 +202,10 @@ test('VS Code entra con la cabecera del token; el aviso, sólo desde el sitio', 
 test('«ver en el grafo» desde el sitio: abre la ventana y la lleva al archivo', async () => {
   const focus = (origin) => fetch(base + '/enfocar', { method: 'POST', headers: { origin }, body: JSON.stringify({ node: 'packages/a/src/usa.js', line: 2 }) })
   expect((await focus('http://malo.test')).status).toBe(403)
+  const before = opens
   const r = await focus(SITE)
   expect(await r.json()).toEqual({ ok: true, opened: true })
-  expect(opens).toBe(1)
+  expect(opens).toBe(before + 1)
   // La ventana que se abre recibe el foco nada más conectar.
   const ctrl = new AbortController()
   const events = await fetch(`${base}/events?token=${token}`, { signal: ctrl.signal })

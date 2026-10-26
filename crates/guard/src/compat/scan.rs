@@ -6,9 +6,9 @@
 //! · Las propias comprobaciones (`@supports (…)`, `CSS.supports(…)`,
 //!   `HTMLScriptElement.supports(…)`) no son usos.
 
-use super::table::{FEATURES, Kind};
+use super::table::{Feature, Kind};
 
-/// Un uso de la función `feature` (índice en `FEATURES`) en la línea `line`.
+/// Un uso de la función `feature` (índice en la tabla) en la línea `line`.
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct Use {
     pub(crate) feature: usize,
@@ -112,7 +112,7 @@ fn blank_comments(text: &str, js: bool) -> String {
 
 /// Todos los usos de un archivo: uno por función (el primero sin proteger, o
 /// el primero si todos lo están), en el orden de la tabla.
-pub(crate) fn uses(path: &str, text: &str) -> Vec<Use> {
+pub(crate) fn uses(path: &str, text: &str, features: &[Feature]) -> Vec<Use> {
     let js = !std::path::Path::new(path)
         .extension()
         .is_some_and(|e| e.eq_ignore_ascii_case("css"));
@@ -120,14 +120,14 @@ pub(crate) fn uses(path: &str, text: &str) -> Vec<Use> {
     let text = clean.as_str();
     let blocks = supports_blocks(text);
     let mut out = Vec::new();
-    for (i, f) in FEATURES.iter().enumerate() {
+    for (i, f) in features.iter().enumerate() {
         if !kind_applies(f.kind, path) {
             continue;
         }
-        let file_guard = f.guards.iter().any(|g| text.contains(g));
+        let file_guard = f.guards.iter().any(|g| text.contains(g.as_str()));
         let mut first: Option<Use> = None;
-        for token in f.tokens {
-            for (pos, _) in text.match_indices(token) {
+        for token in &f.tokens {
+            for (pos, _) in text.match_indices(token.as_str()) {
                 if is_check(text, pos) {
                     continue;
                 }
@@ -137,7 +137,7 @@ pub(crate) fn uses(path: &str, text: &str) -> Vec<Use> {
                             b.start < pos
                                 && pos < b.end
                                 && !b.cond.contains("not")
-                                && f.tokens.iter().any(|t| b.cond.contains(t))
+                                && f.tokens.iter().any(|t| b.cond.contains(t.as_str()))
                         }));
                 let line = text[..pos].matches('\n').count() + 1;
                 let candidate = Use {
@@ -159,11 +159,16 @@ pub(crate) fn uses(path: &str, text: &str) -> Vec<Use> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::table::FEATURES;
-    use super::uses;
+    use super::super::table::tests::sample;
+    use super::Use;
 
-    fn id(i: usize) -> &'static str {
-        FEATURES[i].id
+    // Los usos con las fichas de ejemplo.
+    fn uses(path: &str, text: &str) -> Vec<Use> {
+        super::uses(path, text, &sample())
+    }
+
+    fn id(i: usize) -> String {
+        sample()[i].id.clone()
     }
 
     #[test]

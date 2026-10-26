@@ -1,9 +1,22 @@
-//! La tabla de compatibilidad: sólo las funciones del navegador que usa VERX,
-//! con la primera versión de cada navegador que las trae activadas por defecto.
+//! La tabla de compatibilidad: una ficha por función del navegador que usa
+//! VERX, cada una en su carpeta, `packages/compat/features/<id>/feature.json`
+//! (con su README y, si lo tiene, su respaldo). Añadir una función es crear
+//! una carpeta; aquí sólo se leen.
 //!
-//! Está escrita a mano (cero dependencias, tampoco de datos): cuando se use
-//! algo nuevo, se añade aquí con sus versiones, comprobadas en caniuse.com o
-//! en la documentación de cada navegador. Chrome vale también para Edge.
+//! ```json
+//! { "id": "has", "title": "Selector :has()", "kind": "css", "tokens": [":has("],
+//!   "since": { "chrome": "105", "safari": "15.4", "firefox": "121" },
+//!   "policy": "degrada", "guards": [], "respaldo": null, "sin": "…" }
+//! ```
+//!
+//! Las versiones son la primera de cada navegador que la trae activada por
+//! defecto (`null`: ninguna). Chrome vale también para Edge y Brave.
+
+use crate::json::{self, Json};
+use crate::repo::Repo;
+
+/// Dónde está la carpeta de cada función.
+pub(crate) const FEATURES_DIR: &str = "packages/compat/features/";
 
 /// Dónde se busca la función: en CSS (también el que va dentro de HTML o JS) o en JS.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -22,21 +35,22 @@ pub(crate) enum Policy {
     Proteger,
 }
 
+#[derive(Debug)]
 pub(crate) struct Feature {
-    pub(crate) id: &'static str,
-    pub(crate) title: &'static str,
+    pub(crate) id: String,
+    pub(crate) title: String,
     pub(crate) kind: Kind,
     /// Texto que delata su uso en el código.
-    pub(crate) tokens: &'static [&'static str],
+    pub(crate) tokens: Vec<String>,
     /// Primera versión con la función, por navegador (ver `BROWSERS`); `None`, ninguna.
     pub(crate) since: [Option<u32>; 3],
     pub(crate) policy: Policy,
     /// JS: comprobaciones que cuentan como protección (en el mismo archivo).
     /// CSS: alternativas que cubren a los navegadores que no la tienen
     /// (p. ej. el prefijo -webkit-). La de `@supports` se detecta siempre.
-    pub(crate) guards: &'static [&'static str],
+    pub(crate) guards: Vec<String>,
     /// Qué ofrece VERX donde falta, si ofrece algo.
-    pub(crate) respaldo: Option<&'static str>,
+    pub(crate) respaldo: Option<String>,
 }
 
 /// Los navegadores, en el orden de `Feature::since`.
@@ -49,139 +63,146 @@ pub(crate) const fn v(major: u32, minor: u32) -> u32 {
     major * 100 + minor
 }
 
-pub(crate) const FEATURES: &[Feature] = &[
-    Feature {
-        id: "animaciones-con-scroll",
-        title: "Animaciones ligadas al scroll (animation-timeline)",
-        kind: Kind::Css,
-        tokens: &["animation-timeline"],
-        since: [Some(v(115, 0)), Some(v(26, 0)), None],
-        policy: Policy::Proteger,
-        guards: &[],
-        respaldo: Some("@verx/compat/reveal: las mismas entradas y salidas con IntersectionObserver"),
-    },
-    Feature {
-        id: "transiciones-entre-paginas",
-        title: "Transiciones entre páginas (@view-transition)",
-        kind: Kind::Css,
-        tokens: &["@view-transition"],
-        since: [Some(v(126, 0)), Some(v(18, 2)), None],
-        policy: Policy::Degrada,
-        guards: &[],
-        respaldo: None,
-    },
-    Feature {
-        id: "nombres-de-transicion",
-        title: "Elementos que viajan entre páginas (view-transition-name)",
-        kind: Kind::Css,
-        tokens: &["view-transition-name"],
-        since: [Some(v(111, 0)), Some(v(18, 0)), Some(v(144, 0))],
-        policy: Policy::Degrada,
-        guards: &[],
-        respaldo: None,
-    },
-    Feature {
-        id: "speculation-rules",
-        title: "Prerender al pasar el ratón (Speculation Rules)",
-        kind: Kind::Js,
-        tokens: &["speculationrules"],
-        since: [Some(v(109, 0)), None, None],
-        policy: Policy::Degrada,
-        guards: &[],
-        respaldo: Some("@verx/compat/prefetch: precarga la página al pasar el ratón por el enlace"),
-    },
-    Feature {
-        id: "has",
-        title: "Selector :has()",
-        kind: Kind::Css,
-        tokens: &[":has("],
-        since: [Some(v(105, 0)), Some(v(15, 4)), Some(v(121, 0))],
-        policy: Policy::Degrada,
-        guards: &[],
-        respaldo: None,
-    },
-    Feature {
-        id: "color-mix",
-        title: "Mezcla de colores (color-mix())",
-        kind: Kind::Css,
-        tokens: &["color-mix("],
-        since: [Some(v(111, 0)), Some(v(16, 2)), Some(v(113, 0))],
-        policy: Policy::Degrada,
-        guards: &[],
-        respaldo: None,
-    },
-    Feature {
-        id: "backdrop-filter",
-        title: "Cristal desenfocado (backdrop-filter)",
-        kind: Kind::Css,
-        tokens: &["backdrop-filter"],
-        since: [Some(v(76, 0)), Some(v(18, 0)), Some(v(103, 0))],
-        policy: Policy::Degrada,
-        guards: &["-webkit-backdrop-filter"],
-        respaldo: None,
-    },
-    Feature {
-        id: "property",
-        title: "Propiedades CSS animables (@property)",
-        kind: Kind::Css,
-        tokens: &["@property"],
-        since: [Some(v(85, 0)), Some(v(16, 4)), Some(v(128, 0))],
-        policy: Policy::Degrada,
-        guards: &[],
-        respaldo: None,
-    },
-    Feature {
-        id: "text-wrap",
-        title: "Títulos equilibrados (text-wrap: balance)",
-        kind: Kind::Css,
-        tokens: &["text-wrap"],
-        since: [Some(v(114, 0)), Some(v(17, 5)), Some(v(121, 0))],
-        policy: Policy::Degrada,
-        guards: &[],
-        respaldo: None,
-    },
-    Feature {
-        id: "request-idle-callback",
-        title: "Esperar a que el navegador quede libre (requestIdleCallback)",
-        kind: Kind::Js,
-        tokens: &["requestIdleCallback"],
-        since: [Some(v(47, 0)), None, Some(v(55, 0))],
-        policy: Policy::Proteger,
-        guards: &[
-            "'requestIdleCallback' in",
-            "\"requestIdleCallback\" in",
-            "typeof requestIdleCallback",
-        ],
-        respaldo: None,
-    },
-    Feature {
-        id: "intersection-observer",
-        title: "Saber qué se ve en pantalla (IntersectionObserver)",
-        kind: Kind::Js,
-        tokens: &["IntersectionObserver"],
-        since: [Some(v(58, 0)), Some(v(12, 1)), Some(v(55, 0))],
-        policy: Policy::Proteger,
-        guards: &["'IntersectionObserver' in", "typeof IntersectionObserver"],
-        respaldo: None,
-    },
-    Feature {
-        id: "webgl2",
-        title: "Gráficos 3D (WebGL2)",
-        kind: Kind::Js,
-        tokens: &["'webgl2'", "\"webgl2\""],
-        since: [Some(v(56, 0)), Some(v(15, 0)), Some(v(51, 0))],
-        policy: Policy::Proteger,
-        guards: &["if (!gl)"],
-        respaldo: Some("el agujero negro y la galaxia hechos sólo con CSS"),
-    },
-    Feature {
-        id: "portapapeles",
-        title: "Copiar al portapapeles (navigator.clipboard)",
-        kind: Kind::Js,
-        tokens: &["navigator.clipboard"],
-        since: [Some(v(66, 0)), Some(v(13, 1)), Some(v(63, 0))],
-        policy: Policy::Proteger,
-        guards: &["navigator.clipboard?.", "'clipboard' in navigator"],
-        respaldo: None,
-    },
-];
+/// «17.4» → 1704, «120» → 12000.
+pub(crate) fn version(s: &str) -> Option<u32> {
+    let mut parts = s.trim().split('.');
+    let major = parts.next()?.parse().ok()?;
+    let minor = parts.next().map_or(Some(0), |m| m.parse().ok())?;
+    Some(v(major, minor))
+}
+
+fn strings(doc: &Json, key: &str) -> Result<Vec<String>, String> {
+    match doc.get(key) {
+        Some(Json::Arr(items)) => items
+            .iter()
+            .map(|i| {
+                i.as_str()
+                    .map(String::from)
+                    .ok_or_else(|| format!("«{key}» sólo admite textos"))
+            })
+            .collect(),
+        _ => Err(format!("falta «{key}» (una lista)")),
+    }
+}
+
+fn text(doc: &Json, key: &str) -> Result<String, String> {
+    doc.get(key)
+        .and_then(Json::as_str)
+        .map(String::from)
+        .ok_or_else(|| format!("falta «{key}»"))
+}
+
+/// Una ficha `feature.json`, o por qué no vale.
+pub(crate) fn parse_feature(source: &str) -> Result<Feature, String> {
+    let doc = json::parse(source)?;
+    let kind = match text(&doc, "kind")?.as_str() {
+        "css" => Kind::Css,
+        "js" => Kind::Js,
+        other => return Err(format!("«kind» es css o js, no «{other}»")),
+    };
+    let policy = match text(&doc, "policy")?.as_str() {
+        "proteger" => Policy::Proteger,
+        "degrada" => Policy::Degrada,
+        other => return Err(format!("«policy» es proteger o degrada, no «{other}»")),
+    };
+    let since_doc = doc.get("since").ok_or("falta «since»")?;
+    let mut since = [None; 3];
+    for (slot, browser) in since.iter_mut().zip(BROWSERS) {
+        *slot = match since_doc.get(browser) {
+            Some(Json::Null) => None,
+            Some(Json::Str(s)) => {
+                Some(version(s).ok_or_else(|| format!("versión de {browser} ilegible: «{s}»"))?)
+            }
+            _ => {
+                return Err(format!(
+                    "falta la versión de {browser} en «since» (un texto o null)"
+                ));
+            }
+        };
+    }
+    let tokens = strings(&doc, "tokens")?;
+    if tokens.is_empty() {
+        return Err("«tokens» no puede ir vacío".into());
+    }
+    Ok(Feature {
+        id: text(&doc, "id")?,
+        title: text(&doc, "title")?,
+        kind,
+        tokens,
+        since,
+        policy,
+        guards: strings(&doc, "guards")?,
+        respaldo: doc.get("respaldo").and_then(Json::as_str).map(String::from),
+    })
+}
+
+/// Todas las fichas del repo; las que no se pueden leer van en `errors`
+/// (ruta, motivo), para que la regla las enseñe en vez de ignorarlas.
+pub(crate) fn load(repo: &Repo) -> (Vec<Feature>, Vec<(String, String)>) {
+    let mut features = Vec::new();
+    let mut errors = Vec::new();
+    for file in repo
+        .files
+        .iter()
+        .filter(|f| f.starts_with(FEATURES_DIR) && f.ends_with("/feature.json"))
+    {
+        let folder = &file[FEATURES_DIR.len()..file.len() - "/feature.json".len()];
+        match repo
+            .read(file)
+            .ok_or_else(|| "no se puede leer".to_string())
+            .and_then(|s| parse_feature(&s))
+        {
+            Ok(f) if f.id == folder => features.push(f),
+            Ok(f) => errors.push((
+                file.clone(),
+                format!("el id «{}» no coincide con su carpeta «{folder}»", f.id),
+            )),
+            Err(e) => errors.push((file.clone(), e)),
+        }
+    }
+    (features, errors)
+}
+
+#[cfg(test)]
+pub(crate) mod tests {
+    use super::{Feature, Kind, Policy, parse_feature, v};
+
+    /// Fichas de ejemplo para los tests (las mismas que en el repo, abreviadas).
+    pub(crate) fn sample() -> Vec<Feature> {
+        [
+            r#"{"id":"animaciones-con-scroll","title":"Animaciones con scroll","kind":"css","tokens":["animation-timeline"],"since":{"chrome":"115","safari":"26","firefox":null},"policy":"proteger","guards":[],"respaldo":"@verx/compat/reveal","sin":"…"}"#,
+            r#"{"id":"backdrop-filter","title":"Cristal","kind":"css","tokens":["backdrop-filter"],"since":{"chrome":"76","safari":"18","firefox":"103"},"policy":"degrada","guards":["-webkit-backdrop-filter"],"respaldo":null,"sin":"…"}"#,
+            r#"{"id":"has","title":":has()","kind":"css","tokens":[":has("],"since":{"chrome":"105","safari":"15.4","firefox":"121"},"policy":"degrada","guards":[],"respaldo":null,"sin":"…"}"#,
+            r#"{"id":"speculation-rules","title":"Prerender","kind":"js","tokens":["speculationrules"],"since":{"chrome":"109","safari":null,"firefox":null},"policy":"degrada","guards":[],"respaldo":"@verx/compat/prefetch","sin":"…"}"#,
+            r#"{"id":"request-idle-callback","title":"Idle","kind":"js","tokens":["requestIdleCallback"],"since":{"chrome":"47","safari":null,"firefox":"55"},"policy":"proteger","guards":["'requestIdleCallback' in"],"respaldo":null,"sin":"…"}"#,
+        ]
+        .iter()
+        .filter_map(|s| parse_feature(s).ok())
+        .collect()
+    }
+
+    #[test]
+    fn lee_una_ficha() {
+        let all = sample();
+        assert_eq!(all.len(), 5, "alguna ficha de ejemplo no se lee");
+        let scroll = &all[0];
+        assert_eq!(scroll.kind, Kind::Css);
+        assert_eq!(scroll.policy, Policy::Proteger);
+        assert_eq!(scroll.since, [Some(v(115, 0)), Some(v(26, 0)), None]);
+        assert_eq!(all[2].since[1], Some(v(15, 4)));
+    }
+
+    #[test]
+    fn explica_lo_que_falla() {
+        let bad = |s: &str| parse_feature(s).err().unwrap_or_default();
+        assert!(bad(r#"{"id":"x","title":"x","kind":"wasm"}"#).contains("kind"));
+        assert!(
+            bad(r#"{"id":"x","title":"x","kind":"css","policy":"degrada","since":{"chrome":"1","safari":"1"},"tokens":["a"],"guards":[]}"#)
+                .contains("firefox")
+        );
+        assert!(
+            bad(r#"{"id":"x","title":"x","kind":"css","policy":"degrada","since":{"chrome":"1","safari":"1","firefox":"1"},"tokens":[],"guards":[]}"#)
+                .contains("vacío")
+        );
+    }
+}

@@ -54,6 +54,7 @@ Lee el PNG de `public/` y, con `@verx/img` (Rust → WASM), genera una vez sus v
 - **Tiempo real y edición ahí mismo:** pulsar algo en rojo abre el editor en la línea culpable. Ctrl+S guarda (un guardado a la vez) y el rojo se apaga solo: «✔ Desbloqueado». Si guardas en VS Code, el editor del grafo se pone al día sin pisar nada.
 - **Seguro:** solo escucha en `127.0.0.1`. La ventana entra con el token, que se cambia por una cookie `HttpOnly`/`SameSite=Strict`; VS Code lo manda en la cabecera `x-verx-token`. Cada escritura comprueba el `Origin`, solo se editan archivos de texto del repo (nunca `node_modules`, `target` ni rutas de fuera) y un archivo que cambió en disco no se pisa: responde 409. El aviso del sitio solo lee, y solo responde al origen del sitio.
 - **Sin agotar el navegador:** el aviso pregunta cada 1,5 s y no se queda escuchando, porque el navegador solo abre 6 conexiones por host. Si cada pestaña del sitio tuviera un SSE abierto, los guardados del editor se quedarían esperando.
+- **Cuando algo falla, te lleva:** si el sitio no arranca, o una página da un 500 (el sitio se lo cuenta al grafo por `POST /fallo`, con el token), la ventana del grafo se abre sola, o se trae al frente, en el archivo y la línea del culpable, sacados de la traza de la pila. Una vez por fallo; con `--sin-ventana`, sólo si ya está abierta.
 - Corre en el proceso padre de `verx dev`, así que no se reinicia con cada cambio. Deja su dirección en `.verx/grafo.json` (fuera de git) para que VS Code lo encuentre.
 
 ## Todos los navegadores

@@ -75,7 +75,8 @@ export function mergeSame(problems) {
   return [...out.values()]
 }
 
-export function createGraphApp({ root, token, appOrigins = [], onOpen = null }) {
+// `onOpen` abre una ventana del grafo; `autoOpen`: ¿se abre sola cuando algo falla?
+export function createGraphApp({ root, token, appOrigins = [], onOpen = null, autoOpen = true }) {
   root = resolve(root)
   let graph = buildGraph(root)
   let report = null
@@ -87,7 +88,13 @@ export function createGraphApp({ root, token, appOrigins = [], onOpen = null }) 
   let version = 0 // sube con cada cambio: el aviso del sitio pregunta «¿hay algo nuevo?»
   const encoder = new TextEncoder()
 
-  const problems = () => mergeSame(attachProblems(graph, { rules: [...(runtime ? [runtime] : []), ...(report?.rules ?? [])] }))
+  const failures = new Map() // ruta → error al renderizarla (lo cuenta el sitio por /fallo)
+  const guided = new Set() // fallos que ya abrieron la ventana: no se abre otra vez por lo mismo
+  const failing = () =>
+    failures.size
+      ? [{ id: 'render', title: 'Una página falla al renderizarse', fix: 'arregla el error y recarga la página', skipped: false, problems: [...failures].map(([path, message]) => ({ file: '', line: null, message: `${path}: ${message}` })) }]
+      : []
+  const problems = () => mergeSame(attachProblems(graph, { rules: [...(runtime ? [runtime] : []), ...failing(), ...(report?.rules ?? [])] }))
   const snapshot = () => {
     const list = problems()
     return {
@@ -130,9 +137,11 @@ export function createGraphApp({ root, token, appOrigins = [], onOpen = null }) 
     }
     broadcast()
   }
-  // Tras un cambio: primero lo rápido y, en cuanto acaba, todas las reglas.
+  // Tras un cambio: primero lo rápido y, en cuanto acaba, todas las reglas. Los
+  // errores de render se olvidan: si sigue roto, la siguiente petición lo dirá.
   const refresh = () => {
     graph = buildGraph(root)
+    failures.clear()
     broadcast()
     check(true)
     check(false)
@@ -145,6 +154,34 @@ export function createGraphApp({ root, token, appOrigins = [], onOpen = null }) 
     if (JSON.stringify(next) === JSON.stringify(runtime)) return
     runtime = next
     broadcast()
+    if (next) guide('arranque')
+  }
+  // Una página dio error al renderizarse (500): se apunta y se guía hasta él.
+  const reportFailure = (path, message) => {
+    if (failures.get(path) === message) return
+    failures.set(path, message)
+    broadcast()
+    guide('render')
+  }
+  // Enseña un nodo en la ventana del grafo; si no hay ninguna, la abre (y se
+  // lo enseña al conectar). Devuelve si hubo que abrirla.
+  const focusOn = (next, { open = true } = {}) => {
+    const opened = clients.size === 0 && open && onOpen !== null
+    if (clients.size === 0) {
+      focus = next
+      if (opened) onOpen()
+    } else send(clients, `event: focus\ndata: ${JSON.stringify(next)}\n\n`)
+    return opened
+  }
+  // Algo falló (el arranque o un render): la ventana va directa al culpable,
+  // una sola vez por fallo, y sólo se abre sola si no se pidió --sin-ventana.
+  const guide = (rule) => {
+    const p = problems().find((x) => x.rule.split(' · ').includes(rule))
+    if (!p) return
+    const key = `${p.node}|${p.line}|${p.message}`
+    if (guided.has(key)) return
+    guided.add(key)
+    focusOn({ node: p.node, line: p.line }, { open: autoOpen })
   }
   // Un cliente SSE cuenta mientras su conexión siga abierta: al cerrar la
   // ventana, `req.signal` lo saca (si no, «¿hay ventana?» mentiría).
@@ -213,12 +250,7 @@ export function createGraphApp({ root, token, appOrigins = [], onOpen = null }) 
     } catch {
       throw new HttpError(400, 'JSON inválido')
     }
-    const next = { node: String(target?.node ?? ''), line: Number(target?.line) || null }
-    const opened = clients.size === 0
-    if (opened) {
-      focus = next
-      onOpen?.()
-    } else send(clients, `event: focus\ndata: ${JSON.stringify(next)}\n\n`)
+    const opened = focusOn({ node: String(target?.node ?? ''), line: Number(target?.line) || null })
     if (origin) ctx.set('access-control-allow-origin', origin)
     return ctx.json({ ok: true, opened })
   })
@@ -238,19 +270,26 @@ export function createGraphApp({ root, token, appOrigins = [], onOpen = null }) 
     writeFileSync(full, text)
     return ctx.json({ ok: true, hash: hash(text) })
   })
+  // El sitio (kit.js, en desarrollo) cuenta aquí cada página que da error 500.
+  app.post('/fallo', async (ctx) => {
+    const { path, message } = (await ctx.body()) ?? {}
+    if (typeof path !== 'string' || typeof message !== 'string') throw new HttpError(400, 'Hace falta { path, message }')
+    reportFailure(path.slice(0, 300), message.slice(0, 4000))
+    return ctx.json({ ok: true })
+  })
   app.post('/check', (ctx) => {
     check(false)
     return ctx.status(202).json({ ok: true })
   })
 
-  return { app, refresh, check, snapshot, setRuntime, clients }
+  return { app, refresh, check, snapshot, setRuntime, reportFailure, focusOn, clients }
 }
 
 // Arranca el grafo: servidor en 127.0.0.1, vigila el repo entero y revisa al cambiar.
 // Deja su dirección y su token en .verx/grafo.json (fuera de git) para VS Code.
-export async function startGraph({ root, port = 3001, token = newToken(), appOrigins = [], onOpen = null }) {
+export async function startGraph({ root, port = 3001, token = newToken(), appOrigins = [], onOpen = null, autoOpen = true }) {
   root = resolve(root)
-  const graph = createGraphApp({ root, token, appOrigins, onOpen })
+  const graph = createGraphApp({ root, token, appOrigins, onOpen, autoOpen })
   const server = await graph.app.listen(port, { hostname: '127.0.0.1', log: false })
   let timer = null
   const watcher = watch(root, { recursive: true }, (_, file) => {
@@ -269,6 +308,7 @@ export async function startGraph({ root, port = 3001, token = newToken(), appOri
   return {
     url: `${base}${ENTRY}?token=${token}`,
     base,
+    token,
     setRuntime: graph.setRuntime,
     clients: graph.clients,
     close() {

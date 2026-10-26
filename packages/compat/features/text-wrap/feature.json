@@ -1,0 +1,17 @@
+{
+  "id": "text-wrap",
+  "title": "Títulos equilibrados (text-wrap: balance)",
+  "kind": "css",
+  "tokens": [
+    "text-wrap"
+  ],
+  "since": {
+    "chrome": "114",
+    "safari": "17.5",
+    "firefox": "121"
+  },
+  "policy": "degrada",
+  "guards": [],
+  "respaldo": null,
+  "sin": "los títulos se parten como siempre, sin equilibrar las líneas"
+}

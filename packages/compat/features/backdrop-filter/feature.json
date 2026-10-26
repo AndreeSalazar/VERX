@@ -1,0 +1,19 @@
+{
+  "id": "backdrop-filter",
+  "title": "Cristal desenfocado (backdrop-filter)",
+  "kind": "css",
+  "tokens": [
+    "backdrop-filter"
+  ],
+  "since": {
+    "chrome": "76",
+    "safari": "18",
+    "firefox": "103"
+  },
+  "policy": "degrada",
+  "guards": [
+    "-webkit-backdrop-filter"
+  ],
+  "respaldo": null,
+  "sin": "los paneles se ven sin desenfoque detrás (Safari < 18 lo tiene con el prefijo -webkit-)"
+}

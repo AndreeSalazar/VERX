@@ -1,0 +1,17 @@
+{
+  "id": "animaciones-con-scroll",
+  "title": "Animaciones ligadas al scroll (animation-timeline)",
+  "kind": "css",
+  "tokens": [
+    "animation-timeline"
+  ],
+  "since": {
+    "chrome": "115",
+    "safari": "26",
+    "firefox": null
+  },
+  "policy": "proteger",
+  "guards": [],
+  "respaldo": "@verx/compat/reveal: las mismas entradas y salidas con IntersectionObserver",
+  "sin": "sin protección, la animación correría una sola vez al cargar, por tiempo; dentro de @supports la página se queda quieta"
+}

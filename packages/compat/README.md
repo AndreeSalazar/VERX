@@ -7,7 +7,19 @@ Respaldos propios, sin dependencias, para los navegadores a los que les falta al
 | `@verx/compat/reveal` | sin `animation-timeline` (Firefox; Safari < 26) | las mismas entradas y salidas con el scroll, con `IntersectionObserver` y la Web Animations API |
 | `@verx/compat/prefetch` | sin Speculation Rules (Safari, Firefox) | precarga la página al pasar el ratón 65 ms por un enlace, al tocarlo o al llegar con el teclado |
 
-Los dos se ponen en marcha solos al importarlos (`start()`), y exportan sus decisiones como funciones puras (`stateOf`, `keyframes`, `target`, `needs`), que son las que prueban los tests.
+## Una carpeta por función
+
+```
+features/
+  animaciones-con-scroll/   feature.json · README.md · reveal.js   (respaldo)
+  speculation-rules/        feature.json · README.md · prefetch.js (respaldo)
+  backdrop-filter/          feature.json · README.md               (sin respaldo: se cubre con -webkit-)
+  …                         una por cada función que usa VERX
+```
+
+Cada `feature.json` dice desde qué versión la trae cada navegador, cómo se detecta en el código, qué se pierde sin ella y si hay que protegerla. Esas fichas son la tabla que lee la regla `navegadores` del guardián, y `test/features.test.js` comprueba que estén bien formadas. **Añadir una función es crear su carpeta.**
+
+Los dos respaldos se ponen en marcha solos al importarlos (`start()`), y exportan sus decisiones como funciones puras (`stateOf`, `keyframes`, `target`, `needs`), que son las que prueban los tests.
 
 ## reveal: el contrato con el CSS
 

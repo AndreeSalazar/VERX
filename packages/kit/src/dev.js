@@ -7,6 +7,8 @@
 // el proyecto entero como nodos, con lo que bloquea el guardián en rojo. Se
 // abre solo en su ventana (salvo con --sin-ventana) y, si el sitio no arranca,
 // este proceso ocupa su puerto con una página que explica por qué (caido.js).
+// Cuando algo falla (no arranca, o una página da un 500), la ventana del grafo
+// se abre sola, o se trae al frente, directamente en el archivo y la línea.
 
 import { watch, readdirSync, realpathSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -36,7 +38,7 @@ function linkedPackages(dir, seen = new Set()) {
 }
 
 // El grafo en su puerto (el de la app + 1, o uno libre), con su ventana a mano.
-async function graph({ root, port }) {
+async function graph({ root, port, openGraph }) {
   const appOrigins = [`http://localhost:${port}`, `http://127.0.0.1:${port}`]
   let g
   const open = () => {
@@ -44,7 +46,8 @@ async function graph({ root, port }) {
     mkdirSync(profile, { recursive: true })
     Bun.spawn(windowCommand({ url: g.url, profile }).cmd, { stdio: ['ignore', 'ignore', 'ignore'] })
   }
-  const options = { root: findRepoRoot(root), appOrigins, onOpen: open }
+  // Con --sin-ventana, nada se abre solo (sí al pulsar «Ver en el grafo»).
+  const options = { root: findRepoRoot(root), appOrigins, onOpen: open, autoOpen: openGraph }
   try {
     g = await startGraph({ ...options, port: port + 1 })
   } catch {
@@ -70,7 +73,7 @@ export async function dev({ root, port, openGraph = true }) {
   let stopping = false
   let down = null // la página de «el sitio no arranca», mientras haga falta
 
-  const g = await graph({ root, port }).catch((err) => {
+  const g = await graph({ root, port, openGraph }).catch((err) => {
     console.warn(`[verx] el grafo no arrancó: ${err.message}`)
     return null
   })
@@ -82,7 +85,8 @@ export async function dev({ root, port, openGraph = true }) {
     const proc = (child = Bun.spawn([process.execPath, BIN, 'serve', '--dev', '--port', String(port)], {
       cwd: root,
       stdio: ['inherit', 'pipe', 'pipe'],
-      env: { ...process.env, VERX_PARENT: String(process.pid), ...(g ? { VERX_GRAFO: g.base } : {}) },
+      // El sitio cuenta al grafo cada página que falla (kit.js → POST /fallo, con el token).
+      env: { ...process.env, VERX_PARENT: String(process.pid), ...(g ? { VERX_GRAFO: g.base, VERX_GRAFO_TOKEN: g.token } : {}) },
     }))
     tee(proc.stdout, process.stdout, (text) => {
       if (text.includes(READY)) g?.setRuntime(null)

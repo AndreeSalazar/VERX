@@ -1,0 +1,17 @@
+{
+  "id": "nombres-de-transicion",
+  "title": "Elementos que viajan entre páginas (view-transition-name)",
+  "kind": "css",
+  "tokens": [
+    "view-transition-name"
+  ],
+  "since": {
+    "chrome": "111",
+    "safari": "18",
+    "firefox": "144"
+  },
+  "policy": "degrada",
+  "guards": [],
+  "respaldo": null,
+  "sin": "la cabecera y el fondo no viajan entre páginas: cambian de golpe"
+}

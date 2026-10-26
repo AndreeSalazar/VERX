@@ -1,0 +1,17 @@
+{
+  "id": "color-mix",
+  "title": "Mezcla de colores (color-mix())",
+  "kind": "css",
+  "tokens": [
+    "color-mix("
+  ],
+  "since": {
+    "chrome": "111",
+    "safari": "16.2",
+    "firefox": "113"
+  },
+  "policy": "degrada",
+  "guards": [],
+  "respaldo": null,
+  "sin": "se ignora esa declaración: queda el color anterior"
+}

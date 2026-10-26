@@ -98,7 +98,10 @@ export function pinpoint(message, graph, root) {
   }
 
   // Cualquier «ruta:línea» del repo (trazas «at apps/web/x.js:3:10», errores de compilación…).
-  for (const [, file, line] of text.matchAll(/([\w@.\-/[\]()]+\.[a-z]{1,4}):(\d+)/g)) {
+  // En una traza («at Page (apps/web/x.jsx:3:9)») el paréntesis de delante no es
+  // de la ruta; los de dentro sí pueden serlo (grupos de rutas como «(legal)»).
+  for (const [, match, line] of text.matchAll(/([\w@.\-/[\]()]+\.[a-z]{1,4}):(\d+)/g)) {
+    const file = match.replace(/^\(+/, '')
     if (ids.has(file)) return { file, line: Number(line) }
   }
   for (const [, file] of text.matchAll(/'([\w@.\-/[\]()]+\.[a-z]{1,4})'/g)) {

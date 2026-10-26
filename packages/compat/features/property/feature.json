@@ -1,0 +1,17 @@
+{
+  "id": "property",
+  "title": "Propiedades CSS animables (@property)",
+  "kind": "css",
+  "tokens": [
+    "@property"
+  ],
+  "since": {
+    "chrome": "85",
+    "safari": "16.4",
+    "firefox": "128"
+  },
+  "policy": "degrada",
+  "guards": [],
+  "respaldo": null,
+  "sin": "la propiedad no se anima y se hereda como cualquier variable"
+}

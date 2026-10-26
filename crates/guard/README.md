@@ -18,11 +18,11 @@ Para añadir una regla, escribe la función en `src/rules/` y regístrala en `RU
 
 ## La regla `navegadores`
 
-Revisa el CSS, el HTML y el JS que llegan al navegador (`apps/` y `packages/`, sin tests) y busca las funciones de su tabla, `src/compat/table.rs`: animaciones con el scroll, transiciones entre páginas, Speculation Rules, `:has()`, `requestIdleCallback`…
+Revisa el CSS, el HTML y el JS que llegan al navegador (`apps/` y `packages/`, sin tests) y busca las funciones que describen las fichas de `packages/compat/features/<id>/feature.json` (una carpeta por función): animaciones con el scroll, transiciones entre páginas, Speculation Rules, `:has()`, `requestIdleCallback`…
 
 - El objetivo sale de `browsers` en cada `apps/*/verx.config.js` (con varias apps, manda la más exigente).
 - **Bloquea** una función `Proteger` que falta en algún objetivo y no va protegida: en CSS, dentro de un `@supports` que la nombre; en JS, con una comprobación como `'x' in window`.
 - **Informa** de lo que solo se pierde (`Degrada`) en `check --json` (campo `compat`), que VERX Grafo pinta en ámbar en cada carpeta.
 - Los comentarios y las propias comprobaciones (`@supports (…)`, `CSS.supports(…)`) no cuentan como uso.
 
-Para usar algo nuevo, añádelo a la tabla con la primera versión de cada navegador que lo trae activado por defecto (Chrome vale también para Edge). La tabla se mantiene a mano, porque tampoco hay dependencias de datos.
+Para usar algo nuevo, crea su carpeta con su ficha: la primera versión de cada navegador que lo trae activado por defecto (Chrome vale también para Edge y Brave). Las fichas se mantienen a mano, porque tampoco hay dependencias de datos. Una ficha mal escrita también bloquea, con el motivo.

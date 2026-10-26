@@ -1,0 +1,17 @@
+{
+  "id": "transiciones-entre-paginas",
+  "title": "Transiciones entre páginas (@view-transition)",
+  "kind": "css",
+  "tokens": [
+    "@view-transition"
+  ],
+  "since": {
+    "chrome": "126",
+    "safari": "18.2",
+    "firefox": null
+  },
+  "policy": "degrada",
+  "guards": [],
+  "respaldo": null,
+  "sin": "se navega normal, sin la animación de hundirse y emerger"
+}

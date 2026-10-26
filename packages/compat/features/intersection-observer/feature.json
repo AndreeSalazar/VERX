@@ -1,0 +1,20 @@
+{
+  "id": "intersection-observer",
+  "title": "Saber qué se ve en pantalla (IntersectionObserver)",
+  "kind": "js",
+  "tokens": [
+    "IntersectionObserver"
+  ],
+  "since": {
+    "chrome": "58",
+    "safari": "12.1",
+    "firefox": "55"
+  },
+  "policy": "proteger",
+  "guards": [
+    "'IntersectionObserver' in",
+    "typeof IntersectionObserver"
+  ],
+  "respaldo": null,
+  "sin": "sin comprobarlo, el código fallaría"
+}

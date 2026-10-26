@@ -1,0 +1,20 @@
+{
+  "id": "webgl2",
+  "title": "Gráficos 3D (WebGL2)",
+  "kind": "js",
+  "tokens": [
+    "'webgl2'",
+    "\"webgl2\""
+  ],
+  "since": {
+    "chrome": "56",
+    "safari": "15",
+    "firefox": "51"
+  },
+  "policy": "proteger",
+  "guards": [
+    "if (!gl)"
+  ],
+  "respaldo": "el agujero negro y la galaxia hechos sólo con CSS",
+  "sin": "no hay 3D: se queda el fondo hecho con CSS"
+}

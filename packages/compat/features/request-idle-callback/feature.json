@@ -1,0 +1,21 @@
+{
+  "id": "request-idle-callback",
+  "title": "Esperar a que el navegador quede libre (requestIdleCallback)",
+  "kind": "js",
+  "tokens": [
+    "requestIdleCallback"
+  ],
+  "since": {
+    "chrome": "47",
+    "safari": null,
+    "firefox": "55"
+  },
+  "policy": "proteger",
+  "guards": [
+    "'requestIdleCallback' in",
+    "\"requestIdleCallback\" in",
+    "typeof requestIdleCallback"
+  ],
+  "respaldo": null,
+  "sin": "sin comprobarlo, el código fallaría; el runtime de las islas usa setTimeout en su lugar"
+}

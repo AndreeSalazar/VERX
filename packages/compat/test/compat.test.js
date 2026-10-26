@@ -1,8 +1,8 @@
 // Los respaldos sin navegador: sus decisiones son funciones puras, y el
 // arranque se prueba con un DOM de mentira (lo justo para seguir el rastro).
 import { test, expect } from 'bun:test'
-import { keyframes, needs as needsReveal, start as startReveal, stateOf } from '../src/reveal.js'
-import { needs as needsPrefetch, start as startPrefetch, target } from '../src/prefetch.js'
+import { keyframes, needs as needsReveal, start as startReveal, stateOf } from '../features/animaciones-con-scroll/reveal.js'
+import { needs as needsPrefetch, start as startPrefetch, target } from '../features/speculation-rules/prefetch.js'
 
 const rect = (top, bottom) => ({ top, bottom })
 

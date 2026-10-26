@@ -41,7 +41,7 @@ apps/web/      el sitio                         → kit, ui, sim, search, md, im
 10. Los commits siguen el formato convencional `tipo(ámbito): descripción`. **Nunca `--no-verify`** ni `push --force`.
 11. Rust compila con clippy pedantic en modo `-D warnings`. Una excepción a una lint necesita `#[allow(..., reason = "...")]`.
 12. **Presupuesto de rendimiento:** ninguna página transfiere más JS + WASM (brotli) del límite de `apps/web/verx.config.js` (`budget`). Si una isla crece, adelgázala o cárgala con `client:visible`/`client:idle`. Subir el límite solo con un motivo escrito en el commit. Cuenta el peor navegador (los respaldos que baja Firefox).
-13. **Navegadores:** lo que falte en alguno de los navegadores objetivo (`browsers` en `apps/web/verx.config.js`) va protegido (`@supports` en CSS, `'x' in window` en JS) y, si hace falta, con un respaldo en `@verx/compat`. Una función nueva se añade a la tabla de `crates/guard/src/compat/table.rs` con sus versiones.
+13. **Navegadores:** lo que falte en alguno de los navegadores objetivo (`browsers` en `apps/web/verx.config.js`) va protegido (`@supports` en CSS, `'x' in window` en JS) y, si hace falta, con un respaldo en `@verx/compat`. Una función nueva es una carpeta nueva, `packages/compat/features/<id>/`, con su `feature.json` (versiones, cómo se detecta, qué se pierde sin ella), su README y, si lo tiene, su respaldo.
 
 ## Comandos
 

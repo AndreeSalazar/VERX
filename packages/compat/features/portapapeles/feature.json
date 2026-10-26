@@ -1,0 +1,20 @@
+{
+  "id": "portapapeles",
+  "title": "Copiar al portapapeles (navigator.clipboard)",
+  "kind": "js",
+  "tokens": [
+    "navigator.clipboard"
+  ],
+  "since": {
+    "chrome": "66",
+    "safari": "13.1",
+    "firefox": "63"
+  },
+  "policy": "proteger",
+  "guards": [
+    "navigator.clipboard?.",
+    "'clipboard' in navigator"
+  ],
+  "respaldo": null,
+  "sin": "el botón de copiar no hace nada (y sólo funciona en HTTPS o localhost)"
+}

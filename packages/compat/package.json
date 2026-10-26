@@ -5,8 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    "./reveal": "./src/reveal.js",
-    "./prefetch": "./src/prefetch.js"
+    "./reveal": "./features/animaciones-con-scroll/reveal.js",
+    "./prefetch": "./features/speculation-rules/prefetch.js"
   },
   "scripts": {
     "test": "bun test"
