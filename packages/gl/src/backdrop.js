@@ -1,13 +1,7 @@
 // Fondo a pantalla completa con un solo triángulo: degradado oscuro y una
 // nebulosa suave alrededor de un punto de la pantalla (p. ej. el centro de la galaxia).
 
-const VERTEX = `#version 300 es
-out vec2 vUv;
-void main() {
-  vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
-  vUv = p;
-  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
-}`
+import { FULLSCREEN } from './context.js'
 
 const FRAGMENT = `#version 300 es
 precision mediump float;
@@ -30,7 +24,7 @@ void main() {
 
 export function createBackdrop(ctx, { base = [0.027, 0.027, 0.043], warm = [0.55, 0.32, 0.12], cool = [0.22, 0.14, 0.45] } = {}) {
   const { gl } = ctx
-  const { program, uniforms } = ctx.program(VERTEX, FRAGMENT)
+  const { program, uniforms } = ctx.program(FULLSCREEN, FRAGMENT)
   const vao = gl.createVertexArray()
   return {
     // center en [0, 1] (origen abajo a la izquierda, como gl_FragCoord).

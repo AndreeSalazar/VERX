@@ -52,3 +52,14 @@ export function createGL(canvas, { maxDpr = 2, alpha = false } = {}) {
     },
   }
 }
+
+// Vértices de un triángulo que cubre toda la pantalla, sin buffers (salen de
+// gl_VertexID). Lo comparten todos los pases a pantalla completa: el fondo, la
+// lente gravitacional, el agujero negro trazado… Se dibuja con drawArrays(…, 0, 3).
+export const FULLSCREEN = `#version 300 es
+out vec2 vUv;
+void main() {
+  vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+  vUv = p;
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`

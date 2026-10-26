@@ -6,8 +6,8 @@
 // y, si ni así, se rinde y deja el agujero CSS. Con prefers-reduced-motion no
 // arranca. Nada se ejecuta al importar: el SSR puede cargar este módulo sin DOM.
 
-import { createGL, createLoop, prefersReducedMotion } from '@verx/gl/core'
-import { FRAGMENT, VERTEX } from './blackhole-shader.js'
+import { FULLSCREEN, createGL, createLoop, prefersReducedMotion } from '@verx/gl/core'
+import { FRAGMENT } from './blackhole-shader.js'
 
 const QUALITY = 0.65 // píxeles del lienzo por píxel CSS
 const MIN_QUALITY = 0.3
@@ -19,7 +19,7 @@ export function startBlackHole(canvas, anchor, { onLive, onGiveUp } = {}) {
   const ctx = createGL(canvas, { maxDpr: QUALITY })
   if (!ctx) return null
   const { gl } = ctx
-  const { program, uniforms: u } = ctx.program(VERTEX, FRAGMENT)
+  const { program, uniforms: u } = ctx.program(FULLSCREEN, FRAGMENT)
   const vao = gl.createVertexArray()
   // En el inicio, el héroe trae su propio agujero: éste sólo se dibuja al bajar.
   const hero = document.querySelector('.hero')

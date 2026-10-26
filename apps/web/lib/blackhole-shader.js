@@ -15,12 +15,6 @@
 // Los comentarios van aquí, en JS, y no dentro del GLSL: el minificador quita
 // los de JS, pero el texto de un shader viaja tal cual al navegador.
 
-export const VERTEX = `#version 300 es
-void main() {
-  vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
-  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
-}`
-
 // Uniformes: uCenter, centro del agujero en píxeles del lienzo (origen abajo);
 // uFocal, píxeles por radián; uLook, paralaje del puntero en [-1, 1].
 // RIN es la última órbita estable; DIST, la distancia de la cámara.

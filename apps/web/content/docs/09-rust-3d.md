@@ -50,3 +50,16 @@ alpha = 2.0 / b + 15.0 * PI / (16.0 * b * b)
 - Los rayos que pasan lejos usan la fórmula de Einstein en vez de integrarse: el shader va unas 18 veces más rápido.
 - Dibuja a resolución reducida, la baja más si el equipo no llega y, si ni así, se rinde y deja el CSS.
 - Usa `@verx/gl/core`: sólo el contexto y el bucle, sin el resto del motor 3D.
+
+## La lente del héroe
+
+En el inicio, la galaxia de Rust gira alrededor de su propio agujero negro, y se ve curvada por él. La galaxia se dibuja primero en una textura (`createTarget` de `@verx/gl`) y un segundo pase la deforma con la ecuación de la lente de una masa puntual:
+
+```js title="apps/web/lib/lens.js"
+// θ: dónde está el píxel · β: de dónde viene su luz · θE: radio de Einstein
+// β = θ − θE² · θ / |θ|²
+vec2 uv = (uCenter + p * (1.0 - uEinstein * uEinstein / r2)) / uRes
+```
+
+> [!TIP]
+> El núcleo brillante queda justo detrás del agujero, así que la lente lo estira en un **anillo de Einstein**, y lo que está al otro lado aparece como una imagen secundaria invertida dentro del anillo. Es un solo pase con una lectura de textura por píxel: casi gratis.

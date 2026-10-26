@@ -38,7 +38,12 @@ test('un rayo que no corta el plano devuelve null', () => {
 test('@verx/gl/core expone lo mínimo y es lo mismo que la entrada principal', async () => {
   const core = await import('../src/core.js')
   const full = await import('../src/index.js')
-  expect(Object.keys(core).sort()).toEqual(['createGL', 'createLoop', 'prefersReducedMotion'])
+  expect(Object.keys(core).sort()).toEqual(['FULLSCREEN', 'createGL', 'createLoop', 'prefersReducedMotion'])
   expect(core.createGL).toBe(full.createGL)
   expect(core.createLoop).toBe(full.createLoop)
+})
+
+test('la entrada principal expone el objetivo de render', async () => {
+  const full = await import('../src/index.js')
+  expect(typeof full.createTarget).toBe('function')
 })

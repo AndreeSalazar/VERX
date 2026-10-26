@@ -285,6 +285,15 @@ body {
 .hero-hole .bh-glow {
   opacity: 0.7;
 }
+/* Con WebGL, la lente gravitacional dibuja el agujero de verdad (lib/lens.js). */
+.hero-hole {
+  transition: opacity 1.4s ease, visibility 0s;
+}
+.hero:has(.galaxy.is-live) .hero-hole {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1.4s ease, visibility 0s 1.4s;
+}
 @media (max-aspect-ratio: 9/10) {
   .hero-hole {
     --bh-x: var(--gx, 50%);
@@ -664,4 +673,149 @@ footer::before {
     background: rgba(3, 3, 7, 0.68);
     box-shadow: 0 0 0 1px var(--line), 0 30px 80px -30px rgba(0, 0, 0, 0.9);
   }
+}
+
+/* ══ Textura (AAA) ═════════════════════════════════════════════════
+   Grano de película sobre toda la imagen, viñeta, y un «material» para los
+   paneles: luz suave desde arriba, filo de luz superior, grano dentro y
+   sombra profunda. El ruido es un SVG (feTurbulence) en el propio CSS: sin
+   imágenes ni JS, se rasteriza una vez. */
+:root {
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.7 0 0 0 -.62'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-soft: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .34 0 0 0 -.14'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 42%);
+  --rim: inset 0 1px 0 rgba(255, 255, 255, 0.075);
+  --depth: 0 28px 70px -32px rgba(0, 0, 0, 0.9);
+}
+
+/* Grano de película: tiembla 8 veces por segundo (sólo transform: lo hace la GPU). */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -60px;
+  z-index: 60;
+  pointer-events: none;
+  background: var(--grain);
+  opacity: 0.038;
+  animation: grain 1s steps(8) infinite;
+}
+@keyframes grain {
+  12% {
+    transform: translate(-22px, 13px);
+  }
+  25% {
+    transform: translate(17px, -26px);
+  }
+  37% {
+    transform: translate(-9px, 31px);
+  }
+  50% {
+    transform: translate(28px, 5px);
+  }
+  62% {
+    transform: translate(-31px, -14px);
+  }
+  75% {
+    transform: translate(6px, 24px);
+  }
+  87% {
+    transform: translate(-15px, -30px);
+  }
+}
+
+/* Viñeta: los bordes se hunden en el vacío. */
+.cosmos::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 95% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.55));
+}
+
+/* Material de los paneles. */
+.card,
+.arch-world,
+.code,
+.terminal,
+.stats div,
+.counter,
+.on-page,
+.table-wrap,
+.callout,
+.search input {
+  background-image: var(--sheen), var(--grain-soft);
+}
+.code,
+.terminal,
+.stats div,
+.arch-world,
+.table-wrap {
+  box-shadow: var(--rim), var(--depth), 0 0 0 1px var(--line);
+}
+@media (min-width: 900px) {
+  .prose {
+    background-image: var(--sheen), var(--grain-soft);
+    box-shadow: var(--rim), 0 0 0 1px var(--line), 0 40px 100px -40px rgba(0, 0, 0, 0.95);
+  }
+}
+.top {
+  box-shadow: var(--rim);
+}
+
+/* Tipografía: títulos equilibrados, párrafos sin viudas y un acento antes de cada sección. */
+body {
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern', 'liga', 'calt';
+}
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p,
+li {
+  text-wrap: pretty;
+}
+.prose h2 {
+  padding-top: 18px;
+}
+.prose h2::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--spectrum);
+  box-shadow: 0 0 14px rgba(255, 170, 90, 0.45);
+}
+
+/* Listas de enlaces (blog, buscador): un cristal se enciende bajo el elemento. */
+.list li {
+  position: relative;
+  padding-inline: 14px;
+  margin-inline: -14px;
+  border-radius: 12px;
+  transition: background-color 0.25s ease;
+}
+.list li:hover {
+  background-color: rgba(255, 255, 255, 0.035);
+}
+
+/* Foco visible y barras de desplazamiento a juego. */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+html {
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+  scrollbar-width: thin;
+}
+::selection {
+  background: rgba(255, 150, 70, 0.32);
+  color: #fff;
 }

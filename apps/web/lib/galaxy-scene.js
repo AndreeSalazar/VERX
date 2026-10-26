@@ -2,14 +2,17 @@
 // la dibuja WebGL2 (@verx/gl). Cada frame:
 //   puntero → rayo → plano de la galaxia → Rust empuja partículas →
 //   vista Float32Array sobre la memoria del .wasm → GPU (sin copias en JS).
+// En el centro hay un agujero negro: la galaxia se dibuja en una textura y una
+// lente gravitacional (lib/lens.js) la curva a su alrededor.
 // Multijugador: los punteros de los demás visitantes (vía /api/galaxia) también
 // empujan la galaxia y se ven como orbes de colores.
 // Nada se ejecuta al importar: el SSR puede cargar este módulo sin DOM.
 
-import { createGL, createLoop, createPointCloud, createBackdrop, m4 } from '@verx/gl'
+import { createGL, createLoop, createPointCloud, createBackdrop, createTarget, m4 } from '@verx/gl'
 import { createGalaxy } from '@verx/sim'
 import { connectGalaxy } from './galaxy-net.js'
 import { MAX_CURSORS } from './galaxy-protocol.js'
+import { createLens } from './lens.js'
 
 const FOV = Math.PI / 4.2
 // Radio del horizonte de sucesos del agujero negro central, en unidades del mundo
@@ -35,6 +38,8 @@ export async function startGalaxy(canvas, { seed = 7, multiplayer = true, onOnli
   const galaxy = await createGalaxy({ count: budget(), seed })
   const cloud = createPointCloud(ctx, { count: galaxy.count, colors: galaxy.colors })
   const backdrop = createBackdrop(ctx)
+  const scene = createTarget(ctx)
+  const lens = createLens(ctx)
   const orbPoints = new Float32Array(MAX_CURSORS * 4)
   const orbColors = new Float32Array(MAX_CURSORS * 3)
   const orbs = createPointCloud(ctx, { count: MAX_CURSORS, colors: orbColors })
@@ -60,7 +65,7 @@ export async function startGalaxy(canvas, { seed = 7, multiplayer = true, onOnli
 
   const frame = (dt) => {
     time += dt
-    const { aspect, dpr } = ctx.resize()
+    const { width, height, aspect, dpr } = ctx.resize()
     // En pantallas anchas la galaxia se desplaza a la derecha (desplazamiento de lente).
     // En vertical (móvil) baja a la mitad inferior, bajo el texto.
     const shift = Math.min(0.5, Math.max(0, (aspect - 0.9) * 0.9))
@@ -100,8 +105,9 @@ export async function startGalaxy(canvas, { seed = 7, multiplayer = true, onOnli
     cloud.update(galaxy.step(dt, pointers))
 
     const [cx, cy] = m4.project(vp, TARGET)
-    // El agujero negro (CSS, components/BlackHole.jsx) va en el centro proyectado
-    // de la galaxia. Sólo cambia al redimensionar: no hay escrituras de estilo por frame.
+    // El agujero negro va en el centro proyectado de la galaxia: lo dibuja la lente
+    // y, hasta que hay WebGL, el CSS (components/BlackHole.jsx), que se coloca así.
+    // Sólo cambia al redimensionar: no hay escrituras de estilo por frame.
     const size = (2 * HORIZON * canvas.clientHeight) / (2 * dist * Math.tan(FOV / 2))
     const next = `${(cx * 50 + 50).toFixed(2)}% ${(50 - cy * 50).toFixed(2)}% ${size.toFixed(1)}px`
     if (next !== hole) {
@@ -112,14 +118,19 @@ export async function startGalaxy(canvas, { seed = 7, multiplayer = true, onOnli
       style.setProperty('--gy', gy)
       style.setProperty('--gsize', gsize)
     }
-    backdrop.draw([cx * 0.5 + 0.5, cy * 0.5 + 0.5], aspect)
-    // En vertical hay menos partículas: puntos algo mayores y más brillo.
-    cloud.draw(vp, { size: (portrait ? 30 : 24) * dpr, intensity: portrait ? 1.4 : 0.95 })
-    if (visible > 0) {
-      orbs.update(orbPoints)
-      orbs.setColors(orbColors)
-      orbs.draw(vp, { size: 150 * dpr, intensity: 1.6, visible })
-    }
+    // La galaxia se dibuja en una textura y la lente gravitacional la deforma
+    // en pantalla alrededor del agujero (lib/lens.js).
+    scene.render(width, height, () => {
+      backdrop.draw([cx * 0.5 + 0.5, cy * 0.5 + 0.5], aspect)
+      // En vertical hay menos partículas: puntos algo mayores y más brillo.
+      cloud.draw(vp, { size: (portrait ? 30 : 24) * dpr, intensity: portrait ? 1.4 : 0.95 })
+      if (visible > 0) {
+        orbs.update(orbPoints)
+        orbs.setColors(orbColors)
+        orbs.draw(vp, { size: 150 * dpr, intensity: 1.6, visible })
+      }
+    })
+    lens.draw(scene.texture, { width, height, center: [(cx * 0.5 + 0.5) * width, (cy * 0.5 + 0.5) * height], shadow: (size / 2) * dpr })
   }
 
   const loop = createLoop(canvas, frame, { onSlow: () => ctx.setMaxDpr(1) })
@@ -128,6 +139,7 @@ export async function startGalaxy(canvas, { seed = 7, multiplayer = true, onOnli
   return () => {
     net?.close()
     loop.destroy()
+    scene.destroy()
     removeEventListener('pointermove', onMove)
     document.documentElement.removeEventListener('pointerleave', onLeave)
     ctx.gl.getExtension('WEBGL_lose_context')?.loseContext()
