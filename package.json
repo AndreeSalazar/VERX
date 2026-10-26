@@ -7,9 +7,10 @@
     "apps/*"
   ],
   "scripts": {
-    "postinstall": "git config core.hooksPath .githooks",
+    "postinstall": "git config core.hooksPath .githooks || true",
     "dev": "cd apps/web && bun run dev",
     "build": "cd apps/web && bun run build",
+    "build:vercel": "cd apps/web && bun run build:vercel",
     "start": "cd apps/web && bun run start",
     "budget": "cd apps/web && bun run budget",
     "desktop": "cd apps/web && bun run desktop",

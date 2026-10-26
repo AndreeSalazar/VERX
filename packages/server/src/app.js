@@ -2,6 +2,7 @@ import { STATUS_CODES } from 'node:http'
 import { Context, EMPTY, safeDecode } from './context.js'
 import { loadStatic, encode, buildAsset } from './static.js'
 import { compileJSON } from './json.js'
+import { createRouter } from './router.js'
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 const HTML = 'text/html; charset=utf-8'
@@ -149,7 +150,7 @@ export class App {
         if (extra === false) return new Response('Forbidden', { status: 403 })
         const data = { ...extra, params: req.params ?? EMPTY, server, handlers }
         // Tras un upgrade correcto Bun espera `undefined`, no una Response.
-        if (server.upgrade(req, { data })) return undefined
+        if (server?.upgrade(req, { data })) return undefined // sin servidor (handle), no hay upgrade
         return new Response('Upgrade Required', { status: 426, headers: { upgrade: 'websocket' } })
       })
     }
@@ -220,6 +221,18 @@ export class App {
       return new Response(null, { status: 308, headers: { location: path.replace(/\/+$/, '') + (q === -1 ? '' : req.url.slice(q)) } })
     }
     return this.run(this._notFound, new Context(this, req, server, null, EMPTY))
+  }
+
+  // Sin Bun.serve delante (funciones serverless): la tabla de rutas se resuelve
+  // en JS (router.js) y se llama al mismo handler; lo que no encaja, a fetch().
+  async handle(req, server) {
+    await this.compile()
+    this.router ??= createRouter(this.table)
+    const hit = this.router(pathOf(req.url))
+    const fn = hit && (hit.methods[req.method] ?? (req.method === 'HEAD' ? hit.methods.GET : undefined))
+    if (!fn) return this.fetch(req, server)
+    if (hit.params) Object.defineProperty(req, 'params', { value: hit.params })
+    return fn(req, server)
   }
 
   // listen(puerto, { hostname, workers: número | 'auto', log, ...opcionesDeBunServe })

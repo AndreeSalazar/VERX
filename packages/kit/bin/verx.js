@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // verx dev    → servidor de desarrollo con recarga en vivo
-// verx build  → exporta lo estático a dist/
+// verx build  → exporta lo estático a dist/ (--vercel: .vercel/output, con funciones)
 // verx start  → servidor de producción
 import { parseArgs } from 'node:util'
 
@@ -12,6 +12,7 @@ const { values } = parseArgs({
     out: { type: 'string', short: 'o' },
     workers: { type: 'string', short: 'w' },
     dev: { type: 'boolean' },
+    vercel: { type: 'boolean' },
     'sin-ventana': { type: 'boolean' },
   },
   allowPositionals: true,
@@ -58,8 +59,18 @@ switch (command) {
   case 'build': {
     const t = performance.now()
     const { createKit } = await import('../src/kit.js')
-    const { exportStatic } = await import('../src/export.js')
     const kit = await createKit({ root })
+    if (values.vercel) {
+      // .vercel/output con lo estático, las cabeceras y una función de Bun para lo dinámico.
+      const { exportVercel } = await import('../src/vercel.js')
+      const r = await exportVercel(kit, values.out)
+      console.log(`[verx] Vercel: ${r.files} archivos estáticos en ${r.out} · ${Math.round(performance.now() - t)} ms`)
+      if (r.fn) console.log(`        Función ${r.fn.runtime} para lo dinámico: ${[...kit.dynamic, ...kit.apis].filter((x) => !r.skipped.includes(x)).join(', ')}`)
+      if (r.isr.length) console.log(`        ISR exportado como estático: ${r.isr.join(', ')}`)
+      if (r.skipped.length) console.log(`        Sin soporte en Vercel (no hay WebSockets): ${r.skipped.join(', ')}`)
+      break
+    }
+    const { exportStatic } = await import('../src/export.js')
     const r = await exportStatic(kit, values.out)
     console.log(`[verx] ${r.files} archivos en ${r.out} (${(r.bytes / 1024).toFixed(1)} KB con brotli) · ${Math.round(performance.now() - t)} ms`)
     if (r.isr.length) console.log(`        ISR exportado como estático: ${r.isr.join(', ')}`)
@@ -98,5 +109,5 @@ switch (command) {
     process.exit(problems.length ? 1 : 0)
   }
   default:
-    console.log('Uso: verx <dev|grafo|build|start|desktop|budget> [--port 3000] [--out dist] [--workers auto] [--sin-ventana]')
+    console.log('Uso: verx <dev|grafo|build|start|desktop|budget> [--port 3000] [--out dist] [--vercel] [--workers auto] [--sin-ventana]')
 }

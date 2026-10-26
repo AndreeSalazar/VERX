@@ -4,7 +4,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const SKIP_DIRS: [&str; 7] = [
+const SKIP_DIRS: [&str; 8] = [
     "node_modules",
     "target",
     "dist",
@@ -12,6 +12,7 @@ const SKIP_DIRS: [&str; 7] = [
     ".claude",
     ".bun",
     ".verx",
+    ".vercel",
 ];
 
 pub(crate) struct Repo {

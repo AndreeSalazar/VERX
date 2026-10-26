@@ -52,7 +52,7 @@ Una comparación cualitativa, sin favoritismos: aparece lo que VERX ya hace mejo
 | ~~**Optimización de imágenes**~~ ✅ | Next.js, Astro | **Hecho:** `verx-img` en Rust, con PNG, DEFLATE y JPEG propios, reducción en luz lineal y placeholder; `<Image>` sin JS (WebP/AVIF, más adelante) | 🦀 Rust |
 | **Tipos TypeScript** | todos | `.d.ts` para cada paquete y `tsc --noEmit` dentro de `verify` | Bun |
 | **HMR que conserva el estado** | Vite (Astro, SvelteKit…) | `bun --hot` más recarga parcial de islas | Bun |
-| **Adaptadores de despliegue** (edge, serverless) | Next.js, Astro, SvelteKit | Adaptadores para Cloudflare y Vercel sobre `fetch` estándar | Bun |
+| **Adaptadores de despliegue** (edge, serverless) | Next.js, Astro, SvelteKit | **Vercel hecho:** `verx build --vercel` (estático en la CDN + una función de Bun para lo dinámico). Falta Cloudflare | Bun |
 | **i18n en las rutas** | Next.js, Nuxt | Segmento `[lang]` con negociación de idioma en el servidor | Bun |
 | ~~**WebSockets y tiempo real**~~ ✅ | SvelteKit (vía adaptador), Fresh | **Hecho:** `app.ws()` y `export const WS` en `route.js`; la galaxia ya es multijugador | Bun |
 | ~~**Listas con clave** (`<For>`)~~ ✅ | Solid | **Hecho:** `@verx/ui/for` reconcilia por clave y mueve lo mínimo (subsecuencia creciente más larga) | Bun |
@@ -186,6 +186,7 @@ Windows 11, Bun 1.3.14, 12 núcleos, 100 conexiones keep-alive, 8 s por escenari
 | Comando | Qué hace |
 |---|---|
 | `bun run dev` · `build` · `start` | desarrollo, exportación estática y producción |
+| `bun run build:vercel` | `.vercel/output` para Vercel: lo estático, las cabeceras y una función de Bun para lo dinámico (guía con GitHub en la documentación, «Build y despliegue») |
 | `bun run check` · `rules` | el guardián y su lista de reglas |
 | `bun run wasm` | recompila la simulación Rust y la publica |
 | `bun run budget` | JS + WASM por página contra el presupuesto (18 KB por página en el peor navegador, 9 KB por isla) |

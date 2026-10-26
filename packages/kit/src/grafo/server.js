@@ -30,7 +30,7 @@ export const ENTRY = '/entrar'
 const UI = ['index.html', 'app.js', 'view.js', 'editor.js', 'browsers.js', 'aviso.js']
 const PUBLIC = new Set(['/', ...UI.map((f) => `/${f}`), '/aviso', '/enfocar'])
 const EDITABLE = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.rs', '.toml', '.json', '.md', '.css', '.html', '.sh', '.txt'])
-export const IGNORED = /(^|[\\/])(node_modules|target|dist|\.git|\.verx)([\\/]|$)/
+export const IGNORED = /(^|[\\/])(node_modules|target|dist|\.git|\.verx|\.vercel)([\\/]|$)/
 const MAX_BYTES = 512 * 1024
 // El archivo con el que otras herramientas (la extensión de VS Code) encuentran el grafo.
 export const RUNTIME = join('.verx', 'grafo.json')

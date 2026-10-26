@@ -61,14 +61,8 @@ export async function buildClient({ root, dev, compat = {} }) {
   const compatUrls = Object.fromEntries(fallbacks.map((name) => [name, fixes.urlFor(COMPAT[name])]))
   if (files.length === 0) return { files: outputs, runtime: null, compat: compatUrls, count: 0 }
   const { urlFor } = islands
-
-  for (const file of files) {
-    const mod = await import(pathToFileURL(file).href)
-    const src = urlFor(file)
-    for (const [exportName, value] of Object.entries(mod)) {
-      if (typeof value === 'function') registerIsland(value, { src, exportName, file })
-    }
-  }
+  const sources = Object.fromEntries(files.map((file) => [relative(root, file).replaceAll('\\', '/'), urlFor(file)]))
+  await register(root, sources)
 
   // Chunks que el runtime importa estáticamente: se precargan con modulepreload.
   const runtimeSrc = urlFor(RUNTIME)
@@ -76,7 +70,27 @@ export async function buildClient({ root, dev, compat = {} }) {
   const chunkImport = new RegExp(String.raw`(?:from|import)\s*["'](?:\./|${CLIENT_PREFIX})([^"']+)["']`, 'g')
   const preload = [...runtimeCode.matchAll(chunkImport)].map((m) => CLIENT_PREFIX + m[1])
 
-  return { files: outputs, runtime: { src: runtimeSrc, preload }, compat: compatUrls, count: files.length }
+  return { files: outputs, runtime: { src: runtimeSrc, preload }, compat: compatUrls, sources, count: files.length }
+}
+
+// Importa cada isla en el servidor y la registra con la URL de su build.
+async function register(root, sources) {
+  for (const [rel, src] of Object.entries(sources)) {
+    const file = join(root, rel)
+    const mod = await import(pathToFileURL(file).href)
+    for (const [exportName, value] of Object.entries(mod)) {
+      if (typeof value === 'function') registerIsland(value, { src, exportName, file })
+    }
+  }
+}
+
+// El cliente que ya empaquetó `verx build` (lo usa la función de Vercel): las
+// mismas URLs que los archivos de la CDN, sin volver a llamar a Bun.build.
+export async function loadClient({ root, manifest }) {
+  clearIslands()
+  const sources = manifest.sources ?? {}
+  await register(root, sources)
+  return { files: [], runtime: manifest.runtime, compat: manifest.compat ?? {}, sources, count: Object.keys(sources).length }
 }
 
 // Un Bun.build para el navegador: sus salidas y la URL de cada entrada.

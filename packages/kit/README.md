@@ -5,6 +5,7 @@ El meta-framework, al estilo Next.js. Depende de `@verx/server` y `@verx/ui`.
 ```bash
 verx dev     # desarrollo con recarga en vivo (vigila también el código del framework)
 verx build   # exporta lo estático a dist/ con .br/.gz y _headers
+verx build --vercel  # .vercel/output: lo estático, las cabeceras y una función de Bun para lo dinámico
 verx start   # producción (--workers auto reparte la carga en Linux)
 verx budget  # JS + WASM (brotli) que transfiere cada página, contra `budget` de verx.config.js
 verx desktop # la misma app como programa de escritorio (ventana propia, solo 127.0.0.1, con candado)
@@ -38,6 +39,23 @@ Lee el PNG de `public/` y, con `@verx/img` (Rust → WASM), genera una vez sus v
 - Las variantes son JPEG si la imagen es opaca (unas 7 veces más ligeras) y PNG si tiene transparencia. Se sirven en `/_verx/img/<nombre>-<ancho>.<huella>.jpg|png` con caché inmutable, y `verx build` las exporta.
 - El `<img>` sale con `srcset`, `sizes`, `width`/`height` reales, `loading="lazy"` (o `fetchpriority="high"` con `priority`), y el placeholder desenfocado de fondo. Cero JS.
 - `alt` es obligatorio; `src` no puede salir de `public/`.
+
+## Vercel: `verx build --vercel`
+
+Escribe `.vercel/output` (Build Output API v3; `--out` cambia la carpeta):
+
+| Pieza | Qué lleva |
+|---|---|
+| `static/` | la exportación de siempre, sin .br/.gz (Vercel comprime) ni `_headers` |
+| `config.json` | las rutas, en este orden (`vercel-routes.js`, sin disco y con tests): barra final → 308, cabeceras de `verx.config.js` y caché inmutable para lo que lleva huella, lo que no es GET hacia la función, `{ handle: 'filesystem' }`, los GET dinámicos hacia la función y la 404 del sitio. `overrides` sirve cada `carpeta/index.html` en `/carpeta` y da su tipo a los GET estáticos sin extensión |
+| `functions/_verx.func` | runtime `bun1.x`. Lleva la app (sin `dist/` ni tests) y sus paquetes `@verx/*` copiados de verdad en `node_modules`, porque los enlaces del linker aislado no viajan. Su entrada es `export default { fetch }` con `createKit({ prebuilt })` y `app.handle()` |
+
+- **`prebuilt`:** el kit no empaqueta el cliente (usa el manifiesto `_verx.json`, con las mismas URLs que `static/`), no prerenderiza páginas ni ejecuta los GET `force-static`, y no carga `public/` en memoria; solo su mapa de huellas. Arranca en unos 60 ms.
+- **JSX:** cada `.jsx` de la función lleva `/** @jsxImportSource … */` en su primera línea, sin añadir líneas. Bun solo lee el tsconfig de la carpeta desde la que arranca.
+- **Sin soporte en Vercel:** los WebSockets (se avisan y no se despliegan). El ISR se exporta como estático y el middleware solo corre en lo que pasa por la función.
+- **Opciones:** `vercel: { function: { memory, maxDuration, regions } }` en `verx.config.js` se añade al `.vc-config.json`.
+
+La guía para conectarlo con GitHub está en la documentación del sitio (`content/docs/07-despliegue.md`).
 
 ## VERX Grafo: el proyecto en nodos, con los bloqueos en rojo
 

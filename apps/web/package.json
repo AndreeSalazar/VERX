@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "verx dev",
     "build": "verx build",
+    "build:vercel": "verx build --vercel --out ../../.vercel/output",
     "start": "verx start",
     "budget": "verx budget",
     "portadas": "bun scripts/portadas.js",

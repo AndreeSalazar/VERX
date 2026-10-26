@@ -59,6 +59,7 @@ apps/web/      el sitio                         → kit, ui, sim, search, md, im
 | `bun run vscode` | instala la extensión de VS Code (`packages/vscode`): el grafo en un panel, los bloqueos en «Problemas» y en la barra de estado |
 | `bun test` · `bun run test:rust` | tests |
 | `bun run build` · `bun run start` | exportación estática y servidor de producción |
+| `bun run build:vercel` | `.vercel/output` para Vercel (estático + función de Bun); `vercel.json` en la raíz |
 
 ## Cómo se bloquea
 

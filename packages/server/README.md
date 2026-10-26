@@ -36,6 +36,8 @@ app.publish('sala-1', 'a todos')            // a todos los suscritos
 
 Un GET sin upgrade recibe 426. Un error dentro de un handler se registra sin tumbar el servidor. `veloz({ wsMaxPayload })` limita el tamaño de los mensajes (16 KB por defecto).
 
+**Sin `Bun.serve` delante** (funciones serverless como las de Vercel): `await app.handle(req)` resuelve la misma tabla de rutas en JS (`router.js`) con la precedencia de Bun: exacta, después parámetros y por último comodines. Llama a los mismos handlers. Sin servidor no hay WebSockets, así que su ruta responde 426.
+
 **Subpath `@verx/server/assets`:** `encode`, `buildAsset`, `loadStatic`, `MIME` y `IMMUTABLE`, para construir respuestas precocinadas fuera del router (por ejemplo, ISR).
 
 Para medirlo: `bun run bench`.

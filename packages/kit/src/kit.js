@@ -21,7 +21,7 @@ import { verx } from '@verx/server'
 import { IMMUTABLE } from '@verx/server/assets'
 import { renderToString, onIsland, raw } from '@verx/ui/server'
 import { scanRoutes, fillPath } from './scan.js'
-import { buildClient } from './client.js'
+import { buildClient, loadClient } from './client.js'
 import { mergeMetadata, renderDocument } from './document.js'
 import { IsrCache } from './isr.js'
 import { NotFoundError, RedirectError, setCurrent } from './navigation.js'
@@ -63,19 +63,22 @@ const cssMentions = (dir, text) =>
   readdirSync(dir, { recursive: true }).some((f) => String(f).endsWith('.css') && readFileSync(join(dir, String(f)), 'utf8').includes(text))
 
 // desktop: { token } activa el modo escritorio (ver desktop.js).
-export async function createKit({ root = process.cwd(), dev = false, desktop = null } = {}) {
+// prebuilt: { client, assets } que dejó `verx build --vercel`: el kit sólo
+// atiende lo dinámico, porque lo estático ya lo sirve la CDN (ver vercel.js).
+export async function createKit({ root = process.cwd(), dev = false, desktop = null, prebuilt = null } = {}) {
   root = resolve(root)
   const config = { lang: 'es', speculation: 'prerender', ...(await loadConfig(root)) }
   const appDir = join(root, 'app')
   if (!existsSync(appDir)) throw new Error(`No existe ${appDir}: crea al menos app/page.jsx`)
 
   const app = verx({ headers: config.headers, bodyLimit: config.bodyLimit })
-  const kit = { root, dev, desktop, config, app, pages: [], statics: [], dynamic: [], apis: [], client: null, routes: null }
+  const kit = { root, dev, desktop, prebuilt, config, app, pages: [], statics: [], dynamic: [], apis: [], client: null, routes: null }
   if (desktop) app.use(desktopGuard(desktop.token))
   setCurrent(kit)
 
   const publicDir = join(root, 'public')
-  if (existsSync(publicDir)) app.static(publicDir)
+  if (existsSync(publicDir) && !prebuilt) app.static(publicDir)
+  for (const [path, hashed] of prebuilt?.assets ?? []) app.assets.set(path, hashed)
   kit.publicDir = existsSync(publicDir) ? publicDir : null
   // Imágenes de public/ con variantes y placeholder (verx-img): ver images.js.
   kit.images = kit.publicDir ? await createImageStore(kit.publicDir) : null
@@ -89,7 +92,7 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
   // transiciones con el scroll si algún CSS de public/ marca bloques con
   // --verx-reveal; la precarga si hay Speculation Rules.
   const compat = { reveal: kit.publicDir !== null && cssMentions(kit.publicDir, '--verx-reveal'), prefetch: Boolean(config.speculation) }
-  const client = (kit.client = await buildClient({ root, dev, compat }))
+  const client = (kit.client = prebuilt ? await loadClient({ root, manifest: prebuilt.client }) : await buildClient({ root, dev, compat }))
   for (const f of client.files) app.prerender(f.path, () => f.bytes, { type: f.type || JS, cache: IMMUTABLE })
 
   const routes = (kit.routes = scanRoutes(appDir))
@@ -152,6 +155,7 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
 
     for (const { path, params } of known) {
       kit.pages.push({ path, mode, render: () => renderAt(params), measure: () => renderPage(route, { params, searchParams: EMPTY }) })
+      if (prebuilt) continue
       if (mode === 'isr') app.get(path, (ctx) => isr.serve(ctx.req, path, m.revalidate, () => renderAt(params)))
       else app.prerender(path, () => renderAt(params))
     }
@@ -193,6 +197,7 @@ export async function createKit({ root = process.cwd(), dev = false, desktop = n
       if (typeof m.GET !== 'function' || methods.length > 1 || a.path.includes(':')) {
         throw new Error(`${a.file}: una ruta force-static exporta sólo GET (una función sin parámetros de URL)`)
       }
+      if (prebuilt) continue
       const out = await staticRoute(m.GET)
       app.prerender(a.path, () => out.bytes, { type: out.type })
       kit.statics.push({ path: a.path, ...out })

@@ -19,7 +19,7 @@ import { startGraph } from './grafo/server.js'
 import { serveDown } from './grafo/caido.js'
 
 const BIN = fileURLToPath(new URL('../bin/verx.js', import.meta.url))
-const IGNORED = /(^|[\\/])(node_modules|dist|\.git|\.verx)([\\/]|$)/
+const IGNORED = /(^|[\\/])(node_modules|dist|\.git|\.verx|\.vercel)([\\/]|$)/
 const READY = '[verx] desarrollo en'
 const TAIL = 6000 // lo último de stderr: ahí está el error si no arranca
 

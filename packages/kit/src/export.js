@@ -3,7 +3,10 @@
 //  · Páginas como carpeta/index.html, con hermanos .br y .gz precomprimidos
 //    (nginx brotli_static/gzip_static, Caddy `precompressed`, etc.).
 //  · Archivos con huella y _headers (formato Netlify/Cloudflare) para cachearlos un año.
-//  · Lo que necesita servidor (SSR, API, acciones) se lista: eso va con `verx start`.
+//  · Lo que necesita servidor (SSR, API, acciones) se lista: eso va con `verx start`
+//    o, en Vercel, con la función que genera `verx build --vercel` (vercel.js).
+// Opciones: `precompress` (los .br/.gz) y `headers` (el _headers). Vercel no
+// usa ninguno de los dos: comprime él y las cabeceras van en su config.json.
 
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, extname, join, resolve } from 'node:path'
@@ -12,7 +15,7 @@ import { CLIENT_PREFIX } from './client.js'
 
 const HTML = 'text/html; charset=utf-8'
 
-export async function exportStatic(kit, outDir = 'dist') {
+export async function exportStatic(kit, outDir = 'dist', { precompress = true, headers: writeHeaders = true } = {}) {
   await kit.app.compile() // rellena el mapa de URLs con huella
   const out = resolve(kit.root, outDir)
   rmSync(out, { recursive: true, force: true })
@@ -24,7 +27,7 @@ export async function exportStatic(kit, outDir = 'dist') {
     const file = join(out, ...urlPath.split('/').filter(Boolean).map(decodeURIComponent))
     mkdirSync(dirname(file), { recursive: true })
     writeFileSync(file, buf)
-    const enc = encode(buf, type)
+    const enc = precompress ? encode(buf, type) : {}
     if (enc.br) writeFileSync(file + '.br', enc.br)
     if (enc.gzip) writeFileSync(file + '.gz', enc.gzip)
     files++
@@ -67,7 +70,8 @@ export async function exportStatic(kit, outDir = 'dist') {
   let headers = immutable.map((p) => `${p}\n  Cache-Control: public, max-age=31536000, immutable`).join('\n')
   for (const s of kit.statics) headers += `\n${s.path}\n  Content-Type: ${s.type}`
   if (kit.app.defaultHeaders.length) headers += '\n/*\n' + kit.app.defaultHeaders.map(([k, v]) => `  ${k}: ${v}`).join('\n')
-  writeFileSync(join(out, '_headers'), headers + '\n')
+  if (writeHeaders) writeFileSync(join(out, '_headers'), headers + '\n')
 
-  return { out, files, bytes, needsServer: [...kit.dynamic, ...kit.apis], isr: kit.pages.filter((p) => p.mode === 'isr').map((p) => p.path) }
+  // bytes: con brotli si se precomprimió; si no, en crudo.
+  return { out, files, bytes, immutable, needsServer: [...kit.dynamic, ...kit.apis], isr: kit.pages.filter((p) => p.mode === 'isr').map((p) => p.path) }
 }

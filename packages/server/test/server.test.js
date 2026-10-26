@@ -140,6 +140,21 @@ test('404 para lo desconocido', async () => {
   expect((await get('/no/existe')).status).toBe(404)
 })
 
+test('handle(): las mismas rutas sin Bun.serve (funciones serverless)', async () => {
+  const h = (path, init) => app.handle(new Request('https://x.app' + path, init))
+  expect(await (await h('/users/me')).text()).toBe('soy yo')
+  expect(await (await h('/users/7')).json()).toEqual({ id: '7' })
+  expect(await (await h('/files/a/b%20c.txt')).text()).toBe('a/b c.txt')
+  const echo = await h('/echo', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"a":1}' })
+  expect(await echo.json()).toEqual({ recibido: { a: 1 } })
+  expect((await h('/')).headers.get('content-type')).toBe('text/html; charset=utf-8')
+  expect((await h('/hola', { method: 'HEAD' })).status).toBe(200)
+  expect((await h('/hola/')).status).toBe(308)
+  expect((await h('/hola', { method: 'DELETE' })).status).toBe(404)
+  expect((await h('/nada')).status).toBe(404)
+  expect((await h('/eco/sala')).status).toBe(426) // sin servidor no hay WebSocket
+})
+
 test('compileJSON: proyección anidada idéntica a JSON.stringify', () => {
   const serialize = compileJSON({
     type: 'array',
