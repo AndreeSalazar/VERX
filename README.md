@@ -106,6 +106,14 @@ Una sola base de código con dos destinos. Las mismas páginas, islas, `.wasm`, 
 
 Las fases siguientes (ventana nativa en Rust y ejecutable único) están en el [ROADMAP](ROADMAP.md#️-verx-desktop-la-misma-app-como-web-y-como-escritorio).
 
+## VERX Grafo: ver por qué algo está bloqueado
+
+```bash
+bun run grafo   # dev + el grafo en su propia ventana (con bun run dev, en http://127.0.0.1:3001)
+```
+
+Todo el repo en nodos: mundos, paquetes, carpetas, archivos, imports y puentes `.wasm`. Cuando el guardián bloquea algo, el archivo late en rojo y sus carpetas llevan la cuenta. Al pulsarlo se ven la regla, el motivo, la línea y cómo arreglarlo. Se edita ahí mismo con las líneas culpables marcadas, y al guardar el rojo se apaga solo. Todo va en tiempo real (SSE), solo en `127.0.0.1` y con el mismo candado de token que VERX Desktop.
+
 ## Reglas que bloquean
 
 Las 13 reglas de `verx-guard` (`bun run rules`) se aplican en tres sitios:
@@ -157,8 +165,9 @@ Windows 11, Bun 1.3.14, 12 núcleos, 100 conexiones keep-alive, 8 s por escenari
 | `bun run dev` · `build` · `start` | desarrollo, exportación estática y producción |
 | `bun run check` · `rules` | el guardián y su lista de reglas |
 | `bun run wasm` | recompila la simulación Rust y la publica |
-| `bun run budget` | JS + WASM por página contra el presupuesto (12 KB por página, 8 KB por isla) |
+| `bun run budget` | JS + WASM por página contra el presupuesto (14 KB por página, 9 KB por isla) |
 | `bun run desktop` | la misma app como programa de escritorio (VERX Desktop) |
+| `bun run grafo` | el repo en nodos, con los bloqueos del guardián en tiempo real (VERX Grafo) |
 | `bun test` · `bun run test:rust` | 53 tests JS · 16 tests de Rust |
 | `bun run verify` | todo junto: pásalo antes de dar algo por terminado |
 | `bun run bench` | benchmark del núcleo HTTP |

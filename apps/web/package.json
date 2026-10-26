@@ -8,7 +8,8 @@
     "start": "verx start",
     "budget": "verx budget",
     "portadas": "bun scripts/portadas.js",
-    "desktop": "verx desktop"
+    "desktop": "verx desktop",
+    "grafo": "verx grafo"
   },
   "dependencies": {
     "@verx/gl": "workspace:*",

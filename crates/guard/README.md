@@ -5,6 +5,7 @@ El guardián de las reglas del repositorio. Está escrito en Rust, solo con `std
 ```bash
 bun run check         # todas las reglas (incluye el análisis de imports JS con el AST de Bun)
 bun run check:quick   # las reglas rápidas (lo usan los hooks de Claude Code)
+verx-guard check --json [--quick]   # el informe en una línea JSON (lo lee VERX Grafo)
 bun run rules         # lista de reglas con su explicación
 bun run wasm          # compila cada crate puente → su .wasm + manifiesto
 ```

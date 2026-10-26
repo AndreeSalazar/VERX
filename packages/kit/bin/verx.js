@@ -64,6 +64,12 @@ switch (command) {
     if (r.needsServer.length) console.log(`        Necesitan servidor (verx start): ${r.needsServer.join(', ')}`)
     break
   }
+  case 'grafo': {
+    // `verx dev` + el grafo del proyecto en su propia ventana.
+    const { dev } = await import('../src/dev.js')
+    dev({ root, port, openGraph: true })
+    break
+  }
   case 'desktop': {
     const { runDesktop } = await import('../src/desktop.js')
     await runDesktop({ root })
@@ -88,5 +94,5 @@ switch (command) {
     process.exit(problems.length ? 1 : 0)
   }
   default:
-    console.log('Uso: verx <dev|build|start|desktop|budget> [--port 3000] [--out dist] [--workers auto]')
+    console.log('Uso: verx <dev|grafo|build|start|desktop|budget> [--port 3000] [--out dist] [--workers auto]')
 }

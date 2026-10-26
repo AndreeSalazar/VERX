@@ -8,6 +8,7 @@ verx build   # exporta lo estático a dist/ con .br/.gz y _headers
 verx start   # producción (--workers auto reparte la carga en Linux)
 verx budget  # JS + WASM (brotli) que transfiere cada página, contra `budget` de verx.config.js
 verx desktop # la misma app como programa de escritorio (ventana propia, solo 127.0.0.1, con candado)
+verx grafo   # verx dev + VERX Grafo en su propia ventana
 ```
 
 | Archivo | Qué hace |
@@ -37,3 +38,13 @@ Lee el PNG de `public/` y, con `@verx/img` (Rust → WASM), genera una vez sus v
 - Las variantes son JPEG si la imagen es opaca (unas 7 veces más ligeras) y PNG si tiene transparencia. Se sirven en `/_verx/img/<nombre>-<ancho>.<huella>.jpg|png` con caché inmutable, y `verx build` las exporta.
 - El `<img>` sale con `srcset`, `sizes`, `width`/`height` reales, `loading="lazy"` (o `fetchpriority="high"` con `priority`), y el placeholder desenfocado de fondo. Cero JS.
 - `alt` es obligatorio; `src` no puede salir de `public/`.
+
+## VERX Grafo: el proyecto en nodos, con los bloqueos en rojo
+
+`verx dev` abre, además del sitio, **VERX Grafo** en el puerto siguiente (`http://127.0.0.1:3001`; la URL con su token sale en la consola). `verx grafo` hace lo mismo y lo abre en su propia ventana.
+
+- **Todo el repo en un mapa:** mundos (Rust, Bun, la app), espacios de trabajo, carpetas y archivos, con sus aristas reales: dependencias de `package.json`, imports de JS (con el analizador de Bun), `mod` de Rust y, en dorado, los puentes `.wasm`.
+- **Por qué está bloqueado:** cada cambio en disco pasa por el guardián (`verx-guard check --json --quick`; «Revisar todo» lanza todas las reglas). El archivo culpable late en rojo y sus carpetas llevan la cuenta. Al pulsarlo, el panel dice la regla, el motivo, la línea y cómo arreglarlo.
+- **Tiempo real y edición ahí mismo:** el grafo llega por SSE. «Arreglarlo aquí» abre el archivo con las líneas bloqueadas en rojo. Ctrl+S guarda (un guardado a la vez) y, cuando el guardián deja de ver el problema, el rojo se apaga solo: «✔ Desbloqueado».
+- **Seguro:** solo escucha en `127.0.0.1`, pide el token (que se cambia por una cookie `HttpOnly`/`SameSite=Strict`) y comprueba el `Origin` en cada escritura. Solo edita archivos de texto del repo (nunca `node_modules`, `target` ni rutas de fuera), y si el archivo cambió en disco responde 409 en lugar de pisarlo.
+- Corre en el proceso padre de `verx dev`, así que no se reinicia con cada cambio.
