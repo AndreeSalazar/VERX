@@ -123,7 +123,7 @@ test('buscador: índice estático de Rust, por secciones y con anclas que existe
   expect(r.headers.get('content-type')).toBe('application/x-verx-search')
   expect(r.headers.get('content-encoding')).toBe('br')
   const search = await createSearch()
-  const sections = docs.reduce((n, d) => n + 1 + d.body.filter((b) => b.h).length, 0)
+  const sections = docs.reduce((n, d) => n + d.sections.length, 0)
   expect(search.load(await r.arrayBuffer())).toBe(sections)
   expect(search.query('galaxia webgl')[0].href).toBe('/docs/rust-3d')
   const [hit] = search.query('estructura app')
@@ -131,4 +131,19 @@ test('buscador: índice estático de Rust, por secciones y con anclas que existe
   expect(await (await html('/docs/empezar')).text()).toContain(`id="${anchor('Estructura de una app')}"`)
   // Mientras escribes: prefijos y sin acentos.
   expect(search.query('exportaci').map((h) => h.href)).toContain('/docs/despliegue')
+})
+
+test('docs y blog salen de Markdown: código resaltado, índice de la página y sin JS para pintarlo', async () => {
+  const page = await (await html('/docs/islas')).text()
+  expect(page).toContain('<figure class="code"><figcaption>components/Counter.jsx</figcaption>')
+  expect(page).toContain('<span class="t-kw">export</span>')
+  // El índice «En esta página» sólo aparece con dos secciones o más.
+  expect(page).not.toContain('class="on-page"')
+  const rust3d = await (await html('/docs/rust-3d')).text()
+  expect(rust3d).toMatch(/<nav class="on-page" aria-label="En esta página">.*href="#multijugador"/s)
+  expect(page).toContain('min de lectura')
+  const post = await (await html('/blog/de-node-a-bun')).text()
+  expect(post).toContain('<p>La primera versión iba sobre <code>node:http</code>')
+  // El HTML de los .md nunca trae HTML crudo: todo lo que parece una etiqueta se escapa.
+  expect(page).not.toMatch(/<script(?! type="(module|speculationrules)")/)
 })

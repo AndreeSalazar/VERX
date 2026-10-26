@@ -12,6 +12,7 @@
   "dependencies": {
     "@verx/gl": "workspace:*",
     "@verx/kit": "workspace:*",
+    "@verx/md": "workspace:*",
     "@verx/search": "workspace:*",
     "@verx/sim": "workspace:*",
     "@verx/ui": "workspace:*"

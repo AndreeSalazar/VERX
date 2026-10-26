@@ -881,3 +881,164 @@ h3 {
   font-size: 1.05rem;
   line-height: 1.4;
 }
+
+/* ── Contenido Markdown (verx-md) ─────────────────────────────────── */
+/* Resaltado de código: verx-md lo marca en el servidor, el CSS lo colorea. */
+.code .t-kw {
+  color: #c792ea;
+}
+.code .t-str {
+  color: #f2c97d;
+}
+.code .t-com {
+  color: #6b6b84;
+  font-style: italic;
+}
+.code .t-num {
+  color: #ff9e80;
+}
+.code .t-fn {
+  color: #82aaff;
+}
+.code .t-ty {
+  color: #7fdbca;
+}
+.code .t-attr {
+  color: #89ddff;
+}
+
+/* Anclas de los títulos: aparecen al pasar por encima. */
+.prose :is(h1, h2, h3, h4) {
+  position: relative;
+}
+.prose .anchor {
+  margin-left: 0.4em;
+  color: var(--muted);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  background: none;
+}
+.prose :is(h2, h3, h4):hover .anchor,
+.prose .anchor:focus-visible {
+  opacity: 1;
+}
+.prose .anchor:hover {
+  color: var(--gold);
+}
+
+/* «En esta página» */
+.on-page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  margin: 4px 0 28px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 0.9rem;
+}
+.on-page strong {
+  flex-basis: 100%;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.on-page a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.on-page a:hover {
+  color: var(--fg);
+}
+
+/* Avisos: > [!NOTE] · [!TIP] · [!IMPORTANT] · [!WARNING] · [!CAUTION] */
+.callout {
+  --tone: var(--cyan);
+  margin: 24px 0;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--tone) 7%, transparent);
+  box-shadow: inset 3px 0 0 var(--tone), inset 0 0 0 1px color-mix(in srgb, var(--tone) 22%, transparent);
+}
+.callout p {
+  margin: 0.35em 0;
+}
+.callout-title {
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+.callout.tip {
+  --tone: #4ee38a;
+}
+.callout.important {
+  --tone: var(--violet);
+}
+.callout.warning {
+  --tone: var(--gold);
+}
+.callout.caution {
+  --tone: var(--danger);
+}
+.prose blockquote {
+  margin: 24px 0;
+  padding: 2px 18px;
+  border-left: 2px solid var(--line-strong);
+  color: var(--muted);
+}
+
+/* Tablas y tareas */
+.table-wrap {
+  overflow-x: auto;
+  margin: 22px 0;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.93rem;
+}
+.table-wrap th,
+.table-wrap td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.table-wrap th {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.025);
+}
+.table-wrap tr:last-child td {
+  border-bottom: 0;
+}
+.prose li.task {
+  list-style: none;
+  margin-left: -1.3em;
+}
+.prose li.task input {
+  accent-color: var(--gold);
+  margin-right: 6px;
+}
+.prose img {
+  border-radius: 12px;
+}
+/* Código en línea dentro del texto. */
+.prose :not(pre) > code {
+  padding: 0.12em 0.38em;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px var(--line);
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@verx/md",
+  "version": "0.3.0",
+  "description": "Puente JS ↔ Rust: carga md.wasm (compilado desde crates/md) y convierte Markdown en HTML",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": ["src", "md.wasm", "md.manifest.json"],
+  "scripts": {
+    "test": "bun test"
+  }
+}

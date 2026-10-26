@@ -56,7 +56,7 @@ Una comparación cualitativa, sin favoritismos: aparece lo que VERX ya hace mejo
 | **i18n en las rutas** | Next.js, Nuxt | Segmento `[lang]` con negociación de idioma en el servidor | Bun |
 | ~~**WebSockets y tiempo real**~~ ✅ | SvelteKit (vía adaptador), Fresh | **Hecho:** `app.ws()` y `export const WS` en `route.js`; la galaxia ya es multijugador | Bun |
 | ~~**Listas con clave** (`<For>`)~~ ✅ | Solid | **Hecho:** `@verx/ui/for` reconcilia por clave y mueve lo mínimo (subsecuencia creciente más larga) | Bun |
-| **Markdown / MDX** | Astro, Next.js | Parser de Markdown en Rust → WASM para docs y blog | 🦀 Rust |
+| ~~**Markdown**~~ ✅ | Astro, Next.js | **Hecho:** `verx-md` en Rust: blog y docs en `.md`, con el código resaltado en el servidor y cero JS para pintarlo (MDX con islas, todavía no) | 🦀 Rust |
 | ~~**Búsqueda**~~ ✅ | Docusaurus, Astro (plugins) | **Hecho:** `verx-search`, índice invertido con BM25 en Rust; el mismo `.wasm` indexa en el servidor y busca en el navegador | 🦀 Rust |
 | **Ecosistema** | todos | Plantillas, ejemplos y documentación pública | — |
 
@@ -70,6 +70,7 @@ Cada fila es un paquete o crate nuevo con su README y sus tests, igual que el re
 crates/          MUNDO RUST (workspace propio, toolchain 1.99.1 fijada)
   sim/           verx-sim     galaxia → .wasm · no_std · 6 KB · unsafe sólo en abi.rs
   search/        verx-search  buscador BM25 → .wasm · no_std · 12 KB · unsafe sólo en abi.rs
+  md/            verx-md      Markdown → HTML con resaltado · no_std · en el servidor
   guard/         verx-guard   guardián de 13 reglas (std, sin crates)
 packages/        MUNDO BUN (workspaces aislados: cada uno ve sólo lo que declara)
   signals/       @verx/signals   reactividad de grano fino            → nada
@@ -77,9 +78,10 @@ packages/        MUNDO BUN (workspaces aislados: cada uno ve sólo lo que declar
   ui/            @verx/ui        JSX propio servidor/navegador         → signals
   sim/           @verx/sim       puente con verx-sim (ABI v2)          → nada
   search/        @verx/search    puente con verx-search (ABI v1)       → nada
+  md/            @verx/md        puente con verx-md (ABI v1)           → nada
   gl/            @verx/gl        motor WebGL2 propio                   → nada
   kit/           @verx/kit       rutas, islas, ISR, CLI (estilo Next)  → server, ui
-apps/web/        el sitio                                      → kit, ui, sim, search, gl
+apps/web/        el sitio                                      → kit, ui, sim, search, md, gl
 ```
 
 - **Los puentes:** un crate se declara puente en su `Cargo.toml` (`[package.metadata.verx] bridge = "packages/…"`). `bun run wasm` compila cada uno y publica su `.wasm` en el paquete JS correspondiente, junto con un manifiesto que lleva la huella del código. Solo esos paquetes pueden cargar un `.wasm`, y si alguno no corresponde a su código Rust, la regla `wasm-al-dia` falla.
