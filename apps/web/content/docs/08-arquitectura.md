@@ -12,6 +12,7 @@ crates/          MUNDO RUST (workspace propio, toolchain fijada)
   md/            verx-md     Markdown → HTML con resaltado (servidor)
   img/           verx-img    PNG y redimensionado (servidor)
   guard/         verx-guard  guardián de las reglas
+  desktop/       verx-desktop ventana nativa (WebView2 / WebKitGTK)
 packages/        MUNDO BUN (workspaces en modo aislado)
   signals/       reactividad                     → nada
   server/        HTTP sobre Bun.serve            → nada

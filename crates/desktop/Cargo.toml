@@ -1,0 +1,17 @@
+[package]
+name = "verx-desktop"
+description = "VERX Desktop: la app en una ventana nativa (WebView2 en Windows, WebKitGTK en Linux), sin dependencias"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# No es un puente: no compila a .wasm ni toca JS. Bun (packages/kit/src/desktop.js)
+# lo lanza como un programa aparte y le pasa la URL por la línea de órdenes.
+[[bin]]
+name = "verx-desktop"
+path = "src/main.rs"
+
+[lints]
+workspace = true

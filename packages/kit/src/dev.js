@@ -13,7 +13,7 @@
 import { watch, readdirSync, realpathSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { profileDir, windowCommand } from './desktop.js'
+import { nativeBinary, openWindow, profileDir } from './desktop.js'
 import { findRepoRoot } from './grafo/model.js'
 import { startGraph } from './grafo/server.js'
 import { serveDown } from './grafo/caido.js'
@@ -44,7 +44,8 @@ async function graph({ root, port, openGraph }) {
   const open = () => {
     const profile = profileDir(root) + '-grafo'
     mkdirSync(profile, { recursive: true })
-    Bun.spawn(windowCommand({ url: g.url, profile }).cmd, { stdio: ['ignore', 'ignore', 'ignore'] })
+    // La ventana nativa si está compilada (bun run desktop la compila); si no, la de siempre.
+    openWindow({ url: g.url, profile, title: 'VERX Grafo', native: nativeBinary(findRepoRoot(root)), width: 1280, height: 820 })
   }
   // Con --sin-ventana, nada se abre solo (sí al pulsar «Ver en el grafo»).
   const options = { root: findRepoRoot(root), appOrigins, onOpen: open, autoOpen: openGraph }

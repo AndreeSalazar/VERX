@@ -21,7 +21,7 @@
     "rules": "cd crates && cargo run -q --release -p verx-guard -- rules",
     "wasm": "cd crates && cargo run -q --release -p verx-guard -- wasm",
     "test:rust": "cd crates && cargo test -q",
-    "lint:rust": "cd crates && cargo fmt --all --check && cargo clippy -q --workspace --all-targets -- -D warnings && cargo clippy -q -p verx-sim -p verx-search -p verx-md -p verx-img --target wasm32-unknown-unknown -- -D warnings",
+    "lint:rust": "cd crates && cargo fmt --all --check && cargo clippy -q --workspace --all-targets -- -D warnings && cargo clippy -q -p verx-sim -p verx-search -p verx-md -p verx-img --target wasm32-unknown-unknown -- -D warnings && cargo clippy -q -p verx-desktop --target x86_64-unknown-linux-gnu --all-targets -- -D warnings",
     "verify": "bun run check && bun test && bun run lint:rust && bun run test:rust",
     "bench": "cd packages/server && bun run bench"
   }

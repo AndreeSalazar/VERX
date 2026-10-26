@@ -3,6 +3,7 @@
 
 mod code;
 mod deps;
+mod ffi;
 mod project;
 
 use crate::repo::Repo;
@@ -68,9 +69,9 @@ pub(crate) const RULES: &[Rule] = &[
     },
     Rule {
         id: "unsafe-acotado",
-        title: "`unsafe` sólo en crates/*/src/abi.rs",
-        fix: "mueve la operación insegura a abi.rs y expón una API segura",
-        check: code::unsafe_acotado,
+        title: "`unsafe` sólo en crates/*/src/abi.rs y en crates/desktop/src/ffi/",
+        fix: "mueve la operación insegura a abi.rs (o a ffi/ en VERX Desktop) y expón una API segura",
+        check: ffi::unsafe_acotado,
         quick: true,
     },
     Rule {
@@ -78,6 +79,13 @@ pub(crate) const RULES: &[Rule] = &[
         title: "Sin test.only, debugger, dbg!, todo! ni unimplemented!",
         fix: "quita el resto de depuración antes de seguir",
         check: code::sin_restos,
+        quick: true,
+    },
+    Rule {
+        id: "ffi-aislada",
+        title: "Cada `unsafe` con su `// SAFETY:`, y lo que habla con el sistema sólo en ffi/",
+        fix: "escribe encima por qué es seguro, o mueve la declaración a crates/desktop/src/ffi/",
+        check: ffi::ffi_aislada,
         quick: true,
     },
     Rule {

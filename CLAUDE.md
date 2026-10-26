@@ -12,6 +12,7 @@ crates/        MUNDO RUST (workspace propio, toolchain fijada en rust-toolchain.
   md/          verx-md     Markdown → HTML  (unsafe SOLO en src/abi.rs)
   img/         verx-img    PNG y redimensionado (unsafe SOLO en src/abi.rs)
   guard/       verx-guard  guardián de reglas (std, sin crates)
+  desktop/     verx-desktop ventana nativa (WebView2 / WebKitGTK; unsafe SOLO en src/ffi/)
 packages/      MUNDO JS (workspaces de Bun en modo aislado)
   signals/     reactividad                      → nada
   server/      HTTP sobre Bun.serve             → nada
@@ -33,7 +34,7 @@ apps/web/      el sitio                         → kit, ui, sim, search, md, im
 2. **Cero dependencias de terceros**, ni en JS ni en Rust. Si hace falta algo, se escribe como paquete en `packages/` o como crate en `crates/`.
 3. **Fronteras:** un paquete solo importa lo que declara y solo la API de sus `exports`; nada de `../../otro/src`.
 4. **Rust y JS no se tocan.** Los únicos puentes son los paquetes que un crate declara en su `Cargo.toml` (`[package.metadata.verx]`): hoy, `@verx/sim`, `@verx/search`, `@verx/md` y `@verx/img`. Si cambias un crate puente, ejecuta `bun run wasm`. La ABI está versionada: si cambia una firma o un formato, sube `ABI_VERSION` en los dos lados.
-5. **`unsafe` solo en `crates/*/src/abi.rs`**, y siempre con un comentario `// SAFETY:`.
+5. **`unsafe` solo en `crates/*/src/abi.rs` y en `crates/desktop/src/ffi/`**, y siempre con un comentario `// SAFETY:` justo encima (o `/// # Safety` en una `unsafe fn`). Las declaraciones que hablan con el sistema (`extern "…" { }`, `#[link]`, `LoadLibraryW`, `dlopen`…) solo en `ffi/` (regla `ffi-aislada`).
 6. **Los componentes `'use client'` no tocan código de servidor** (`@verx/kit`, `@verx/server`, `node:*`, `bun`), ni siquiera de forma indirecta.
 7. **Ningún archivo de código pasa de 400 líneas**: divide por responsabilidades.
 8. **Sin restos de depuración:** ni `test.only`, `debugger`, `dbg!`, `todo!` ni `unimplemented!`.
@@ -53,7 +54,7 @@ apps/web/      el sitio                         → kit, ui, sim, search, md, im
 | `bun run verify` | check + tests JS + fmt/clippy/tests de Rust: **pásalo antes de dar algo por terminado** |
 | `bun run wasm` | recompila cada crate puente y publica su `.wasm` en su paquete |
 | `bun run budget` | tabla de JS + WASM por página y por isla, contra el presupuesto |
-| `bun run desktop` | la app como escritorio: ventana propia, servidor solo en 127.0.0.1 y candado por token |
+| `bun run desktop` | la app como escritorio: ventana nativa (crates/desktop, se compila la primera vez; Edge si falta WebView2), servidor solo en 127.0.0.1 y candado por token |
 | `bun run grafo` | dev + VERX Grafo en su ventana: el repo en nodos, los bloqueos del guardián en rojo y en tiempo real, y edición ahí mismo. `bun run dev` ya lo abre (`--sin-ventana` para no hacerlo) y pone un aviso en el propio sitio |
 | `bun run vscode` | instala la extensión de VS Code (`packages/vscode`): el grafo en un panel, los bloqueos en «Problemas» y en la barra de estado |
 | `bun test` · `bun run test:rust` | tests |

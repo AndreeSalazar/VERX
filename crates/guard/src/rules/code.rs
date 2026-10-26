@@ -1,7 +1,7 @@
 //! Reglas sobre el contenido del código.
 
 use super::Problem;
-use crate::repo::{Repo, code_only, has_word};
+use crate::repo::{Repo, code_only};
 use crate::wasm::bridges;
 
 const JS: [&str; 5] = [".js", ".jsx", ".ts", ".tsx", ".mjs"];
@@ -10,11 +10,6 @@ const TEXT: [&str; 13] = [
     ".js", ".jsx", ".ts", ".tsx", ".mjs", ".json", ".md", ".css", ".html", ".rs", ".toml", ".svg", ".txt",
 ];
 const MAX_LINES: usize = 400;
-
-/// `unsafe` sólo en `crates/<puente>/src/abi.rs`.
-fn is_abi_file(path: &str) -> bool {
-    path.starts_with("crates/") && path.ends_with("/src/abi.rs") && path.matches('/').count() == 3
-}
 
 fn lines(repo: &Repo, file: &str) -> Vec<String> {
     repo.read(file)
@@ -73,21 +68,6 @@ pub(super) fn frontera(repo: &Repo) -> Vec<Problem> {
                 out.push(Problem::new(
                     format!("{file}:{}", n + 1),
                     "un crate referencia archivos fuera de crates/",
-                ));
-            }
-        }
-    }
-    out
-}
-
-pub(super) fn unsafe_acotado(repo: &Repo) -> Vec<Problem> {
-    let mut out = Vec::new();
-    for file in repo.with_ext(&RUST, "crates/").filter(|f| !is_abi_file(f)) {
-        for (n, line) in lines(repo, file).iter().enumerate() {
-            if has_word(&code_only(line), "unsafe") {
-                out.push(Problem::new(
-                    format!("{file}:{}", n + 1),
-                    "`unsafe` fuera de abi.rs",
                 ));
             }
         }

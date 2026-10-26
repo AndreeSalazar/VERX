@@ -4,7 +4,8 @@ const lines = [
   ['ok', 'cero-deps-js', 'Sin dependencias JS de terceros'],
   ['ok', 'cero-deps-rust', 'Sin crates de terceros'],
   ['ok', 'frontera-rust-js', 'Los únicos puentes son los paquetes .wasm'],
-  ['ok', 'unsafe-acotado', 'unsafe sólo en abi.rs'],
+  ['ok', 'unsafe-acotado', 'unsafe sólo en abi.rs y en ffi/'],
+  ['ok', 'ffi-aislada', 'Cada unsafe con su // SAFETY:'],
   ['ok', 'wasm-al-dia', 'sim.wasm corresponde al código Rust'],
   ['ok', 'tamano', 'Ningún archivo pasa de 400 líneas'],
   ['ok', 'imports-js', 'Fronteras comprobadas con el AST de Bun'],
@@ -22,7 +23,7 @@ export default function Rules() {
           pelearse con nada a las 3 de la mañana.
         </p>
         <a class="button ghost" href="/docs/reglas">
-          Las 14 reglas
+          Las 15 reglas
         </a>
       </div>
       <figure class="terminal" aria-label="Salida de bun run check">
@@ -34,7 +35,7 @@ export default function Rules() {
         </figcaption>
         <pre>
           <code>
-            {'verx-guard · 14 reglas\n'}
+            {'verx-guard · 15 reglas\n'}
             {lines.map(([, id, text]) => (
               <span class="line">
                 <b>✔</b> {id.padEnd(18)} {text}

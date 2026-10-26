@@ -72,7 +72,8 @@ crates/          MUNDO RUST (workspace propio, toolchain 1.99.1 fijada)
   search/        verx-search  buscador BM25 → .wasm · no_std · 12 KB · unsafe sólo en abi.rs
   md/            verx-md      Markdown → HTML con resaltado · no_std · en el servidor
   img/           verx-img     PNG, DEFLATE y redimensionado en luz lineal · en el servidor
-  guard/         verx-guard   guardián de 14 reglas (std, sin crates)
+  guard/         verx-guard   guardián de 15 reglas (std, sin crates)
+  desktop/       verx-desktop ventana nativa: WebView2 / WebKitGTK, 140 KB
 packages/        MUNDO BUN (workspaces aislados: cada uno ve sólo lo que declara)
   signals/       @verx/signals   reactividad de grano fino            → nada
   server/        @verx/server    HTTP sobre Bun.serve + estáticos      → nada
@@ -92,7 +93,7 @@ apps/web/        el sitio                                      → kit, ui, sim,
 ## VERX Desktop: la misma app, también como escritorio
 
 ```bash
-bun run desktop   # abre la app en su propia ventana
+bun run desktop   # abre la app en su propia ventana nativa (la compila la primera vez)
 ```
 
 Una sola base de código con dos destinos. Las mismas páginas, islas, `.wasm`, APIs y WebSockets sirven a la web y al escritorio. En el escritorio, el servidor es Bun en tu ordenador, así que una página puede usar los recursos del sistema (ver `app/escritorio`). Las páginas saben dónde corren con `isDesktop()`.
@@ -100,11 +101,12 @@ Una sola base de código con dos destinos. Las mismas páginas, islas, `.wasm`, 
 | | Electron | Tauri | **VERX Desktop** |
 |---|---|---|---|
 | Proceso principal | Node (V8) | Rust | **Bun (JavaScriptCore)** |
-| Navegador | Chromium incluido | WebView del sistema | ventana del sistema (Edge en modo app en Windows; WebView nativo en la fase 2) |
+| Navegador | Chromium incluido | WebView del sistema | **WebView del sistema en una ventana nativa en Rust** (WebView2 en Windows, WebKitGTK en Linux), sin el SDK: 140 KB. Si falta, Edge en modo app |
+| Si la app no responde | pantalla en blanco | pantalla en blanco | **una página que explica qué pasa y vuelve sola** |
 | Protección del servidor local | depende de la app | permisos declarados | **solo `127.0.0.1` + token → cookie `HttpOnly`/`SameSite=Strict`; sin ella, 403 en todo, WebSockets incluidos** |
 | Dependencias | cientos | cientos de crates | **cero** |
 
-Las fases siguientes (ventana nativa en Rust y ejecutable único) están en el [ROADMAP](ROADMAP.md#️-verx-desktop-la-misma-app-como-web-y-como-escritorio).
+El `unsafe` que exige hablar con el sistema vive solo en `crates/desktop/src/ffi/`, con sus propios guardianes: cada `unsafe` con su `// SAFETY:` y las declaraciones del sistema solo ahí. La fase siguiente (un solo ejecutable) está en el [ROADMAP](ROADMAP.md#️-verx-desktop-la-misma-app-como-web-y-como-escritorio).
 
 ## VERX Grafo: ver por qué algo está bloqueado
 
@@ -137,7 +139,7 @@ Lo que un navegador no trae no se puede hacer nativo en él, pero sí se puede p
 
 ## Reglas que bloquean
 
-Las 14 reglas de `verx-guard` (`bun run rules`) se aplican en tres sitios:
+Las 15 reglas de `verx-guard` (`bun run rules`) se aplican en tres sitios:
 
 | Dónde | Qué hace |
 |---|---|
